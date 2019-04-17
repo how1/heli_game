@@ -1,4 +1,5 @@
 import { camera, renderer, scene, init, character, objects } from "./Initialize.js";
+import { heliCount } from "../app.js";
 import * as THREE from 'three';
 
 export let heli;
@@ -114,6 +115,7 @@ export let helipart1 = [];
 export let helipart2 = [];
 export let heliPartVelocityY = [];
 export let heliPartVelocityX = [];
+export let pickUps = [];
 
 export const blowUp = () => {
 	let geometry = new THREE.PlaneGeometry( 15, 10, 32 );
@@ -134,6 +136,47 @@ export const blowUp = () => {
 	part2.position.y = heli.position.y;
 	helipart2.push(part2);
 
+	if (heliCount % 3 == 0){
+		let dropInfo = getDropInfo();
+		geometry = new THREE.PlaneGeometry( 4, 4, 32 );
+		material = new THREE.MeshBasicMaterial( {color: dropInfo.color, side: THREE.DoubleSide} );
+		let drop = new THREE.Mesh( geometry, material );
+		scene.add( drop );
+		drop.position.x = heli.position.x;
+		drop.position.y = heli.position.y;
+		dropInfo.mesh = drop;
+		pickUps.push(dropInfo);
+	}
+
 	scene.remove(heli);
 	spawn();
+}
+
+const getDropInfo = () => {
+	let dropInfo = {
+		color: 0x00ff00,
+		powerUp: 'akimboMac10',
+		size: 1,
+		speed: .5,
+		ammo: 50,
+		damage: 1,
+		velocity: 0,
+		mesh: null
+	}
+	if (Math.random() < .30){
+		dropInfo.color = 0xcccc00;
+		dropInfo.powerUp = 'RPG';
+		dropInfo.ammo = 6;
+		dropInfo.damage = 7;
+		dropInfo.size = 1.5;
+		dropInfo.speed = .2;
+	} else if (Math.random() < .60){
+		dropInfo.color = 0xcccc00;
+		dropInfo.powerUp = 'Shotgun';
+		dropInfo.ammo = 15;
+		dropInfo.damage = 1;
+		dropInfo.size = 1;
+		dropInfo.speed = .5;
+	}
+	return dropInfo;
 }

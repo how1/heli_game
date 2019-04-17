@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 import { bodies, camera, renderer, scene, init, character, objects } from "./physics/Initialize.js";
 import { checkCollisions, checkBoundingBoxes, checkBulletCollision } from "./physics/checkForCollision.js";
-import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY } from "./physics/spawn.js";
+import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 
@@ -18,11 +18,11 @@ const GRAVITATION = 0.028;
 const BOUNDS = 500;
 const DRAG = 0.028;
 let hasContactedGround = false;
-const HELIHEALTHMAX = 10;
-let heliHealth = 10;
+const HELIHEALTHMAX = 5;
+let heliHealth = 5;
 let gameStatus = "play";
 
-let heliCount = 0;
+export let heliCount = 0;
 export let playerHealth = 8;
 const PLAYERHEALTHMAX = 8;
 
@@ -282,6 +282,22 @@ const heliPartAnimation = () => {
 }
 
 const update = () => {
+    for (var i = 0; i < pickUps.length; i++) {
+        let stop = false;
+        for (var j = 0; j < objects.length; j++) {
+            if (checkBulletCollision(objects[j], pickUps[i].mesh)){
+                stop = true;
+            }
+        }
+        if (!stop){
+            pickUps[i].velocity -= GRAVITATION/4;
+            pickUps[i].mesh.position.y += pickUps[i].velocity;
+        }
+        if (checkBulletCollision(character, pickUps[i].mesh)){
+            scene.remove(pickUps[i].mesh);
+            pickUps.splice(i, 1);
+        }
+    }
     heliPartAnimation();
     healthBarBackground.position.x = character.position.x + 70;  
     healthBar.position.x = character.position.x + 70;
