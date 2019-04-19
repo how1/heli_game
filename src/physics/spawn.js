@@ -154,29 +154,32 @@ export const blowUp = () => {
 
 const getDropInfo = () => {
 	let dropInfo = {
-		color: 0x00ff00,
-		powerUp: 'akimboMac10',
+		color: 0x0000ff,
+		name: 'akimboMac10',
 		size: 1,
 		speed: .5,
 		ammo: 50,
 		damage: 1,
 		velocity: 0,
-		mesh: null
+		mesh: null,
+		reloadTime: 250
 	}
 	if (Math.random() < .30){
-		dropInfo.color = 0xcccc00;
-		dropInfo.powerUp = 'RPG';
+		dropInfo.color = 0xffff00;
+		dropInfo.name = 'RPG';
 		dropInfo.ammo = 6;
 		dropInfo.damage = 7;
 		dropInfo.size = 1.5;
-		dropInfo.speed = .2;
+		dropInfo.speed = .4;
+		dropInfo.reloadTime = 2000;
 	} else if (Math.random() < .60){
-		dropInfo.color = 0xcccc00;
-		dropInfo.powerUp = 'Shotgun';
+		dropInfo.color = 0xff0000;
+		dropInfo.name = 'shotgun';
 		dropInfo.ammo = 15;
 		dropInfo.damage = 1;
 		dropInfo.size = 1;
 		dropInfo.speed = .5;
+		dropInfo.reloadTime = 500;
 	}
 	return dropInfo;
 }

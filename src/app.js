@@ -13,7 +13,6 @@ let ySpeed = 1;
 let xSpeed = .5;
 let gravity = 0;
 let bulletSpeed = .5;
-let bulletInterval = 250;
 const GRAVITATION = 0.028;
 const BOUNDS = 500;
 const DRAG = 0.028;
@@ -21,6 +20,18 @@ let hasContactedGround = false;
 const HELIHEALTHMAX = 5;
 let heliHealth = 5;
 let gameStatus = "play";
+let standardGun = {
+    color: 0x00ff00,
+    name: 'standardGun',
+    size: 1,
+    speed: .5,
+    ammo: -10,
+    damage: 1,
+    velocity: 0,
+    mesh: null,
+    reloadTime: 250
+}
+let equippedWeapon = standardGun;
 
 export let heliCount = 0;
 export let playerHealth = 8;
@@ -113,11 +124,16 @@ const getMouseCoords = (event) => {
 }
 
 let shoot;
+let reloaded = true;
+let mouseDown = false;
 
 document.addEventListener("mousedown", function(event){
+    mouseDown = true;
     if (gameStatus == 'play'){
-        shootBullet();
-        shoot = setInterval(shootBullet, bulletInterval);
+        if (reloaded){
+            shootBullet();
+            shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
+        }
     } else {
         text2.style.display = 'none';
         start();
@@ -134,6 +150,7 @@ document.addEventListener("mousedown", function(event){
 });
 
 document.addEventListener("mouseup", function(event){
+    mouseDown = false;
     clearInterval(shoot);
 });
 
@@ -147,7 +164,6 @@ const shootHeliBullet = () => {
     let tmpHeliPos = new THREE.Vector3(heli.position.x, heli.position.y, 0);
     let bulletVelocity = tmpHeliPos.sub(character.position).normalize().negate();
     let bullet = {
-        origin: heli.position,
         velocity: bulletVelocity.multiplyScalar(bulletSpeed),
         mesh: square
     }
@@ -155,8 +171,20 @@ const shootHeliBullet = () => {
 }
 
 const shootBullet = () => {
-    var vec = new THREE.Vector3(); // create once and reuse
-    var pos = new THREE.Vector3(); // create once and reuse
+    if (equippedWeapon.name != "standardGun"){
+        equippedWeapon.ammo--;
+        if (equippedWeapon.ammo == 1){
+            equippedWeapon = standardGun;
+            clearInterval(shoot);
+            shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
+        }
+    }
+    //Reload
+    reloaded = false;
+    setTimeout(function(){reloaded = true;}, equippedWeapon.reloadTime);
+    //
+    var vec = new THREE.Vector3(); 
+    var pos = new THREE.Vector3();
     vec.set(
         ( mouse.clientX / window.innerWidth ) * 2 - 1,
         - ( mouse.clientY / window.innerHeight ) * 2 + 1,
@@ -165,8 +193,8 @@ const shootBullet = () => {
     vec.sub( camera.position ).normalize();
     var distance = - camera.position.z / vec.z;
     pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
-    let geometry = new THREE.PlaneGeometry( 1, 1, 32 );
-    let material = new THREE.MeshBasicMaterial( {color: 0x00ff00, side: THREE.DoubleSide} );
+    let geometry = new THREE.PlaneGeometry( equippedWeapon.size, equippedWeapon.size, 32 );
+    let material = new THREE.MeshBasicMaterial( {color: equippedWeapon.color, side: THREE.DoubleSide} );
     let square = new THREE.Mesh( geometry, material );
     scene.add( square );
     square.position.x = character.position.x;
@@ -174,11 +202,47 @@ const shootBullet = () => {
     let tmpCharPos = new THREE.Vector3(character.position.x, character.position.y, 0);
     let bulletVelocity = tmpCharPos.sub(pos).normalize().negate();
     let bullet = {
-        origin: character.position,
-        velocity: bulletVelocity.multiplyScalar(bulletSpeed),
-        mesh: square
+        velocity: bulletVelocity.multiplyScalar(equippedWeapon.speed),
+        mesh: square,
+        damage:equippedWeapon.damage
     }
     bullets.push(bullet);
+    if (equippedWeapon.name == 'akimboMac10s'){
+        let square2 = new THREE.Mesh( geometry, material );
+        scene.add(square2);
+        let bullet2 = {
+            velocity: bulletVelocity.multiplyScalar(equippedWeapon.speed),
+            mesh: square2,
+            damage:equippedWeapon.damage
+        }
+        bullets.push(bullet2);
+        square2.position.x = character.position.x - .2;
+        square2.position.x = character.position.y;
+    } else if (equippedWeapon.name == 'shotgun'){
+        for (var i = 0; i < 4; i++) {
+            let square2 = new THREE.Mesh( geometry, material );
+            scene.add(square2);
+            let tmpPos = new THREE.Vector3(0);
+            tmpPos.copy(pos);
+            let offset = 0;
+            if (i == 0) offset = -2;
+            else if (i == 1) offset = -4;
+            else if (i == 2) offset = 2;
+            else if (i == 3) offset = 4;
+            tmpPos.x += offset;
+            let tmpCharPos2 = new THREE.Vector3(character.position.x, character.position.y, 0);
+            let bulletVelocity2 = tmpCharPos2.sub(tmpPos).normalize().negate();
+            
+            let bullet2 = {
+                velocity: bulletVelocity2.multiplyScalar(equippedWeapon.speed),
+                mesh: square2,
+                damage: equippedWeapon.damage
+            }
+            square2.position.x = character.position.x;
+            square2.position.x = character.position.y;
+            bullets.push(bullet2);
+        }
+    }
 }
 
 let heliDodging;
@@ -282,27 +346,42 @@ const heliPartAnimation = () => {
 }
 
 const update = () => {
+    //Pickups
     for (var i = 0; i < pickUps.length; i++) {
-        let stop = false;
+        let stopFalling = false;
         for (var j = 0; j < objects.length; j++) {
             if (checkBulletCollision(objects[j], pickUps[i].mesh)){
-                stop = true;
+                stopFalling = true;
             }
         }
-        if (!stop){
+        if (!stopFalling){
             pickUps[i].velocity -= GRAVITATION/4;
             pickUps[i].mesh.position.y += pickUps[i].velocity;
         }
         if (checkBulletCollision(character, pickUps[i].mesh)){
+            equippedWeapon = pickUps[i];
+            if (mouseDown){
+                clearInterval(shoot);  
+                shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
+            }
             scene.remove(pickUps[i].mesh);
             pickUps.splice(i, 1);
         }
     }
+    //
+    //Blow up heli animation
     heliPartAnimation();
+    //
+    //Healthbar
     healthBarBackground.position.x = character.position.x + 70;  
     healthBar.position.x = character.position.x + 70;
+    //
+
     camera.position.x = character.position.x;
+    //Move Helicopter
     move();
+    //
+    //Helicopter bullet collision detection
     for (var i = 0; i < heliBullets.length; i++) {
         heliBullets[i].mesh.position.x += heliBullets[i].velocity.x;
         heliBullets[i].mesh.position.y += heliBullets[i].velocity.y;
@@ -327,6 +406,8 @@ const update = () => {
             }
         }
     }
+    //
+    //Character bullet collision detection
     for (var i = 0; i < bullets.length; i++) {
         bullets[i].mesh.position.x += bullets[i].velocity.x;
         bullets[i].mesh.position.y += bullets[i].velocity.y;
@@ -339,9 +420,9 @@ const update = () => {
             bullets.splice(i, 1);
         }
         if (checkBulletCollision(heli, bullets[i].mesh)){
+            heliHealth -= bullets[i].damage;
             scene.remove(bullets[i].mesh);
             bullets.splice(i, 1);
-            heliHealth--;
             if(heliHealth == 0){
                 blowUp();
                 heliHealth = HELIHEALTHMAX;
@@ -350,7 +431,7 @@ const update = () => {
             }
         }
     }
-
+    //
     //Collisions come back as t,b,l,r or none
     let collisions = checkCollisions(objects, character);
     //
