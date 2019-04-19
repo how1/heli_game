@@ -17,8 +17,8 @@ const GRAVITATION = 0.028;
 const BOUNDS = 500;
 const DRAG = 0.028;
 let hasContactedGround = false;
-const HELIHEALTHMAX = 5;
-let heliHealth = 5;
+const HELIHEALTHMAX = 20;
+let heliHealth = 20;
 let gameStatus = "play";
 let standardGun = {
     color: 0x00ff00,
@@ -171,8 +171,9 @@ const shootHeliBullet = () => {
 }
 
 const shootBullet = () => {
-    if (equippedWeapon.name != "standardGun"){
+    if (equippedWeapon.name != standardGun.name){
         equippedWeapon.ammo--;
+        updateWeaponInfo();
         if (equippedWeapon.ammo == 1){
             equippedWeapon = standardGun;
             clearInterval(shoot);
@@ -210,14 +211,21 @@ const shootBullet = () => {
     if (equippedWeapon.name == 'akimboMac10s'){
         let square2 = new THREE.Mesh( geometry, material );
         scene.add(square2);
+        let tmpPos = new THREE.Vector3(0);
+        tmpPos.copy(pos);
+        let offset = 2;
+        tmpPos.x += offset;
+        let tmpCharPos2 = new THREE.Vector3(character.position.x - offset, character.position.y, 0);
+        let bulletVelocity2 = tmpCharPos2.sub(tmpPos).normalize().negate();
+        
         let bullet2 = {
-            velocity: bulletVelocity.multiplyScalar(equippedWeapon.speed),
+            velocity: bulletVelocity2.multiplyScalar(equippedWeapon.speed),
             mesh: square2,
-            damage:equippedWeapon.damage
+            damage: equippedWeapon.damage
         }
+        square2.position.x = character.position.x - offset;
+        square2.position.y = character.position.y;
         bullets.push(bullet2);
-        square2.position.x = character.position.x - .2;
-        square2.position.x = character.position.y;
     } else if (equippedWeapon.name == 'shotgun'){
         for (var i = 0; i < 4; i++) {
             let square2 = new THREE.Mesh( geometry, material );
@@ -239,11 +247,43 @@ const shootBullet = () => {
                 damage: equippedWeapon.damage
             }
             square2.position.x = character.position.x;
-            square2.position.x = character.position.y;
+            square2.position.y = character.position.y;
             bullets.push(bullet2);
         }
     }
 }
+
+let shotgun = new sound("./src/sounds/shotgun.wav");
+let akimbo = new sound("./src/sounds/akimbomac10s.wav");
+let rpg = new sound("./src/sounds/rpg.wav");
+
+function sound (src) {
+    this.sound = document.createElement("audio");
+    this.sound.src = src;
+    this.sound.setAttribute("preload", "auto");
+    this.sound.setAttribute("controls", "none");
+    this.sound.style.display = "none";
+    document.body.appendChild(this.sound);
+    this.play = function(){
+    this.sound.play();
+    }
+    this.stop = function(){
+    this.sound.pause();
+    }
+}
+
+const playPickUpSound = () => {
+    let src;
+    if (equippedWeapon.name == 'shotgun'){
+        src = shotgun;
+    } else if (equippedWeapon.name == 'akimboMac10s'){
+        src = akimbo;
+    } else if (equippedWeapon.name == 'RPG'){
+        src = rpg;
+    }
+    src.play();
+}
+
 
 let heliDodging;
 let heliShooting = setInterval(shootHeliBullet, 500);
@@ -287,6 +327,30 @@ const displayScore = () => {
 
 displayScore();
 
+let weaponText;
+
+const updateWeaponInfo = () => {
+    if (equippedWeapon.name != standardGun.name)
+        weaponText.innerHTML = equippedWeapon.name + " x " + equippedWeapon.ammo;
+    else 
+        weaponText.innerHTML = equippedWeapon.name + " x " + "INF";
+}
+
+const displayWeaponInfo = () => {
+    weaponText = document.createElement('div');
+    weaponText.style.position = 'absolute';
+    //weaponText.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+    weaponText.style.width = 100;
+    weaponText.style.height = 100;
+    weaponText.style.backgroundColor = "green";
+    weaponText.style.top = 20 + 'px';
+    weaponText.style.left = window.innerWidth/2 + 300 + 'px';
+    updateWeaponInfo();
+    document.body.appendChild(weaponText);
+}
+
+displayWeaponInfo();
+
 let healthBar;
 let healthBarBackground;
 let healthBarPosition;
@@ -306,9 +370,14 @@ healthBarPosition = healthBar.position.y;
 export const displayHealthBar = () => {
     if (healthBar){
         scene.remove(healthBar);
+        scene.remove(healthBarBackground);
     }
-    let geometry = new THREE.PlaneGeometry( 1, playerHealth, 32 );
-    let material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
+    let geometry = new THREE.PlaneGeometry( 1, PLAYERHEALTHMAX, 32 );
+    let material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide} );
+    healthBarBackground = new THREE.Mesh( geometry, material );
+    scene.add( healthBarBackground ); 
+    geometry = new THREE.PlaneGeometry( 1, playerHealth, 32 );
+    material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
     healthBar = new THREE.Mesh( geometry, material );
     if (playerHealth > 0){
         scene.add( healthBar );
@@ -316,6 +385,9 @@ export const displayHealthBar = () => {
     healthBarPosition -= .5;
     healthBar.position.y = healthBarPosition;
     healthBar.position.x = character.position.x + 70;
+    healthBarBackground.position.y = 30;
+    healthBarBackground.position.x = character.position.x + 70;
+
 
 }
 
@@ -346,6 +418,7 @@ const heliPartAnimation = () => {
 }
 
 const update = () => {
+    //displayWeaponInfo();
     //Pickups
     for (var i = 0; i < pickUps.length; i++) {
         let stopFalling = false;
@@ -360,7 +433,10 @@ const update = () => {
         }
         if (checkBulletCollision(character, pickUps[i].mesh)){
             equippedWeapon = pickUps[i];
+            playWeaponPickupSound();
+            updateWeaponInfo();
             if (mouseDown){
+                shootBullet();
                 clearInterval(shoot);  
                 shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
             }
@@ -423,9 +499,11 @@ const update = () => {
             heliHealth -= bullets[i].damage;
             scene.remove(bullets[i].mesh);
             bullets.splice(i, 1);
-            if(heliHealth == 0){
+            if(heliHealth <= 0){
                 blowUp();
                 heliHealth = HELIHEALTHMAX;
+                updateWeaponInfo;
+                equippedWeapon = standardGun;
                 heliCount++;
                 displayScore();
             }
