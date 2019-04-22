@@ -5,9 +5,30 @@ import { checkCollisions, checkBoundingBoxes, checkBulletCollision } from "./phy
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
+// import rpgSound from './sounds/rpg.wav';
 
 init();
 spawn();
+
+// let listener = new THREE.AudioListener();
+// camera.add( listener );
+
+// // create a global audio source
+// let sound = new THREE.Audio( listener );
+
+// // load a sound and set it as the Audio object's buffer
+// let audioLoader = new THREE.AudioLoader();
+// audioLoader.load( rpgSound, function( buffer ) {
+//     sound.setBuffer( buffer );
+//     sound.setLoop( false );
+//     sound.setVolume( 0.5 );
+//     sound.play();
+// });
+
+// import rpgFX from './sounds/camera.jpg';
+
+// let rpgSound = new Audio(require('./sounds/rpg.wav'));
+// rpgSound.play();
 
 let ySpeed = 1;
 let xSpeed = .5;
@@ -253,9 +274,9 @@ const shootBullet = () => {
     }
 }
 
-let shotgun = new sound("./src/sounds/shotgun.wav");
-let akimbo = new sound("./src/sounds/akimbomac10s.wav");
-let rpg = new sound("./src/sounds/rpg.wav");
+let rpg = new sound(require('./sounds/rpg.wav'));
+let akimbo = new sound(require('./sounds/akimboMac10s.wav'));
+let shotgun = new sound(require('./sounds/shotgun.wav'));
 
 function sound (src) {
     this.sound = document.createElement("audio");
@@ -272,7 +293,7 @@ function sound (src) {
     }
 }
 
-const playPickUpSound = () => {
+const playWeaponPickupSound = () => {
     let src;
     if (equippedWeapon.name == 'shotgun'){
         src = shotgun;
@@ -283,7 +304,6 @@ const playPickUpSound = () => {
     }
     src.play();
 }
-
 
 let heliDodging;
 let heliShooting = setInterval(shootHeliBullet, 500);

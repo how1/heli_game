@@ -60,6 +60,15 @@ module.exports = (env) => {
 					"css-loader",
 					"sass-loader"
 				]
+			}, {
+				test: /\.(wav|jpg)$/,
+				use: [ {
+					loader: 'file-loader',
+					options: {
+						name: '[name].[ext]',
+						outputPath: 'sounds/'
+					}
+				}]
 			}]
 		},
 		plugins: [
