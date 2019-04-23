@@ -2,7 +2,9 @@ import * as THREE from 'three';
 
 import { bodies, camera, renderer, scene, init, character, objects } from "./physics/Initialize.js";
 import { checkCollisions, checkBoundingBoxes, checkBulletCollision } from "./physics/checkForCollision.js";
-import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps } from "./physics/spawn.js";
+import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
+    blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
+    shotgun, akimboMac10s, rpg } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 // import rpgSound from './sounds/rpg.wav';
@@ -50,7 +52,10 @@ let standardGun = {
     damage: 1,
     velocity: 0,
     mesh: null,
-    reloadTime: 250
+    reloadTime: 250,
+    shotSound: null,
+    hitSound: null,
+    pickupSound: null
 }
 let equippedWeapon = standardGun;
 
@@ -197,8 +202,8 @@ const shootBullet = () => {
         updateWeaponInfo();
         if (equippedWeapon.ammo == 1){
             equippedWeapon = standardGun;
-            clearInterval(shoot);
-            shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
+            //clearInterval(shoot);
+            //shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
         }
     }
     //Reload
@@ -216,9 +221,10 @@ const shootBullet = () => {
     var distance = - camera.position.z / vec.z;
     pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
     let geometry = new THREE.PlaneGeometry( equippedWeapon.size, equippedWeapon.size, 32 );
-    let material = new THREE.MeshBasicMaterial( {color: equippedWeapon.color, side: THREE.DoubleSide} );
+    let material = new THREE.MeshBasicMaterial( {color: equippedWeapon.color, side: THREE.FrontSide} );
     let square = new THREE.Mesh( geometry, material );
     scene.add( square );
+    playSound(equippedWeapon.shotSound);
     square.position.x = character.position.x;
     square.position.y = character.position.y;
     let tmpCharPos = new THREE.Vector3(character.position.x, character.position.y, 0);
@@ -232,6 +238,7 @@ const shootBullet = () => {
     if (equippedWeapon.name == 'akimboMac10s'){
         let square2 = new THREE.Mesh( geometry, material );
         scene.add(square2);
+        playSound(equippedWeapon.shotSound);
         let tmpPos = new THREE.Vector3(0);
         tmpPos.copy(pos);
         let offset = 2;
@@ -274,9 +281,47 @@ const shootBullet = () => {
     }
 }
 
-let rpg = new sound(require('./sounds/rpg.wav'));
-let akimbo = new sound(require('./sounds/akimboMac10s.wav'));
-let shotgun = new sound(require('./sounds/shotgun.wav'));
+let rpgPickup = './sounds/rpg.wav'
+let akimboPickup = './sounds/akimboMac10s.wav';
+let shotgunPickup = './sounds/shotgun.wav';
+let shotgunBlast = './sounds/shotgunBlast.wav';
+let explosion = './sounds/explosion.wav';
+let metalHit = './sounds/metalHit.wav';
+let gunshot = './sounds/gunshot.wav';
+let rpgBlast = './sounds/rpgBlast.wav';
+let rpgHit = './sounds/explosion.wav';
+
+standardGun.shotSound = gunshot;
+standardGun.hitSound = metalHit;
+shotgun.shotSound = shotgunBlast;
+shotgun.hitSound = metalHit;
+shotgun.pickupSound = shotgunPickup;
+akimboMac10s.shotSound = gunshot;
+akimboMac10s.hitSound = metalHit;
+akimboMac10s.pickupSound = akimboPickup;
+rpg.shotSound = rpgBlast;
+rpg.hitSound = rpgHit;
+rpg.pickupSound = rpgPickup;
+
+const playSound = (src) => {
+    // create an AudioListener and add it to the camera
+    var listener = new THREE.AudioListener();
+    camera.add( listener );
+
+    // create a global audio source
+    var sound = new THREE.Audio( listener );
+
+    // load a sound and set it as the Audio object's buffer
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load( src, function(buffer){
+        sound.setBuffer( buffer );
+        sound.setLoop( false );
+        sound.setVolume( 0.5 );
+        sound.play();
+    });
+}
+
+playSound(explosion);
 
 function sound (src) {
     this.sound = document.createElement("audio");
@@ -285,24 +330,7 @@ function sound (src) {
     this.sound.setAttribute("controls", "none");
     this.sound.style.display = "none";
     document.body.appendChild(this.sound);
-    this.play = function(){
-    this.sound.play();
-    }
-    this.stop = function(){
-    this.sound.pause();
-    }
-}
-
-const playWeaponPickupSound = () => {
-    let src;
-    if (equippedWeapon.name == 'shotgun'){
-        src = shotgun;
-    } else if (equippedWeapon.name == 'akimboMac10s'){
-        src = akimbo;
-    } else if (equippedWeapon.name == 'RPG'){
-        src = rpg;
-    }
-    src.play();
+    //this.sound.play();
 }
 
 let heliDodging;
@@ -453,7 +481,7 @@ const update = () => {
         }
         if (checkBulletCollision(character, pickUps[i].mesh)){
             equippedWeapon = pickUps[i];
-            playWeaponPickupSound();
+            playSound(equippedWeapon.pickupSound);
             updateWeaponInfo();
             if (mouseDown){
                 shootBullet();
@@ -477,20 +505,24 @@ const update = () => {
     //Move Helicopter
     move();
     //
-    //Helicopter bullet collision detection
+    
     for (var i = 0; i < heliBullets.length; i++) {
+        //Move bullets
         heliBullets[i].mesh.position.x += heliBullets[i].velocity.x;
         heliBullets[i].mesh.position.y += heliBullets[i].velocity.y;
+        //remove them when out of screen
         if (Math.abs(heliBullets[i].mesh.position.x) > BOUNDS){
             heliBullets[i].mesh = null;
             heliBullets.splice(i, 1);
         }
+        //check for collision with ground
         for (var j = 0; j < objects.length; j++) {
             if (checkBulletCollision(objects[j], heliBullets[i].mesh)){
                 scene.remove(heliBullets[i].mesh);
                 heliBullets.splice(i, 1);
             }
         }
+        //check for collision with character
         if (checkBulletCollision(heliBullets[i].mesh, character)){
             scene.remove(heliBullets[i].mesh);
             heliBullets.splice(i, 1);
@@ -505,21 +537,27 @@ const update = () => {
     //
     //Character bullet collision detection
     for (var i = 0; i < bullets.length; i++) {
+        //move bullets
         bullets[i].mesh.position.x += bullets[i].velocity.x;
         bullets[i].mesh.position.y += bullets[i].velocity.y;
+        //remove when out of bounds
         if (Math.abs(bullets[i].mesh.position.x) > BOUNDS){
             bullets[i].mesh = null;
             bullets.splice(i, 1);
         }
+        //check for collision with objects
         if (checkCollisions(objects, bullets[i].mesh).length != 0){
             scene.remove(bullets[i].mesh);
             bullets.splice(i, 1);
         }
+        //check for collision with heli
         if (checkBulletCollision(heli, bullets[i].mesh)){
             heliHealth -= bullets[i].damage;
+            playSound(equippedWeapon.hitSound);
             scene.remove(bullets[i].mesh);
             bullets.splice(i, 1);
             if(heliHealth <= 0){
+                playSound(explosion);
                 blowUp();
                 heliHealth = HELIHEALTHMAX;
                 updateWeaponInfo;

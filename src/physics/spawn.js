@@ -293,33 +293,56 @@ export const blowUp = () => {
 }
 
 const getDropInfo = () => {
-	let dropInfo = {
-		color: 0x0000ff,
-		name: 'akimboMac10',
-		size: 1,
-		speed: .5,
-		ammo: 50,
-		damage: 1,
-		velocity: 0,
-		mesh: null,
-		reloadTime: 250
-	}
+	let dropInfo = akimboMac10s;
 	if (Math.random() < .30){
-		dropInfo.color = 0xffff00;
-		dropInfo.name = 'RPG';
-		dropInfo.ammo = 6;
-		dropInfo.damage = 7;
-		dropInfo.size = 1.5;
-		dropInfo.speed = .4;
-		dropInfo.reloadTime = 2000;
+		dropInfo = rpg;
 	} else if (Math.random() < .60){
-		dropInfo.color = 0xff0000;
-		dropInfo.name = 'shotgun';
-		dropInfo.ammo = 15;
-		dropInfo.damage = 1;
-		dropInfo.size = 1;
-		dropInfo.speed = .5;
-		dropInfo.reloadTime = 500;
+		dropInfo = shotgun;
 	}
 	return dropInfo;
+}
+
+export let shotgun = {
+	color: 0xff0000,
+	name: 'shotgun',
+	size: 1,
+	speed: .5,
+	ammo: 15,
+	damage: 1,
+	velocity: 0,
+	mesh: null,
+	reloadTime: 500,
+	shotSound: null,
+	hitSound: null,
+	pickupSound: null
+}
+
+export let rpg = {
+	color: 0xffff00,
+	name: 'rpg',
+	size: 1.5,
+	speed: .4,
+	ammo: 6,
+	damage: 7,
+	velocity: 0,
+	mesh: null,
+	reloadTime: 2000,
+	shotSound: null,
+	hitSound: null,
+	pickupSound: null
+}
+
+export let akimboMac10s = {
+	color: 0x0000ff,
+	name: 'akimboMac10s',
+	size: 1,
+	speed: .5,
+	ammo: 50,
+	damage: 1,
+	velocity: 0,
+	mesh: null,
+	reloadTime: 250,
+	shotSound: null,
+	hitSound: null,
+	pickupSound: null
 }
