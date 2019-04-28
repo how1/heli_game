@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 
-import { bodies, camera, renderer, scene, init, character, objects } from "./physics/Initialize.js";
-import { checkCollisions, checkBoundingBoxes, checkBulletCollision } from "./physics/checkForCollision.js";
+import { bodies, camera, renderer, scene, init, character, objects, moveCharacter, walk, stand, jump } from "./physics/Initialize.js";
+import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision } from "./physics/checkForCollision.js";
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
-    shotgun, akimboMac10s, rpg } from "./physics/spawn.js";
+    shotgun, akimboMac10s, rpg, flyNormal } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 // import rpgSound from './sounds/rpg.wav';
@@ -33,7 +33,7 @@ spawn();
 // rpgSound.play();
 
 let ySpeed = 1;
-let xSpeed = .5;
+let xSpeed = .3;
 let gravity = 0;
 let bulletSpeed = .5;
 const GRAVITATION = 0.028;
@@ -46,9 +46,10 @@ let gameStatus = "play";
 let standardGun = {
     color: 0x00ff00,
     name: 'standardGun',
-    size: 1,
+    size: 1.1,
     speed: .5,
     ammo: -10,
+    fullAmmoMax: -10,
     damage: 1,
     velocity: 0,
     mesh: null,
@@ -78,14 +79,35 @@ let mouse = {
     clientY: 0
 };
 
+let song = require('./sounds/clubbedtodeath.wav');
+let music = new sound(song);
+
+let heliShooting;
+let heliFlyoff;
+let heliDodging;
+let dodger;
+
 const start = () => {
+    gameSpeed = 1;
+    scene.remove(deathPlane);
     heliHealth = HELIHEALTHMAX;
     heliCount = 0;
     playerHealth = PLAYERHEALTHMAX;
-    character.position.x = 0;
+    moveCharacter(0, character.mesh.position.y);
+    // music.sound.play();
+    heliShooting = setInterval(shootHeliBullet, 500);
+    heliFlyoff = setInterval(flyOff, 20000);
+    dodger = setTimeout( function() {
+        dodge();
+    heliDodging = setInterval(dodge, 5000)
+    }, 3000);
 }
 
-start();
+gameStatus = 'ready';
+
+let walkInterval;
+let walking = false;
+let walkTime = 500;
 
 document.addEventListener("keydown", onDocumentKeyDown, false);
 function onDocumentKeyDown(event) {
@@ -95,17 +117,30 @@ function onDocumentKeyDown(event) {
     	if (Math.abs(yVelocity) == 0){
             yVelocity = ySpeed;
             gravity = GRAVITATION;
+            console.log('clear');
+            clearInterval(walkInterval);
+            walking = false;
+            jump();
         }
         //
         keyEvents[0] = 1;
     } else if (keyCode == 40) { //down
         //No ducking yet
     } else if (keyCode == 37) { //left
+        if (!walking){
+            console.log('qwer');
+            walking = true;
+            walkInterval = setInterval(walk, walkTime);
+        }
         //Move left
         xVelocity = -xSpeed;
         //
         keyEvents[2] = 1;
     } else if (keyCode == 39) { //right
+        if (!walking){
+            walking = true;
+            walkInterval = setInterval(walk, walkTime);
+        }
         //Move right
         xVelocity = xSpeed;
         //
@@ -127,14 +162,25 @@ function onDocumentKeyUp(event) {
         keyEvents[2] = 0;
         if (keyEvents[3]){
         	xVelocity = xSpeed;
-        } else xVelocity = 0;
+        } else{
+            walking = false;
+            console.log('clear2');
+            clearInterval(walkInterval);
+            xVelocity = 0;
+        }
         //
     } else if (keyCode == 39) {
         //See above
+
         keyEvents[3] = 0;
         if (keyEvents[2]){
         	xVelocity = -xSpeed;
-        } else xVelocity = 0;
+        } else {
+            walking = false;
+            console.log('clear43');
+            clearInterval(walkInterval);
+            xVelocity = 0;
+        }
         //
     }
 };
@@ -181,30 +227,29 @@ document.addEventListener("mouseup", function(event){
 });
 
 const shootHeliBullet = () => {
-    let geometry = new THREE.PlaneGeometry( 1, 1, 32 );
-    let material = new THREE.MeshBasicMaterial( {color: 0xccffcc, side: THREE.DoubleSide} );
-    let square = new THREE.Mesh( geometry, material );
-    scene.add( square );
-    square.position.x = heli.position.x;
-    square.position.y = heli.position.y;
-    let tmpHeliPos = new THREE.Vector3(heli.position.x, heli.position.y, 0);
-    let bulletVelocity = tmpHeliPos.sub(character.position).normalize().negate();
-    let bullet = {
-        velocity: bulletVelocity.multiplyScalar(bulletSpeed),
-        mesh: square
+    if (flyNormal){
+        let geometry = new THREE.PlaneGeometry( 1.1, 1.1, 32 );
+        let material = new THREE.MeshBasicMaterial( {color: 0xccffcc, side: THREE.FrontSide} );
+        let square = new THREE.Mesh( geometry, material );
+        scene.add( square );
+        playSound(gunshot);
+        square.position.x = heli.position.x;
+        square.position.y = heli.position.y;
+        let tmpHeliPos = new THREE.Vector3(heli.position.x, heli.position.y, 0);
+        let bulletVelocity = tmpHeliPos.sub(character.mesh.position).normalize().negate();
+        let bullet = {
+            velocity: bulletVelocity.multiplyScalar(bulletSpeed),
+            mesh: square
+        }
+        heliBullets.push(bullet);
     }
-    heliBullets.push(bullet);
 }
 
 const shootBullet = () => {
     if (equippedWeapon.name != standardGun.name){
         equippedWeapon.ammo--;
+        console.log(equippedWeapon.ammo);
         updateWeaponInfo();
-        if (equippedWeapon.ammo == 1){
-            equippedWeapon = standardGun;
-            //clearInterval(shoot);
-            //shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
-        }
     }
     //Reload
     reloaded = false;
@@ -220,14 +265,19 @@ const shootBullet = () => {
     vec.sub( camera.position ).normalize();
     var distance = - camera.position.z / vec.z;
     pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
-    let geometry = new THREE.PlaneGeometry( equippedWeapon.size, equippedWeapon.size, 32 );
+    let yDimension = equippedWeapon.size;
+    if (equippedWeapon.name == 'rpg') yDimension = equippedWeapon.size * 2;
+    let geometry = new THREE.PlaneGeometry( equippedWeapon.size, yDimension, 32 );
     let material = new THREE.MeshBasicMaterial( {color: equippedWeapon.color, side: THREE.FrontSide} );
     let square = new THREE.Mesh( geometry, material );
     scene.add( square );
+    if (equippedWeapon.name == 'rpg') {
+      
+    };
     playSound(equippedWeapon.shotSound);
-    square.position.x = character.position.x;
-    square.position.y = character.position.y;
-    let tmpCharPos = new THREE.Vector3(character.position.x, character.position.y, 0);
+    square.position.x = character.mesh.position.x;
+    square.position.y = character.mesh.position.y;
+    let tmpCharPos = new THREE.Vector3(character.mesh.position.x, character.mesh.position.y, 0);
     let bulletVelocity = tmpCharPos.sub(pos).normalize().negate();
     let bullet = {
         velocity: bulletVelocity.multiplyScalar(equippedWeapon.speed),
@@ -243,7 +293,7 @@ const shootBullet = () => {
         tmpPos.copy(pos);
         let offset = 2;
         tmpPos.x += offset;
-        let tmpCharPos2 = new THREE.Vector3(character.position.x - offset, character.position.y, 0);
+        let tmpCharPos2 = new THREE.Vector3(character.mesh.position.x - offset, character.mesh.position.y, 0);
         let bulletVelocity2 = tmpCharPos2.sub(tmpPos).normalize().negate();
         
         let bullet2 = {
@@ -251,8 +301,8 @@ const shootBullet = () => {
             mesh: square2,
             damage: equippedWeapon.damage
         }
-        square2.position.x = character.position.x - offset;
-        square2.position.y = character.position.y;
+        square2.position.x = character.mesh.position.x - offset;
+        square2.position.y = character.mesh.position.y;
         bullets.push(bullet2);
     } else if (equippedWeapon.name == 'shotgun'){
         for (var i = 0; i < 4; i++) {
@@ -266,7 +316,7 @@ const shootBullet = () => {
             else if (i == 2) offset = 2;
             else if (i == 3) offset = 4;
             tmpPos.x += offset;
-            let tmpCharPos2 = new THREE.Vector3(character.position.x, character.position.y, 0);
+            let tmpCharPos2 = new THREE.Vector3(character.mesh.position.x, character.mesh.position.y, 0);
             let bulletVelocity2 = tmpCharPos2.sub(tmpPos).normalize().negate();
             
             let bullet2 = {
@@ -274,29 +324,40 @@ const shootBullet = () => {
                 mesh: square2,
                 damage: equippedWeapon.damage
             }
-            square2.position.x = character.position.x;
-            square2.position.y = character.position.y;
+            square2.position.x = character.mesh.position.x;
+            square2.position.y = character.mesh.position.y;
             bullets.push(bullet2);
         }
     }
+
+
+    if (equippedWeapon.ammo == 0){
+        equippedWeapon = standardGun;
+        updateWeaponInfo();
+        //clearInterval(shoot);
+        //shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
+    }
 }
 
-let rpgPickup = './sounds/rpg.wav'
-let akimboPickup = './sounds/akimboMac10s.wav';
-let shotgunPickup = './sounds/shotgun.wav';
-let shotgunBlast = './sounds/shotgunBlast.wav';
-let explosion = './sounds/explosion.wav';
-let metalHit = './sounds/metalHit.wav';
-let gunshot = './sounds/gunshot.wav';
-let rpgBlast = './sounds/rpgBlast.wav';
-let rpgHit = './sounds/explosion.wav';
+let rpgPickup = require('./sounds/rpg.wav');
+let akimboPickup = require('./sounds/akimboMac10s.wav');
+let shotgunPickup = require('./sounds/shotgun.wav');
+let shotgunBlast = require('./sounds/shotgunBlast.wav');
+let explosion = require('./sounds/explosion.wav');
+let metalHit = require('./sounds/metalHit.wav');
+let gunshot = require('./sounds/gunshot.wav');
+let gunshot2 = require('./sounds/gunshot2.wav');
+let akimboMac10sShot = require('./sounds/akimbomac10sShot.wav');
+let rpgBlast = require('./sounds/rpgBlast.wav');
+let rpgHit = require('./sounds/explosion.wav');
+let ouch = require('./sounds/ouch.wav');
 
-standardGun.shotSound = gunshot;
+standardGun.shotSound = gunshot2;
 standardGun.hitSound = metalHit;
 shotgun.shotSound = shotgunBlast;
 shotgun.hitSound = metalHit;
 shotgun.pickupSound = shotgunPickup;
-akimboMac10s.shotSound = gunshot;
+akimboMac10s.shotSound = akimboMac10sShot;
 akimboMac10s.hitSound = metalHit;
 akimboMac10s.pickupSound = akimboPickup;
 rpg.shotSound = rpgBlast;
@@ -321,7 +382,7 @@ const playSound = (src) => {
     });
 }
 
-playSound(explosion);
+// playSound(explosion);
 
 function sound (src) {
     this.sound = document.createElement("audio");
@@ -333,15 +394,8 @@ function sound (src) {
     //this.sound.play();
 }
 
-let heliDodging;
-let heliShooting = setInterval(shootHeliBullet, 500);
-let heliFlyoff = setInterval(flyOff, 20000);
-let dodger = setTimeout( function() {
-    dodge();
-    heliDodging = setInterval(dodge, 5000)
-}, 3000);
-
 let text2;
+let deathPlane;
 
 const gameOver = () => {
     text2 = document.createElement('div');
@@ -350,13 +404,25 @@ const gameOver = () => {
     text2.style.width = 100;
     text2.style.height = 100;
     text2.style.backgroundColor = "blue";
-    text2.innerHTML = "GAME OVER";
+    if (gameStatus == 'ready') text2.innerHTML = 'Click to Start';
+    else text2.innerHTML = "GAME OVER";
     text2.style.top = 200 + 'px';
     text2.style.left = window.innerWidth/2 + 'px';
     document.body.appendChild(text2);
-    blowUp();
+    clearInterval(heliShooting);
+    if (gameStatus == 'play'){
+        let geometry = new THREE.PlaneGeometry( 1000, 1000, 32 );
+        let material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.FrontSide} );
+        let deathPlane = new THREE.Mesh( geometry, material );
+        material.transparent = true;
+        material.opacity = .4;
+        scene.add( deathPlane );
+        blowUp();
+    } 
 
 }
+
+gameOver();
 
 let text;
 
@@ -414,6 +480,8 @@ scene.add( healthBar );
 healthBar.position.y = 30;
 healthBarBackground.position.y = 30;
 healthBarPosition = healthBar.position.y;
+healthBar.position.x = 70;
+healthBarBackground.position.x = 70;
 
 export const displayHealthBar = () => {
     if (healthBar){
@@ -432,10 +500,9 @@ export const displayHealthBar = () => {
     }
     healthBarPosition -= .5;
     healthBar.position.y = healthBarPosition;
-    healthBar.position.x = character.position.x + 70;
+    healthBar.position.x = character.mesh.position.x + 70;
     healthBarBackground.position.y = 30;
-    healthBarBackground.position.x = character.position.x + 70;
-
+    healthBarBackground.position.x = character.mesh.position.x + 70;
 
 }
 
@@ -450,20 +517,26 @@ const heliPartAnimation = () => {
                 heliPartVelocityX.splice[i, 1];
                 heliPartVelocityY.splice[i, 1];
             } else {
-                helipart1[i].rotation.z += Math.PI / 100;
-                helipart2[i].rotation.z += Math.PI / 50;
+                let rotationSpeed = 1;
+                if (gameSpeed != 1){
+                    rotationSpeed = gameSpeed * 6;
+                }
+                helipart1[i].rotation.z += Math.PI / 100 * rotationSpeed;
+                helipart2[i].rotation.z += Math.PI / 50 * rotationSpeed;
                 heliPartVelocityY[i] -= GRAVITATION;
                 if (heliPartVelocityX[i] > 0)
                     heliPartVelocityX[i] -= 0.001;
-                helipart1[i].position.y += heliPartVelocityY[i];
-                helipart2[i].position.y += heliPartVelocityY[i];
-                helipart1[i].position.x += heliPartVelocityX[i]/3;
-                helipart2[i].position.x -= heliPartVelocityX[i];
+                helipart1[i].position.y += heliPartVelocityY[i] * gameSpeed;
+                helipart2[i].position.y += heliPartVelocityY[i] * gameSpeed;
+                helipart1[i].position.x += heliPartVelocityX[i]/3 * gameSpeed;
+                helipart2[i].position.x -= heliPartVelocityX[i] * gameSpeed;
             }
         }
         
     }
 }
+
+export let gameSpeed = 1;
 
 const update = () => {
     //displayWeaponInfo();
@@ -477,11 +550,12 @@ const update = () => {
         }
         if (!stopFalling){
             pickUps[i].velocity -= GRAVITATION/4;
-            pickUps[i].mesh.position.y += pickUps[i].velocity;
+            pickUps[i].mesh.position.y += pickUps[i].velocity * gameSpeed;
         }
-        if (checkBulletCollision(character, pickUps[i].mesh)){
+        if (checkBulletCollision(character.mesh, pickUps[i].mesh)){
             equippedWeapon = pickUps[i];
             playSound(equippedWeapon.pickupSound);
+            equippedWeapon.ammo = equippedWeapon.fullAmmoMax;
             updateWeaponInfo();
             if (mouseDown){
                 shootBullet();
@@ -493,23 +567,21 @@ const update = () => {
         }
     }
     //
-    //Blow up heli animation
-    heliPartAnimation();
     //
     //Healthbar
-    healthBarBackground.position.x = character.position.x + 70;  
-    healthBar.position.x = character.position.x + 70;
+    healthBarBackground.position.x = character.mesh.position.x + 70;  
+    healthBar.position.x = character.mesh.position.x + 70;
     //
 
-    camera.position.x = character.position.x;
+    camera.position.x = character.mesh.position.x;
     //Move Helicopter
     move();
     //
-    
+    //Helicopter bullets
     for (var i = 0; i < heliBullets.length; i++) {
         //Move bullets
-        heliBullets[i].mesh.position.x += heliBullets[i].velocity.x;
-        heliBullets[i].mesh.position.y += heliBullets[i].velocity.y;
+        heliBullets[i].mesh.position.x += heliBullets[i].velocity.x * gameSpeed;
+        heliBullets[i].mesh.position.y += heliBullets[i].velocity.y * gameSpeed;
         //remove them when out of screen
         if (Math.abs(heliBullets[i].mesh.position.x) > BOUNDS){
             heliBullets[i].mesh = null;
@@ -523,14 +595,20 @@ const update = () => {
             }
         }
         //check for collision with character
-        if (checkBulletCollision(heliBullets[i].mesh, character)){
+        if (checkBulletCollision(heliBullets[i].mesh, character.mesh)){
             scene.remove(heliBullets[i].mesh);
             heliBullets.splice(i, 1);
             playerHealth--;
+            playSound(ouch);
             displayHealthBar();
             if (playerHealth == 0){
                 gameOver();
+                playSound(explosion);
+                updateWeaponInfo();
+                equippedWeapon = standardGun;
+                music.sound.pause();
                 gameStatus = "game_over";
+                gameSpeed = .01;
             }
         }
     }
@@ -538,8 +616,8 @@ const update = () => {
     //Character bullet collision detection
     for (var i = 0; i < bullets.length; i++) {
         //move bullets
-        bullets[i].mesh.position.x += bullets[i].velocity.x;
-        bullets[i].mesh.position.y += bullets[i].velocity.y;
+        bullets[i].mesh.position.x += bullets[i].velocity.x * gameSpeed;
+        bullets[i].mesh.position.y += bullets[i].velocity.y * gameSpeed;
         //remove when out of bounds
         if (Math.abs(bullets[i].mesh.position.x) > BOUNDS){
             bullets[i].mesh = null;
@@ -551,7 +629,7 @@ const update = () => {
             bullets.splice(i, 1);
         }
         //check for collision with heli
-        if (checkBulletCollision(heli, bullets[i].mesh)){
+        if (checkHeliBulletCollision(bullets[i].mesh)){
             heliHealth -= bullets[i].damage;
             playSound(equippedWeapon.hitSound);
             scene.remove(bullets[i].mesh);
@@ -560,8 +638,6 @@ const update = () => {
                 playSound(explosion);
                 blowUp();
                 heliHealth = HELIHEALTHMAX;
-                updateWeaponInfo;
-                equippedWeapon = standardGun;
                 heliCount++;
                 displayScore();
             }
@@ -569,13 +645,19 @@ const update = () => {
     }
     //
     //Collisions come back as t,b,l,r or none
-    let collisions = checkCollisions(objects, character);
+    let collisions = checkCollisions(objects, character.mesh);
     //
     //Temporary gravity allows gravity if in contact with wall
     let gravityThisTurn = gravity;
     //
     //Preserves users ability to move left and right after contacting a wall in mid air.
     let tmpXVel = xVelocity;
+    //
+    //Sprites
+    character.texture.position.x = character.mesh.position.x;
+    character.texture.position.y = character.mesh.position.y
+     + (Math.abs(character.texture.geometry.parameters.height 
+        - character.mesh.geometry.parameters.height)/2);
     //
     for (var i = 0; i < collisions.length; i++) {
         if (collisions[i] == 'top'){
@@ -587,7 +669,15 @@ const update = () => {
 
             //Stops Gravity if hitting floor
             if (yVelocity < 0){
-                yVelocity = 0; 
+                yVelocity = 0;
+                if (Math.abs(xVelocity) > 0){
+                    walking = true;
+                    walkInterval = setInterval(walk, walkTime);
+                } else {
+                    clearInterval(walkInterval);
+                    walking = false;
+                    stand();
+                }
             }
             gravityThisTurn = 0;
             //
@@ -631,14 +721,17 @@ const update = () => {
     //Enables falling when not in contact with and objects
     if (collisions.length == 0){
             gravityThisTurn = GRAVITATION;
+            clearInterval(walkInterval);
+            walking = false;
+            jump();
             if (yVelocity > -1){
                 yVelocity += -gravityThisTurn;
             }
     }
     //
     //Final movement of character
-    character.position.x += tmpXVel;
-    character.position.y += yVelocity;
+    moveCharacter(character.mesh.position.x += tmpXVel * gameSpeed, 
+        character.mesh.position.y += yVelocity * gameSpeed);
     //
 };
 
@@ -650,8 +743,10 @@ const GameLoop = () => {
     requestAnimationFrame( GameLoop );
     if (gameStatus == 'play'){
     	update();
-    	render();
     }
+    //Blow up heli animation
+    heliPartAnimation();
+    render();
 };
 
 GameLoop();

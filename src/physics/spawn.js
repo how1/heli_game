@@ -1,12 +1,13 @@
 import { camera, renderer, scene, init, character, objects } from "./Initialize.js";
-import { heliCount } from "../app.js";
+import { heliCount, gameSpeed } from "../app.js";
 import * as THREE from 'three';
 
 export let heli;
 
 export const spawn = () => {
-	let geometry = new THREE.PlaneGeometry( 30, 10, 32 );
-	let material = new THREE.MeshBasicMaterial( {color: 0x0000ff, side: THREE.DoubleSide} );
+	let image = new THREE.TextureLoader().load(require('../pics/heli.png'));
+	let geometry = new THREE.PlaneGeometry( 60, 20, 32 );
+	let material = new THREE.MeshBasicMaterial( {map: image, side: THREE.FrontSide} );
 	heli = new THREE.Mesh( geometry, material );
 	scene.add( heli );
 	heli.position.y = 100;
@@ -37,7 +38,7 @@ let heliMaxSpeed = 1.2;
 // let heliVelocityX = 0;
 // let heliVelocityY = 0;
 // let beginDodge = true;
-let flyNormal = true;
+export let flyNormal = true;
 let dodgeMode = false;
 let dodgeDirection = -50;
 let gravity = 0.002;
@@ -53,11 +54,11 @@ let targetPosition;
 
 const brake = () => {
 	if (THREE.Math.radToDeg(heli.rotation.z) < 0){ //if tilted right
-			heli.rotation.z += tiltRate; //tilt left towards zero tilt
+			heli.rotation.z += tiltRate * gameSpeed; //tilt left towards zero tilt
 			if (heli.rotation.z > 0) heli.rotation.z = 0;
 	}		
 	else if (THREE.Math.radToDeg(heli.rotation.z) > 0){ //if tilted left
-		heli.rotation.z -= tiltRate; //tilt right towards zero tilt
+		heli.rotation.z -= tiltRate * gameSpeed; //tilt right towards zero tilt
 		if (heli.rotation.z < 0) heli.rotation.z = 0;
 	}
 	
@@ -80,27 +81,26 @@ const accelerate = (direction, multiplier) => {
 const tiltLeft = () => {
 	// forceVector.y = boost;
 	if (THREE.Math.radToDeg(heli.rotation.z) < maxRotation)
-		heli.rotation.z += tiltRate;
+		heli.rotation.z += tiltRate * gameSpeed;
 }
 
 const tiltRight = () => {
 	// forceVector.y = boost;
 	if (THREE.Math.radToDeg(heli.rotation.z) > -maxRotation)
-		heli.rotation.z -= tiltRate;
+		heli.rotation.z -= tiltRate * gameSpeed;
 }
 
 export const move = () => {
 	getQueueToFly();
 	forceVector.y = 0;
 	if (flyNormal){
-		targetPosition = character.position.x;
+		targetPosition = character.mesh.position.x;
 		if (dodgeMode){
-			targetPosition = character.position.x + dodgeDirection;
+			targetPosition = character.mesh.position.x + dodgeDirection;
 		}
 		if (velocityVector.y > -heliMaxSpeed)
 			velocityVector.y += -gravity;
 		if (heli.position.y < heliHeight && velocityVector.y < 0) {
-			console.log('up');
 			if (velocityVector.y < heliMaxSpeed)
 				forceVector.y = boost;
 		}
@@ -118,12 +118,12 @@ export const move = () => {
 		}
 		v1.copy( forceVector ).applyQuaternion( heli.quaternion );
 		velocityVector.add(v1);
-		heli.position.add(velocityVector);
+		heli.position.add(velocityVector.multiplyScalar(gameSpeed));
 
-		// if (character.position.x > heli.position.x){
+		// if (character.mesh.position.x > heli.position.x){
 		// 	console.log(THREE.Math.radToDeg(heli.rotation.z));
 		// 	tiltRight();
-		// } else if (character.position.x < heli.position.x){
+		// } else if (character.mesh.position.x < heli.position.x){
 		// 	tiltLeft();
 		// 	console.log(THREE.Math.radToDeg(heli.rotation.z));
 			
@@ -150,7 +150,6 @@ export const move = () => {
 		if (velocityVector.y > -heliMaxSpeed)
 			velocityVector.y += -gravity;
 		if (heli.position.y < heliHeight && velocityVector.y < 0) {
-			console.log('up');
 			if (velocityVector.y < heliMaxSpeed)
 				forceVector.y = boost;
 		}
@@ -163,15 +162,15 @@ export const move = () => {
 		}
 		v1.copy( forceVector ).applyQuaternion( heli.quaternion );
 		velocityVector.add(v1);
-		heli.position.add(velocityVector);
+		heli.position.add(velocityVector.multiplyScalar(gameSpeed));
 	}
 
 
 
 	// if (flyNormal){
-	// 	targetPosition = character.position.x;
+	// 	targetPosition = character.mesh.position.x;
 	// 	if (dodgeMode){
-	// 		targetPosition = character.position.x + dodgeDirection;
+	// 		targetPosition = character.mesh.position.x + dodgeDirection;
 	// 	}
 	// 	if (Math.abs(targetPosition - heli.position.x) > heli.geometry.parameters.width/2){
 	// 		if (heliVelocityX < heliMaxSpeed){
@@ -203,7 +202,7 @@ export const move = () => {
 	// }
 	// let tmpPos = new THREE.Vector3(heli.position.x, heli.position.y, 0);
 	// let tmpCharPos = new THREE.Vector3(); 
-	// tmpCharPos.copy(character.position);
+	// tmpCharPos.copy(character.mesh.position);
 	// tmpCharPos.y += heliHeight;
 	// tmpCharPos.x = targetPosition;
 	// let velVector = tmpPos.sub(tmpCharPos).normalize().negate();
@@ -215,8 +214,7 @@ export const move = () => {
 
 export const getQueueToFly = () => {
 	if (!flyNormal)
-		if (Math.abs(heli.position.x) >= character.position.x + 100){
-			console.log('flyon');
+		if (Math.abs(heli.position.x) >= character.mesh.position.x + 200){
 			flyOn();
 		}
 }
@@ -232,9 +230,9 @@ export const flyOff = () => {
 
 export const flyOn = () => {
 	if (flyOffDirection == 'left'){
-		heli.position.x = character.position.x + 250;
+		heli.position.x = character.mesh.position.x + 100;
 	} else {
-		heli.position.x = character.position.x - 250;
+		heli.position.x = character.mesh.position.x - 100;
 	}
 	flyNormal = true;
 }
@@ -289,6 +287,7 @@ export const blowUp = () => {
 	}
 
 	scene.remove(heli);
+	setTimeout(spawn, 1000);
 	spawn();
 }
 
@@ -305,9 +304,10 @@ const getDropInfo = () => {
 export let shotgun = {
 	color: 0xff0000,
 	name: 'shotgun',
-	size: 1,
+	size: 1.1,
 	speed: .5,
 	ammo: 15,
+	fullAmmoMax: 15,
 	damage: 1,
 	velocity: 0,
 	mesh: null,
@@ -320,9 +320,10 @@ export let shotgun = {
 export let rpg = {
 	color: 0xffff00,
 	name: 'rpg',
-	size: 1.5,
-	speed: .4,
+	size: 1.6,
+	speed: .45,
 	ammo: 6,
+	fullAmmoMax: 6,
 	damage: 7,
 	velocity: 0,
 	mesh: null,
@@ -335,13 +336,14 @@ export let rpg = {
 export let akimboMac10s = {
 	color: 0x0000ff,
 	name: 'akimboMac10s',
-	size: 1,
+	size: 1.1,
 	speed: .5,
 	ammo: 50,
+	fullAmmoMax: 50,
 	damage: 1,
 	velocity: 0,
 	mesh: null,
-	reloadTime: 250,
+	reloadTime: 150,
 	shotSound: null,
 	hitSound: null,
 	pickupSound: null

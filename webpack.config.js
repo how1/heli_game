@@ -61,7 +61,7 @@ module.exports = (env) => {
 					"sass-loader"
 				]
 			}, {
-				test: /\.(wav|jpg)$/,
+				test: /\.(wav|jpg|png)$/,
 				use: [ {
 					loader: 'file-loader',
 					options: {

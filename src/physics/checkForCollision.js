@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { camera, renderer, scene, init, character, objects } from "./Initialize.js";
+import { heli } from "./spawn.js";
 
 export const checkCollisions = (objects, character) => {
 	let collisions = [];
@@ -104,6 +105,33 @@ export const checkBulletCollision = (a, b) => {
 	let aXmax = aP.x + aWidth/2;
 	let aYmin = aP.y - aHeight/2;
 	let aYmax = aP.y + aHeight/2;
+	let bXmin = bP.x - bWidth/2;
+	let bXmax = bP.x + bWidth/2;
+	let bYmin = bP.y - bHeight/2;
+	let bYmax = bP.y + bHeight/2;
+
+	if (aXmin > bXmax) return false; // a is left of b
+	if (aXmax < bXmin) return false; // a is right of b
+	if (aYmax < bYmin) return false; // a is below 
+	if (aYmin > bYmax) return false; // a is above
+
+	return true; // boxes overlap
+}
+
+
+//param: bullet position
+export const checkHeliBulletCollision = (b) => {
+	let a = heli;
+	let box = new THREE.Box3().setFromObject( heli );
+	let bP = b.position;
+	let aWidth = a.geometry.parameters.width;
+	let aHeight = a.geometry.parameters.height;
+	let bWidth = b.geometry.parameters.width;
+	let bHeight = b.geometry.parameters.height;
+	let aXmin = box.min.x;
+	let aXmax = box.max.x;
+	let aYmin = box.min.y;
+	let aYmax = box.max.y;
 	let bXmin = bP.x - bWidth/2;
 	let bXmax = bP.x + bWidth/2;
 	let bYmin = bP.y - bHeight/2;
