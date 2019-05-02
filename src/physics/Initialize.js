@@ -58,7 +58,7 @@ const spriteSheet = (sprite, x, y) => {
 }
 
 let walkingArrayRight = [0.015, .11, .21, .307, .397, .487, .577];
-let walkingArrayLeft = [.89, .8, .7, .6, .51, .42, .32];
+let walkingArrayLeft = [.885, .79, .69, .59, .5, .41, .32];
 let standingArrayRight = [.9, .9, .9, .9];
 let standingArrayLeft = [.9, .9, .9, .9];
 
@@ -79,9 +79,11 @@ export const updateSprite = (sprite) => {
 		if (sprite.newVal == 7){
 			sprite.newVal = 0;
 			sprite.tex.offset.x = walkingArrayLeft[sprite.newVal];
+			console.log(sprite.newVal);
 			sprite.newVal++;
 		} else {
 			sprite.tex.offset.x = walkingArrayLeft[sprite.newVal];
+			console.log(sprite.newVal);
 			sprite.newVal += 1;
 		}
 	} else if (sprite == standingRight){
