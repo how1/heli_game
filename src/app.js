@@ -1,36 +1,15 @@
 import * as THREE from 'three';
 
-import { bodies, camera, renderer, scene, init, character, objects, moveCharacter, walk, stand, jump } from "./physics/Initialize.js";
+import { bodies, camera, renderer, scene, init, character, objects, moveCharacter, walk, stand, jump, bgImage, updateSprite } from "./physics/Initialize.js";
 import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision } from "./physics/checkForCollision.js";
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
     shotgun, akimboMac10s, rpg, flyNormal } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
-// import rpgSound from './sounds/rpg.wav';
 
 init();
 spawn();
-
-// let listener = new THREE.AudioListener();
-// camera.add( listener );
-
-// // create a global audio source
-// let sound = new THREE.Audio( listener );
-
-// // load a sound and set it as the Audio object's buffer
-// let audioLoader = new THREE.AudioLoader();
-// audioLoader.load( rpgSound, function( buffer ) {
-//     sound.setBuffer( buffer );
-//     sound.setLoop( false );
-//     sound.setVolume( 0.5 );
-//     sound.play();
-// });
-
-// import rpgFX from './sounds/camera.jpg';
-
-// let rpgSound = new Audio(require('./sounds/rpg.wav'));
-// rpgSound.play();
 
 let ySpeed = 1;
 let xSpeed = .3;
@@ -63,6 +42,8 @@ let equippedWeapon = standardGun;
 export let heliCount = 0;
 export let playerHealth = 8;
 const PLAYERHEALTHMAX = 8;
+let mute = true;
+
 
 let xVelocity = 0;
 let yVelocity = 0;
@@ -80,12 +61,13 @@ let mouse = {
 };
 
 let song = require('./sounds/clubbedtodeath.wav');
-let music = new sound(song);
 
 let heliShooting;
 let heliFlyoff;
 let heliDodging;
 let dodger;
+
+let music;
 
 const start = () => {
     gameSpeed = 1;
@@ -94,7 +76,9 @@ const start = () => {
     heliCount = 0;
     playerHealth = PLAYERHEALTHMAX;
     moveCharacter(0, character.mesh.position.y);
-    // music.sound.play();
+    if (!mute){
+        music = playSound(song);
+    }
     heliShooting = setInterval(shootHeliBullet, 500);
     heliFlyoff = setInterval(flyOff, 20000);
     dodger = setTimeout( function() {
@@ -117,8 +101,6 @@ function onDocumentKeyDown(event) {
     	if (Math.abs(yVelocity) == 0){
             yVelocity = ySpeed;
             gravity = GRAVITATION;
-            console.log('clear');
-            clearInterval(walkInterval);
             walking = false;
             jump();
         }
@@ -128,9 +110,8 @@ function onDocumentKeyDown(event) {
         //No ducking yet
     } else if (keyCode == 37) { //left
         if (!walking){
-            console.log('qwer');
             walking = true;
-            walkInterval = setInterval(walk, walkTime);
+            walk('left');
         }
         //Move left
         xVelocity = -xSpeed;
@@ -139,7 +120,7 @@ function onDocumentKeyDown(event) {
     } else if (keyCode == 39) { //right
         if (!walking){
             walking = true;
-            walkInterval = setInterval(walk, walkTime);
+            walk('right');
         }
         //Move right
         xVelocity = xSpeed;
@@ -164,8 +145,7 @@ function onDocumentKeyUp(event) {
         	xVelocity = xSpeed;
         } else{
             walking = false;
-            console.log('clear2');
-            clearInterval(walkInterval);
+            stand();
             xVelocity = 0;
         }
         //
@@ -177,8 +157,7 @@ function onDocumentKeyUp(event) {
         	xVelocity = -xSpeed;
         } else {
             walking = false;
-            console.log('clear43');
-            clearInterval(walkInterval);
+            stand();
             xVelocity = 0;
         }
         //
@@ -232,7 +211,8 @@ const shootHeliBullet = () => {
         let material = new THREE.MeshBasicMaterial( {color: 0xccffcc, side: THREE.FrontSide} );
         let square = new THREE.Mesh( geometry, material );
         scene.add( square );
-        playSound(gunshot);
+        if (!mute)
+            playSound(gunshot);
         square.position.x = heli.position.x;
         square.position.y = heli.position.y;
         let tmpHeliPos = new THREE.Vector3(heli.position.x, heli.position.y, 0);
@@ -274,7 +254,8 @@ const shootBullet = () => {
     if (equippedWeapon.name == 'rpg') {
       
     };
-    playSound(equippedWeapon.shotSound);
+    if (!mute)
+        playSound(equippedWeapon.shotSound);
     square.position.x = character.mesh.position.x;
     square.position.y = character.mesh.position.y;
     let tmpCharPos = new THREE.Vector3(character.mesh.position.x, character.mesh.position.y, 0);
@@ -288,7 +269,8 @@ const shootBullet = () => {
     if (equippedWeapon.name == 'akimboMac10s'){
         let square2 = new THREE.Mesh( geometry, material );
         scene.add(square2);
-        playSound(equippedWeapon.shotSound);
+        if (!mute)
+            playSound(equippedWeapon.shotSound);
         let tmpPos = new THREE.Vector3(0);
         tmpPos.copy(pos);
         let offset = 2;
@@ -380,6 +362,7 @@ const playSound = (src) => {
         sound.setVolume( 0.5 );
         sound.play();
     });
+    return sound;
 }
 
 // playSound(explosion);
@@ -537,9 +520,22 @@ const heliPartAnimation = () => {
 }
 
 export let gameSpeed = 1;
+let frameCounter = 0;
+let fps = 1;
+let curTime;
+let oldTime = Date.now();
+let interval = 1000/fps;
+let delta;
+
 
 const update = () => {
-    //displayWeaponInfo();
+    curTime = Date.now();
+    delta = curTime - oldTime;
+    if (delta > interval){
+        oldTime = curTime - (delta % interval);
+        updateSprite(character.sheet);
+    }
+    bgImage.position.x = character.mesh.position.x;
     //Pickups
     for (var i = 0; i < pickUps.length; i++) {
         let stopFalling = false;
@@ -554,7 +550,8 @@ const update = () => {
         }
         if (checkBulletCollision(character.mesh, pickUps[i].mesh)){
             equippedWeapon = pickUps[i];
-            playSound(equippedWeapon.pickupSound);
+            if (!mute)
+                playSound(equippedWeapon.pickupSound);
             equippedWeapon.ammo = equippedWeapon.fullAmmoMax;
             updateWeaponInfo();
             if (mouseDown){
@@ -598,15 +595,17 @@ const update = () => {
         if (checkBulletCollision(heliBullets[i].mesh, character.mesh)){
             scene.remove(heliBullets[i].mesh);
             heliBullets.splice(i, 1);
-            playerHealth--;
-            playSound(ouch);
+            playerHealth -= 0;
+            if (!mute)
+                playSound(ouch);
             displayHealthBar();
             if (playerHealth == 0){
                 gameOver();
-                playSound(explosion);
+                if (!mute)
+                    playSound(explosion);
                 updateWeaponInfo();
                 equippedWeapon = standardGun;
-                music.sound.pause();
+                music.stop();
                 gameStatus = "game_over";
                 gameSpeed = .01;
             }
@@ -631,11 +630,13 @@ const update = () => {
         //check for collision with heli
         if (checkHeliBulletCollision(bullets[i].mesh)){
             heliHealth -= bullets[i].damage;
-            playSound(equippedWeapon.hitSound);
+            if (!mute)
+                playSound(equippedWeapon.hitSound);
             scene.remove(bullets[i].mesh);
             bullets.splice(i, 1);
             if(heliHealth <= 0){
-                playSound(explosion);
+                if (!mute)
+                    playSound(explosion);
                 blowUp();
                 heliHealth = HELIHEALTHMAX;
                 heliCount++;
@@ -656,8 +657,7 @@ const update = () => {
     //Sprites
     character.texture.position.x = character.mesh.position.x;
     character.texture.position.y = character.mesh.position.y
-     + (Math.abs(character.texture.geometry.parameters.height 
-        - character.mesh.geometry.parameters.height)/2);
+     + (Math.abs(character.texture.scale.x/2));
     //
     for (var i = 0; i < collisions.length; i++) {
         if (collisions[i] == 'top'){
@@ -670,12 +670,11 @@ const update = () => {
             //Stops Gravity if hitting floor
             if (yVelocity < 0){
                 yVelocity = 0;
-                if (Math.abs(xVelocity) > 0){
-                    walking = true;
-                    walkInterval = setInterval(walk, walkTime);
+                if (xVelocity > 0){
+                    walk('right');
+                } else if (xVelocity < 0) {
+                    walk('left');
                 } else {
-                    clearInterval(walkInterval);
-                    walking = false;
                     stand();
                 }
             }

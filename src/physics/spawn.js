@@ -5,10 +5,12 @@ import * as THREE from 'three';
 export let heli;
 
 export const spawn = () => {
-	let image = new THREE.TextureLoader().load(require('../pics/heli.png'));
+	let image = new THREE.TextureLoader().load(require('../pics/heli4.png'));
 	let geometry = new THREE.PlaneGeometry( 60, 20, 32 );
 	let material = new THREE.MeshBasicMaterial( {map: image, side: THREE.FrontSide} );
 	heli = new THREE.Mesh( geometry, material );
+	material.transparent = true;
+	material.opacity = 1;
 	scene.add( heli );
 	heli.position.y = 100;
 }
