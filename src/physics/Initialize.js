@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import "../styles/components/loader.scss";
-import { playerHealth } from "../app.js";
+import { playerHealth,  } from "../app.js";
 
 
 
@@ -30,6 +30,7 @@ camera.position.z = 100;
 export let objects = [];
 
 export let character;
+export let arm;
 let standingLeft;
 let standingRight;
 let leftFoot;
@@ -37,7 +38,7 @@ let rightFoot;
 let jumping;
 export let bgImage;
 
-const spriteSheet = (sprite, x, y) => {
+const spriteSheet = (sprite, x, y, d, scaleX, scaleY) => {
 	let sheet = {
 		xOffset: x,
 		yOffset: y,
@@ -47,20 +48,27 @@ const spriteSheet = (sprite, x, y) => {
 		tex: null
 	}
 	sheet.tex = sprite;
-	sheet.tex.repeat.set( 1/11, 1);
+	sheet.tex.repeat.set( 1/d, 1);
 	sheet.tex.needsUpdate = true;
 	sheet.tex.wrapS = sheet.tex.wrapT - THREE.repeatWrapping;
 	sheet.mat = new THREE.SpriteMaterial({map: sheet.tex});
 
 	sheet.spr = new THREE.Sprite(sheet.mat);
-	sheet.spr.scale.set(10,10,10);
+	sheet.spr.scale.set( scaleX, scaleY, 1);
 	return sheet;
 }
 
-let walkingArrayRight = [0.015, .11, .21, .307, .397, .487, .577];
+let walkingArrayRight = [0.016, .111, .211, .308, .398, .488, .578];
 let walkingArrayLeft = [.885, .79, .69, .59, .5, .41, .32];
-let standingArrayRight = [.9, .9, .9, .9];
-let standingArrayLeft = [.9, .9, .9, .9];
+let standingArrayRight = [.67, .76, .85, .6];
+let standingArrayLeft = [.06, .15, .24, .15];
+let jumpingArrayLeft = [.06, .15, .24, .15];
+let jumpingArrayRight = [.06, .15, .24, .15];
+
+// let heliArray = [-0.014, .11, .218, .34, .25, .125];
+// let heliArray = [-0.014, .11, .218, .34, .45, .55];
+// let heliArray = [.218, -0.014, .45, .11, .55, .34];
+let heliArray = [.217, -0.014, .47, .111, .59, .34];
 
 
 export const updateSprite = (sprite) => {
@@ -68,36 +76,54 @@ export const updateSprite = (sprite) => {
 		if (sprite.newVal == 7){
 			sprite.newVal = 0;
 			sprite.tex.offset.x = walkingArrayRight[sprite.newVal];
-			console.log(sprite.newVal);
 			sprite.newVal++;
 		} else {
 			sprite.tex.offset.x = walkingArrayRight[sprite.newVal];
-			console.log(sprite.newVal);
 			sprite.newVal++;
 		}
 	} else if (sprite == leftFoot){
 		if (sprite.newVal == 7){
 			sprite.newVal = 0;
 			sprite.tex.offset.x = walkingArrayLeft[sprite.newVal];
-			console.log(sprite.newVal);
 			sprite.newVal++;
 		} else {
 			sprite.tex.offset.x = walkingArrayLeft[sprite.newVal];
-			console.log(sprite.newVal);
 			sprite.newVal += 1;
 		}
 	} else if (sprite == standingRight){
-		if (sprite.newVal > 3){
-			sprite.newVal = 2;
-			sprite.tex.offset.x = standingArrayRight[sprite.newVal];
+		if (sprite.newVal > 2){
 			sprite.newVal = 1;
+			sprite.tex.offset.x = standingArrayRight[sprite.newVal];
+			sprite.newVal = 0;
 		} else {
 			sprite.tex.offset.x = standingArrayRight[sprite.newVal];
+			sprite.newVal++;
+		}
+	} else if (sprite == standingLeft){
+		if (sprite.newVal > 2){
+			sprite.newVal = 1;
+			sprite.tex.offset.x = standingArrayLeft[sprite.newVal];
+			sprite.newVal = 0;
+		} else {
+			sprite.tex.offset.x = standingArrayLeft[sprite.newVal];
+			sprite.newVal++;
+		}
+	} 
+
+	if (sprite == heliFlying){
+		if (sprite.newVal == 6){
+			sprite.newVal = 0;
+			sprite.tex.offset.x = heliArray[sprite.newVal];
+			sprite.newVal++;
+		} else {
+			sprite.tex.offset.x = heliArray[sprite.newVal];
 			sprite.newVal++;
 		}
 	}
 
 }
+
+export let heliFlying;
 
 export const init = () => {
 	character = {
@@ -122,33 +148,29 @@ export const init = () => {
 	// spriteMaterial.opacity = .5;
 	let standingRightSpr = new THREE.TextureLoader().load(require('../pics/roboWalkingLarge.png'));
 	standingRightSpr.anisotropy = renderer.getMaxAnisotropy();
-	standingRight = new spriteSheet(standingRightSpr, 0, 1);
+	standingRight = new spriteSheet(standingRightSpr, 0, 1, 11, 10, 10);
 	let standingLeftSpr = new THREE.TextureLoader().load(require('../pics/roboWalkingLarge2.png'));
 	standingLeftSpr.anisotropy = renderer.getMaxAnisotropy();
-	standingLeft = new spriteSheet(standingLeftSpr, 0, 1);
+	standingLeft = new spriteSheet(standingLeftSpr, 0, 1, 11, 10, 10);
 	let rightFootSpr = new THREE.TextureLoader().load(require('../pics/roboWalkingLarge.png'));
 	rightFootSpr.anisotropy = renderer.getMaxAnisotropy();
-	rightFoot = new spriteSheet(rightFootSpr, 0, 1);
+	rightFoot = new spriteSheet(rightFootSpr, 0, 1, 11, 10, 10);
 	let leftFootSpr = new THREE.TextureLoader().load(require('../pics/roboWalkingLarge2.png'));
 	leftFootSpr.anisotropy = renderer.getMaxAnisotropy();
-	leftFoot = new spriteSheet(leftFootSpr, 0, 1);
+	leftFoot = new spriteSheet(leftFootSpr, 0, 1, 11, 10, 10);
+	let heliFlyingSpr = new THREE.TextureLoader().load(require('../pics/heli5.png'));
+	heliFlyingSpr.anisotropy = renderer.getMaxAnisotropy();
+	heliFlying = new spriteSheet(heliFlyingSpr, 0, 1, 8, 40, 20);
+	console.log(heliFlying);
 
-
-	// let geometry = new THREE.PlaneGeometry( 8, 8, 32 );
-	// standing = new THREE.TextureLoader().load(require('../pics/armyguy.png'));
-	// leftFoot = new THREE.TextureLoader().load(require('../pics/armyguyLeft.png'));
-	// rightFoot = new THREE.TextureLoader().load(require('../pics/armyguyRight.png'));
-	// // jumping = new THREE.TextureLoader().load(require('../pics/jumping.png'));
-	// let mat1 = new THREE.MeshBasicMaterial( {map: leftFoot, side: THREE.FrontSide } );
-	// let mat2 = new THREE.MeshBasicMaterial( {map: rightFoot, side: THREE.FrontSide } );
-	// // let mat3 = new THREE.MeshBasicMaterial( {map: jumping, side: THREE.FrontSide } );
-	// let mat4 = new THREE.MeshBasicMaterial( {map: standing, side: THREE.FrontSide } );
-	// mat4.transparent = true;
-	// mat4.opacity = 1;
-	// leftFoot = new THREE.Mesh( geometry, mat1 );
-	// rightFoot = new THREE.Mesh( geometry, mat2 );
-	// // jumping = new THREE.Mesh( geometry, mat3 );
-	// standing = spr; //new THREE.Mesh( geometry, mat4 );
+	let geometry = new THREE.PlaneGeometry( 2, 8, 32 );
+	let armTex = new THREE.TextureLoader().load(require('../pics/roboArm.png'));
+	armTex.anisotropy = renderer.getMaxAnisotropy();
+	let mat1 = new THREE.MeshBasicMaterial( {map: armTex, side: THREE.FrontSide } );
+	mat1.transparent = true;
+	mat1.opacity = 1;
+	arm = new THREE.Mesh( geometry, mat1 );
+	scene.add(arm);
 
 	const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
 	directionalLight.position.set( 1, 1, 0 );
@@ -256,14 +278,14 @@ export const walk = (dir) => {
 	character.texture.position.y = character.mesh.position.y;
 }
 
-export const stand = () => {
+export const stand = (dir) => {
 	scene.remove(character.texture);
-	if (character.texture == leftFoot.spr){
+	if (dir == 'right') {
 		character.sheet = standingRight;
 		character.texture = character.sheet.spr;
 	}
-	else{
-		character.sheet = standingRight;
+	else if (dir == 'left') {
+		character.sheet = standingLeft;
 		character.texture = character.sheet.spr;
 	}
 	character.texture.position.x = character.mesh.position.x;
@@ -272,8 +294,8 @@ export const stand = () => {
 	updateSprite();
 }
 
-export const jump = () => {
-	stand();
+export const jump = (dir) => {
+	stand(dir);
 	// scene.remove(character.texture);
 	// character.texture = jumping;
 	// scene.add(character.texture);

@@ -102,7 +102,7 @@ function onDocumentKeyDown(event) {
             yVelocity = ySpeed;
             gravity = GRAVITATION;
             walking = false;
-            jump();
+            jump(standDir);
         }
         //
         keyEvents[0] = 1;
@@ -126,6 +126,10 @@ function onDocumentKeyDown(event) {
         xVelocity = xSpeed;
         //
 		keyEvents[3] = 1;
+    } else if (keyCode == 77) {
+        mute = !mute;
+        if (music.isPlaying) music.stop();
+        else music.play();
     }
 };
 
@@ -143,9 +147,10 @@ function onDocumentKeyUp(event) {
         keyEvents[2] = 0;
         if (keyEvents[3]){
         	xVelocity = xSpeed;
+            walk('right');
         } else{
             walking = false;
-            stand();
+            stand('left');
             xVelocity = 0;
         }
         //
@@ -155,9 +160,10 @@ function onDocumentKeyUp(event) {
         keyEvents[3] = 0;
         if (keyEvents[2]){
         	xVelocity = -xSpeed;
+            walk('left');
         } else {
             walking = false;
-            stand();
+            stand('right');
             xVelocity = 0;
         }
         //
@@ -521,12 +527,12 @@ const heliPartAnimation = () => {
 
 export let gameSpeed = 1;
 let frameCounter = 0;
-let fps = 1;
+let fps = 15;
 let curTime;
 let oldTime = Date.now();
 let interval = 1000/fps;
 let delta;
-
+let standDir = 'right';
 
 const update = () => {
     curTime = Date.now();
@@ -644,6 +650,8 @@ const update = () => {
             }
         }
     }
+    if (xVelocity > 0) standDir = 'right';
+    if (xVelocity < 0) standDir = 'left';
     //
     //Collisions come back as t,b,l,r or none
     let collisions = checkCollisions(objects, character.mesh);
@@ -656,8 +664,7 @@ const update = () => {
     //
     //Sprites
     character.texture.position.x = character.mesh.position.x;
-    character.texture.position.y = character.mesh.position.y
-     + (Math.abs(character.texture.scale.x/2));
+    character.texture.position.y = character.mesh.position.y;
     //
     for (var i = 0; i < collisions.length; i++) {
         if (collisions[i] == 'top'){
@@ -675,7 +682,8 @@ const update = () => {
                 } else if (xVelocity < 0) {
                     walk('left');
                 } else {
-                    stand();
+                    if (keyEvents[1])
+                        stand(standDir);
                 }
             }
             gravityThisTurn = 0;
@@ -720,9 +728,8 @@ const update = () => {
     //Enables falling when not in contact with and objects
     if (collisions.length == 0){
             gravityThisTurn = GRAVITATION;
-            clearInterval(walkInterval);
             walking = false;
-            jump();
+            jump(standDir);
             if (yVelocity > -1){
                 yVelocity += -gravityThisTurn;
             }
