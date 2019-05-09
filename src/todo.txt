@@ -1,0 +1,16 @@
+To Do: 
+
+
+
+ 
+gun drop sprites
+
+fix interval bullet bug
+
+reload time indicator
+
+fix arm transparency
+
+fix background
+
+fix slow mo heli crash sound

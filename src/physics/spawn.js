@@ -1,20 +1,41 @@
-import { camera, renderer, scene, init, character, objects, heliFlying, updateSprite } from "./Initialize.js";
-import { heliCount, gameSpeed } from "../app.js";
+import { camera, renderer, scene, init, character, objects, heliFlying, 
+	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getExplosion, getMaterial } from "./Initialize.js";
+import { heliCount, gameSpeed, gameStatus, playSound } from "../app.js";
 import * as THREE from 'three';
 
 export let heli;
+let mute = false;
+let crash = require('../sounds/crash.wav');
+let hover = require('../sounds/hover.wav');
+let fadeIn = require('../sounds/fadeIn.wav');
+let fadeOut = require('../sounds/fadeOut.wav');
+
+let hoverSound;
+
+document.addEventListener("keydown", onDocumentKeyDown, false);
+function onDocumentKeyDown(event) {
+    let keyCode = event.which;
+	if (keyCode == 77) {
+        mute = !mute;
+        if (hoverSound.isPlaying) {
+            hoverSound.pause();
+        }
+        else hoverSound.play();
+    }
+};
 
 export const spawn = () => {
-	// let image = new THREE.TextureLoader().load(require('../pics/heli4.png'));
+	hoverSound = playSound(hover, true);
 	let geometry = new THREE.PlaneGeometry( 30, 10, 32 );
 	let material = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.FrontSide} );
-	// let material = new THREE.MeshBasicMaterial( {map: image, side: THREE.FrontSide} );
 	heli = new THREE.Mesh( geometry, material );
 	material.transparent = true;
 	material.opacity = 0;
-	scene.add( heli );
-	scene.add(heliFlying.spr);
 	heli.position.y = 80;
+	scene.add( heli );
+	heliFlying.spr.position.x = heli.position.x;
+	heliFlying.spr.position.y = heli.position.y;
+	scene.add(heliFlying.spr);
 }
 
 function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
@@ -94,7 +115,18 @@ let oldTime = Date.now();
 let interval = 1000/fps;
 let delta;
 
+export let volume;
+
 export const move = () => {
+	//Chopper volume
+	let tmpVec = new THREE.Vector3();
+	tmpVec.copy(character.mesh.position);
+	let distance = tmpVec.sub(heli.position).length();
+	volume = (1/(distance * distance)) * 2500;
+	if (volume > .5) volume = .5;
+	hoverSound.setVolume(volume);
+	//
+
 	curTime = Date.now();
     delta = curTime - oldTime;
     if (delta > interval){
@@ -163,7 +195,7 @@ export const move = () => {
 
 export const getQueueToFly = () => {
 	if (!flyNormal)
-		if (Math.abs(heli.position.x) >= character.mesh.position.x + 200){
+		if (Math.abs(heli.position.x) >= character.mesh.position.x + 190){
 			flyOn();
 		}
 }
@@ -171,6 +203,9 @@ export const getQueueToFly = () => {
 let flyOffDirection;
 
 export const flyOff = () => {
+	// hoverSound.pause();
+	// if (!mute)
+	// 	playSound(fadeOut, false).onEnded(playSound(fadeIn, false).onEnded(hoverSound.play()));
 	flyNormal = false;
 	if (Math.random() < .5){
 		flyOffDirection = 'left';
@@ -178,10 +213,11 @@ export const flyOff = () => {
 }
 
 export const flyOn = () => {
+	// playSound(fadeIn).onEnded(hoverSound.play());
 	if (flyOffDirection == 'left'){
-		heli.position.x = character.mesh.position.x + 100;
+		heli.position.x = character.mesh.position.x + 200;
 	} else {
-		heli.position.x = character.mesh.position.x - 100;
+		heli.position.x = character.mesh.position.x - 200;
 	}
 	flyNormal = true;
 }
@@ -199,29 +235,47 @@ export const dodge = () => {
 }
 
 export let helipart1 = [];
-export let helipart2 = [];
+export let crashedHelis = [];
+export let explosions = [];
+// export let helipart2 = [];
 export let heliPartVelocityY = [];
 export let heliPartVelocityX = [];
 export let pickUps = [];
 
 export const blowUp = () => {
-	let geometry = new THREE.PlaneGeometry( 15, 10, 32 );
+	hoverSound.stop();
+	let crashSound = playSound(crash, false, 'slow');
+	// crashSound.setPlaybackRate(.1);
+	// console.log(crashSound.getPlaybackRate());
+	let geometry = new THREE.PlaneGeometry( 30, 10, 32 );
 	let material = new THREE.MeshBasicMaterial( {color: 0x0000ff, side: THREE.DoubleSide} );
+	material.transparent = true;
+	material.opacity = 0;
 	let part1 = new THREE.Mesh( geometry, material );
 	scene.add( part1 );
-	part1.position.x = heli.position.x + heli.geometry.parameters.width / 4;
+	part1.position.x = heli.position.x;
 	part1.position.y = heli.position.y;
 	helipart1.push(part1);
+	let crashed= getCrashedHeli();
+	let explosion = getExplosion(40, 40);
+	scene.add(crashed.spr);
+	scene.add(explosion.spr);
+	crashedHelis.push(crashed);
+	explosions.push(explosion);
+	explosion.spr.position.x = heli.position.x + 4;
+	explosion.spr.position.y = heli.position.y;
+	scene.remove(heli);
+	scene.remove(heliFlying.spr);
 	heliPartVelocityX.push(1);
-	heliPartVelocityY.push(1);
+	heliPartVelocityY.push(.0005);
 	
-	geometry = new THREE.PlaneGeometry( 15, 10, 32 );
-	material = new THREE.MeshBasicMaterial( {color: 0x0000ff, side: THREE.DoubleSide} );
-	let part2 = new THREE.Mesh( geometry, material );
-	scene.add( part2 );
-	part2.position.x = heli.position.x - heli.geometry.parameters.width / 4;
-	part2.position.y = heli.position.y;
-	helipart2.push(part2);
+	// geometry = new THREE.PlaneGeometry( 15, 10, 32 );
+	// material = new THREE.MeshBasicMaterial( {color: 0x0000ff, side: THREE.DoubleSide} );
+	// let part2 = new THREE.Mesh( geometry, material );
+	// scene.add( part2 );
+	// part2.position.x = heli.position.x - heli.geometry.parameters.width / 4;
+	// part2.position.y = heli.position.y;
+	// helipart2.push(part2);
 
 	if (heliCount % 3 == 0){
 		let dropInfo = getDropInfo();
@@ -234,10 +288,8 @@ export const blowUp = () => {
 		dropInfo.mesh = drop;
 		pickUps.push(dropInfo);
 	}
-
-	scene.remove(heli);
-	scene.remove(heliFlying);
-	setTimeout(spawn, 1000);
+	if (gameStatus == 'play')
+		setTimeout(spawn, 2000);
 	// spawn();
 }
 
@@ -249,6 +301,29 @@ const getDropInfo = () => {
 		dropInfo = shotgun;
 	}
 	return dropInfo;
+}
+
+let bulletMat = getMaterial(new THREE.TextureLoader().load(require('../pics/bullet.png')));
+let bullet2Mat = getMaterial(new THREE.TextureLoader().load(require('../pics/bullet2.png')));
+
+export const getBulletMesh = (color, s) => {
+	let size = 1.6;
+	let mesh;
+	if (color == 'rpg'){
+		let geometry = new THREE.PlaneGeometry(3.5, 3.5, 32);
+		mesh = new THREE.Mesh(geometry, rocketTex);
+		mesh.transparent = true;
+		mesh.opacity = 1;
+		mesh.position.z = .1;
+	} else if (color == 'heli') {
+		mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size, 32), bullet2Mat);
+		mesh.position.z = .1;
+	} else {
+		mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size, 32), bulletMat);
+		mesh.position.z = .1;
+	}
+	mesh.position.z = 1;
+	return mesh;
 }
 
 export let shotgun = {
@@ -264,7 +339,8 @@ export let shotgun = {
 	reloadTime: 500,
 	shotSound: null,
 	hitSound: null,
-	pickupSound: null
+	pickupSound: null,
+	getBullet: function() {return getBulletMesh('0xff0000', 1.1);}
 }
 
 export let rpg = {
@@ -280,7 +356,8 @@ export let rpg = {
 	reloadTime: 2000,
 	shotSound: null,
 	hitSound: null,
-	pickupSound: null
+	pickupSound: null,
+	getBullet: function(){return getBulletMesh('rpg', 1.6);}
 }
 
 export let akimboMac10s = {
@@ -296,5 +373,6 @@ export let akimboMac10s = {
 	reloadTime: 150,
 	shotSound: null,
 	hitSound: null,
-	pickupSound: null
+	pickupSound: null,
+	getBullet: function(){return getBulletMesh('0x0000ff',1.1);}
 }
