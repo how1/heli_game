@@ -17,10 +17,10 @@ function onDocumentKeyDown(event) {
     let keyCode = event.which;
 	if (keyCode == 77) {
         mute = !mute;
-        if (hoverSound.isPlaying) {
-            hoverSound.pause();
-        }
-        else hoverSound.play();
+        if (gameStatus == 'play')
+	        if (hoverSound.isPlaying) {
+	            hoverSound.pause();
+	        } else hoverSound.play();
     }
 };
 
@@ -337,7 +337,7 @@ export let shotgun = {
 	damage: 1,
 	velocity: 0,
 	mesh: null,
-	reloadTime: 500,
+	reloadTime: 1700,
 	shotSound: null,
 	hitSound: null,
 	pickupSound: null,
@@ -354,7 +354,7 @@ export let rpg = {
 	damage: 7,
 	velocity: 0,
 	mesh: null,
-	reloadTime: 2000,
+	reloadTime: 7000,
 	shotSound: null,
 	hitSound: null,
 	pickupSound: null,
@@ -371,7 +371,7 @@ export let akimboMac10s = {
 	damage: 1,
 	velocity: 0,
 	mesh: null,
-	reloadTime: 150,
+	reloadTime: 550,
 	shotSound: null,
 	hitSound: null,
 	pickupSound: null,

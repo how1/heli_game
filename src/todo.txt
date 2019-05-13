@@ -4,13 +4,9 @@ gun drop sprites
 
 make drops random intervals
 
-fix interval bullet bug
-
 reload time indicator
 
 allow bullets to fly during gameover screen
-
-add instructions and main menu
 
 add gun
 
@@ -25,5 +21,3 @@ make drop at 3rd heli rather than 1st after debugging
 add neon signs
 
 add passing cars from demo?
-
-take healthbar and hud info off main menu screen

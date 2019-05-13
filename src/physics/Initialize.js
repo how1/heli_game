@@ -406,10 +406,15 @@ export const credits = () => {
 	scene.add(tintMesh);
 	tintMesh.position.z = 4;
 	//
-	let creditsGeom = new THREE.PlaneGeometry(40,40,32);
+	let creditsGeom = new THREE.PlaneGeometry(60,60,32);
 	let creditsTex = getTexture(require('../pics/credits.png'));
 	let creditsMat = getMaterial(creditsTex);
-	
+	let credits = new THREE.Mesh(creditsGeom, creditsMat);
+	scene.add(credits);
+
+	backButton = new THREE.Mesh(buttonGeom, getMaterial(getTexture(require('../pics/backButtonUp.png'))));
+	backButton.position.y = -36;
+	scene.add(backButton);
 
 }
 

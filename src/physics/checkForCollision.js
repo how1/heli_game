@@ -119,6 +119,7 @@ export const checkBulletCollision = (a, b) => {
 }
 
 export const checkMenuCollision = (a, b) => {
+	if (!b) return false;
 	let aP = a;
 	let bP = b.position;
 	let aWidth = 0;
