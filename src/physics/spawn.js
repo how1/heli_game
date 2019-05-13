@@ -31,7 +31,7 @@ export const spawn = () => {
 	heli = new THREE.Mesh( geometry, material );
 	material.transparent = true;
 	material.opacity = 0;
-	heli.position.y = 80;
+	heli.position.y = 150;
 	scene.add( heli );
 	heliFlying.spr.position.x = heli.position.x;
 	heliFlying.spr.position.y = heli.position.y;
@@ -195,7 +195,7 @@ export const move = () => {
 
 export const getQueueToFly = () => {
 	if (!flyNormal)
-		if (Math.abs(heli.position.x) >= character.mesh.position.x + 190){
+		if (Math.abs(heli.position.x) >= character.mesh.position.x + 95){
 			flyOn();
 		}
 }
@@ -215,9 +215,9 @@ export const flyOff = () => {
 export const flyOn = () => {
 	// playSound(fadeIn).onEnded(hoverSound.play());
 	if (flyOffDirection == 'left'){
-		heli.position.x = character.mesh.position.x + 200;
+		heli.position.x = character.mesh.position.x + 100;
 	} else {
-		heli.position.x = character.mesh.position.x - 200;
+		heli.position.x = character.mesh.position.x - 100;
 	}
 	flyNormal = true;
 }
@@ -242,11 +242,13 @@ export let heliPartVelocityY = [];
 export let heliPartVelocityX = [];
 export let pickUps = [];
 
+export let slowSound;
+
 export const blowUp = () => {
 	hoverSound.stop();
-	let crashSound = playSound(crash, false, 'slow');
-	// crashSound.setPlaybackRate(.1);
-	// console.log(crashSound.getPlaybackRate());
+	if (gameStatus == 'gameOver')
+		slowSound = playSound(crash, false, 'slow');
+	else playSound(crash, false);
 	let geometry = new THREE.PlaneGeometry( 30, 10, 32 );
 	let material = new THREE.MeshBasicMaterial( {color: 0x0000ff, side: THREE.DoubleSide} );
 	material.transparent = true;
@@ -289,8 +291,7 @@ export const blowUp = () => {
 		pickUps.push(dropInfo);
 	}
 	if (gameStatus == 'play')
-		setTimeout(spawn, 2000);
-	// spawn();
+		spawn();
 }
 
 const getDropInfo = () => {

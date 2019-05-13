@@ -1,16 +1,29 @@
 To Do: 
 
-
-
- 
 gun drop sprites
+
+make drops random intervals
 
 fix interval bullet bug
 
 reload time indicator
 
-fix arm transparency
+allow bullets to fly during gameover screen
 
-fix background
+add instructions and main menu
 
-fix slow mo heli crash sound
+add gun
+
+nicer health bar, heli count, gun indicator
+
+add helathpack
+
+things will look good once everything is consistent
+
+make drop at 3rd heli rather than 1st after debugging
+
+add neon signs
+
+add passing cars from demo?
+
+take healthbar and hud info off main menu screen

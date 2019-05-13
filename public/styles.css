@@ -49,6 +49,7 @@ hr {
   height: 0;
   /* 1 */
   overflow: visible;
+  /*margin: auto;*/
   /* 2 */ }
 
 /**
@@ -312,7 +313,7 @@ html {
 body {
   font-family: Helvetica, Arial, sans-serif;
   font-size: 1.6rem;
-  margin: 0px; }
+  text-align: : center; }
 
 button {
   cursor: pointer; }

@@ -3,15 +3,16 @@ import * as THREE from 'three';
 import { bodies, camera, renderer, scene, init, character, objects, 
     moveCharacter, walk, stand, jump, updateSprite, 
     arm, armTex, armTex2, armTex3, armTexLeft, armTex2Left, armTex3Left, leftFoot, rightFoot, 
-    rocket, rocketTex, rocketTex2, changeJumpingDir, getExplosion, getBulletHit } from "./physics/Initialize.js";
-import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision } from "./physics/checkForCollision.js";
+    rocket, rocketTex, rocketTex2, changeJumpingDir, getExplosion, getBulletHit, updateBackground,
+    startGameButton, instructionsButton, creditsButton, mainMenu, buttonHover, instructions, backButton } from "./physics/Initialize.js";
+import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision, checkMenuCollision } from "./physics/checkForCollision.js";
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
-    shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume } from "./physics/spawn.js";
+    shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume, slowSound } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 
-init();
+mainMenu();
 
 let ySpeed = 1;
 let xSpeed = .3;
@@ -64,7 +65,8 @@ let mouse = {
     clientY: 0
 };
 
-let song = require('./sounds/clubbedtodeath.wav');
+let song = require('./sounds/gameplayMusic.wav');
+let menuSong = require('./sounds/menuMusic.wav');
 
 let heliShooting;
 let heliFlyoff;
@@ -74,6 +76,13 @@ let dodger;
 let music;
 
 const start = () => {
+    scene.remove.apply(scene, scene.children);
+    init();
+    menuMusic.stop();
+    // slowSound.stop();
+    character.mesh.position.y = 120;
+    character.mesh.position.x = 0;
+    playSound(explosion);
     spawn();
     gameStatus = 'play'
     rpg.mesh = rocket;
@@ -84,7 +93,8 @@ const start = () => {
     playerHealth = PLAYERHEALTHMAX;
     moveCharacter(0, character.mesh.position.y);
     if (!mute){
-        //music = playSound(song);
+        music = playSound(song);
+        console.log(music);
     }
     heliShooting = setInterval(shootHeliBullet, 500);
     heliFlyoff = setInterval(flyOff, 20000);
@@ -97,7 +107,8 @@ const start = () => {
 gameStatus = 'ready';
 
 let walkInterval;
-let walking = false;
+let walkingLeft = false;
+let walkingRight = false;
 let jumping = false;
 let walkTime = 500;
 
@@ -109,7 +120,8 @@ function onDocumentKeyDown(event) {
     	if (Math.abs(yVelocity) == 0){
             yVelocity = ySpeed;
             gravity = GRAVITATION;
-            walking = false;
+            walkingRight = false;
+            walkingLeft = false;
             if (!jumping){
                 jumping = true;
                 jump(standDir);
@@ -120,8 +132,10 @@ function onDocumentKeyDown(event) {
     } else if (keyCode == 40) { //down
         //No ducking yet
     } else if (keyCode == 37) { //left
-        if (!walking && yVelocity == 0){
-            walking = true;
+        if (!walkingLeft && yVelocity == 0){
+            walkingLeft = true;
+            walkingRight = false;
+            jumping = false;
             walk('left');
         } else if (jumping){
             changeJumpingDir('left');
@@ -131,8 +145,10 @@ function onDocumentKeyDown(event) {
         //
         keyEvents[2] = 1;
     } else if (keyCode == 39) { //right
-        if (!walking && yVelocity == 0){
-            walking = true;
+        if (!walkingRight && yVelocity == 0){
+            walkingRight = true;
+            walkingLeft = false;
+            jumping = false;
             walk('right');
         } else if (jumping){
             changeJumpingDir('right');
@@ -165,12 +181,15 @@ function onDocumentKeyUp(event) {
         	xVelocity = xSpeed;
             if (yVelocity == 0){
                 jumping = false;
+                walkingRight = true;
+                walkingLeft = false;
                 walk('right');
             } else if (jumping) {
                 changeJumpingDir('right');
             }
         } else{
-            walking = false;
+            walkingRight = false;
+            walkingLeft = false;
             if (yVelocity == 0){
                 jumping = false;
                 stand('left');
@@ -185,18 +204,20 @@ function onDocumentKeyUp(event) {
         //
     } else if (keyCode == 39) {
         //See above
-
         keyEvents[3] = 0;
         if (keyEvents[2]){
         	xVelocity = -xSpeed;
             if (yVelocity == 0){
                 jumping = false;
+                walkingRight = false;
+                walkingLeft = true;
                 walk('left');
             } else if (jumping) {
                 changeJumpingDir('left');
             }
         } else {
-            walking = false;
+            walkingRight = false;
+            walkingLeft = false;
             if (yVelocity == 0){
                 jumping = false;
                 stand('right');
@@ -213,9 +234,55 @@ function onDocumentKeyUp(event) {
     }
 };
 
+let hovering = false;
+let hovering2 = false;
+let hovering3 = false;
+let hovering4 = false;
 
 document.addEventListener("mousemove", function(event){
     getMouseCoords(event);
+    if (gameStatus == 'ready'){
+        getMousePos();
+        if (onMainMenu) {
+            if (checkMenuCollision(pos, startGameButton)){
+                if (!hovering)
+                    playSound(tick);
+                hovering = true;
+                buttonHover('startGameButton', 'down');
+            } else {
+                buttonHover('startGameButton', 'up');
+                hovering = false;
+            }
+            if (checkMenuCollision(pos, instructionsButton)){
+                if (!hovering2)
+                    playSound(tick);
+                hovering2 = true;
+                buttonHover('instructionsButton', 'down');
+            } else {
+                buttonHover('instructionsButton', 'up');
+                hovering2 = false;
+            }
+            if (checkMenuCollision(pos, creditsButton)){
+                if (!hovering3)
+                    playSound(tick);
+                hovering3 = true;
+                buttonHover('creditsButton', 'down');
+            } else {
+                buttonHover('creditsButton', 'up');
+                hovering3 = false;
+            }
+        }
+        if (instructionsMenu)
+            if (checkMenuCollision(pos, backButton)){
+                if (!hovering4)
+                    playSound(tick);
+                hovering4 = true;
+                buttonHover('backButton', 'down');
+            } else {
+                buttonHover('backButton', 'up');
+                hovering4 = false;
+            }
+    }
 });
 
 const getMouseCoords = (event) => {
@@ -226,6 +293,8 @@ const getMouseCoords = (event) => {
 let shoot;
 let reloaded = true;
 let mouseDown = false;
+let instructionsMenu = false;
+let onMainMenu = true;
 
 document.addEventListener("mousedown", function(event){
     mouseDown = true;
@@ -234,7 +303,7 @@ document.addEventListener("mousedown", function(event){
             shootBullet();
             shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
         }
-    } else {
+    } else if (gameStatus == 'gameOver') {
         text2.style.display = 'none';
         start();
         gameStatus = 'play';
@@ -246,6 +315,23 @@ document.addEventListener("mousedown", function(event){
         healthBar.position.y = 30;
         healthBarPosition = healthBar.position.y;
 
+    } else if (gameStatus == 'ready'){
+        console.log('ready');
+        console.log(pos);
+        if (checkMenuCollision(pos, startGameButton)){
+            onMainMenu = false;
+            start();
+        } else if (checkMenuCollision(pos, instructionsButton)){
+            onMainMenu = false;
+            instructionsMenu = true;
+            instructions();
+        } else if (checkMenuCollision(pos, creditsButton)){
+            console.log('credits');
+        } else if (checkMenuCollision(pos, backButton)){
+            instructionsMenu = false;
+            onMainMenu = true;
+            mainMenu();
+        }
     }
 });
 
@@ -259,15 +345,7 @@ const shootHeliBullet = () => {
         let square = getBulletMesh('heli', 1);
         scene.add( square );
         if (!mute){
-            //Chopper volume
-            let tmpVec = new THREE.Vector3();
-            tmpVec.copy(character.mesh.position);
-            let distance = tmpVec.sub(heli.position).length();
-            let volume = (1/(distance * distance)) * 2500;
-            if (volume > .5) volume = .5;
-            hoverSound.setVolume(volume);
-            //
-            playSound(gunshot);
+            playSound(gunshot, false, 1, volume);
         }
         square.position.x = heli.position.x;
         square.position.y = heli.position.y;
@@ -423,6 +501,7 @@ let ouch = require('./sounds/ouch.wav');
 export let hover = require('./sounds/hover.wav');
 export let fadeIn = require('./sounds/fadeIn.wav');
 export let fadeOut = require('./sounds/fadeOut.wav');
+let tick = require('./sounds/tick.wav');
 
 standardGun.shotSound = gunshot2;
 standardGun.hitSound = metalHit;
@@ -462,6 +541,8 @@ export const playSound = (src, loop, speed, volume) => {
 }
 
 // playSound(explosion);
+let menuMusic = playSound(menuSong, true);
+
 
 function sound (src) {
     this.sound = document.createElement("audio");
@@ -483,8 +564,8 @@ const gameOver = () => {
     text2.style.width = 100;
     text2.style.height = 100;
     text2.style.backgroundColor = "blue";
-    if (gameStatus == 'ready') text2.innerHTML = 'Click to Start';
-    else text2.innerHTML = "GAME OVER";
+    // if (gameStatus == 'ready') text2.innerHTML = 'Click to Start';
+    // else text2.innerHTML = "GAME OVER";
     text2.style.top = 200 + 'px';
     text2.style.left = window.innerWidth/2 + 'px';
     document.body.appendChild(text2);
@@ -560,8 +641,8 @@ scene.add( healthBar );
 healthBar.position.y = 30;
 healthBarBackground.position.y = 30;
 healthBarPosition = healthBar.position.y;
-healthBar.position.x = 70;
-healthBarBackground.position.x = 70;
+healthBar.position.x = 30;
+healthBarBackground.position.x = 30;
 
 export const displayHealthBar = () => {
     if (healthBar){
@@ -580,9 +661,9 @@ export const displayHealthBar = () => {
     }
     healthBarPosition -= .5;
     healthBar.position.y = healthBarPosition;
-    healthBar.position.x = character.mesh.position.x + 70;
+    healthBar.position.x = character.mesh.position.x + 30;
     healthBarBackground.position.y = 30;
-    healthBarBackground.position.x = character.mesh.position.x + 70;
+    healthBarBackground.position.x = character.mesh.position.x + 30;
 
 }
 
@@ -686,6 +767,8 @@ const update = () => {
             // }
         }
     }
+    //Background
+    updateBackground();
     //
     //Mouse vector info
     getMousePos();
@@ -723,8 +806,8 @@ const update = () => {
     //
     //
     //Healthbar
-    healthBarBackground.position.x = character.mesh.position.x + 70;  
-    healthBar.position.x = character.mesh.position.x + 70;
+    healthBarBackground.position.x = character.mesh.position.x + 30;  
+    healthBar.position.x = character.mesh.position.x + 30;
     //
 
     camera.position.x = character.mesh.position.x;
@@ -801,6 +884,7 @@ const update = () => {
                 if (!mute && bullets[i].sound != explosion);
                     playSound(explosion);
                 blowUp();
+                bullets = [];
                 heliHealth = HELIHEALTHMAX;
                 heliCount++;
                 displayScore();
@@ -811,7 +895,7 @@ const update = () => {
     }
 
     if (xVelocity > 0) standDir = 'right';
-    if (xVelocity < 0) standDir = 'left';
+    else if (xVelocity < 0) standDir = 'left';
 
     pointArm();
 
@@ -829,14 +913,28 @@ const update = () => {
     character.texture.position.x = character.mesh.position.x;
     character.texture.position.y = character.mesh.position.y;
     //
+    //Character movement collisions
+    if (character.mesh.position.y < -50){
+        playerHealth = 0;
+        gameStatus = "gameOver";
+        gameOver();
+        if (!mute)
+            playSound(explosion);
+        updateWeaponInfo();
+        equippedWeapon = standardGun;
+        music.stop();
+        gameSpeed = .01;
+        character.mesh.position.y = 100;
+        character.mesh.position.x = 0;
+    }
     for (var i = 0; i < collisions.length; i++) {
         if (collisions[i] == 'top'){
             //Enables continuous jumping
             if (keyEvents[0]){
                 yVelocity = ySpeed;
-                // console.log('j');
                 jumping = true;
-                jump(standDir);
+                if (!jumping)
+                    jump(standDir);
             }
             //
 
@@ -845,9 +943,13 @@ const update = () => {
                 yVelocity = 0;
                 if (xVelocity > 0){
                     jumping = false;
+                    walkingRight = true;
+                    walkingLeft = false;
                     walk('right');
                 } else if (xVelocity < 0) {
                     jumping = false;
+                    walkingLeft = true;
+                    walkingRight = false;
                     walk('left');
                 } else {
                     if (keyEvents[1] && !jumping){
@@ -901,9 +1003,11 @@ const update = () => {
     //Enables falling when not in contact with and objects
     if (collisions.length == 0){
             gravityThisTurn = GRAVITATION;
-            walking = false;
-            jumping = true;
-            // jump(standDir);
+            walkingRight = false;
+            walkingLeft = false;
+            // jumping = true;
+            // if (!jumping)
+            //     jump(standDir);
             if (yVelocity > -1){
                 yVelocity += -gravityThisTurn;
             }
@@ -920,7 +1024,7 @@ const render = () => {
 };
 
 const GameLoop = () => {
-    requestAnimationFrame( GameLoop );
+    window.requestAnimationFrame( GameLoop );
     if (gameStatus == 'play'){
     	update();
     }

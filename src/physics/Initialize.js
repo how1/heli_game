@@ -9,8 +9,9 @@ import { playerHealth, getMousePos } from "../app.js";
 export let scene = new THREE.Scene();
 export let renderer = new THREE.WebGLRenderer();
 
-let width = window.innerWidth - 10;
-let height = window.innerHeight - 10;
+let height = window.innerHeight - 5;
+let width = height * 1.5;
+// let width = window.innerWidth;
 renderer.setSize( width, height );
 document.body.appendChild( renderer.domElement );
 
@@ -19,19 +20,21 @@ scene.add( camera );
 
 camera.position.z = 100;
 
-// window.addEventListener('resize', () => {
-// 	width = window.innerWidth - 10;
-// 	height = window.innerHeight - 10;
-// 	renderer.setSize(width, height);
-// 	camera.aspect = width/height;
-// 	camera.updateProjectionMatrix();
-// });
+window.addEventListener('resize', () => {
+	height = window.innerHeight - 5;
+	width = height * 1.5;
+	renderer.setSize(width, height);
+	camera.aspect = width/height;
+	camera.updateProjectionMatrix();
+});
 
 export let objects = [];
 
 export let character;
 export let arm;
 export let rocket;
+
+let maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
 
 export const resetJumping = () => {
 	jumpingNewVal = 0;
@@ -139,9 +142,8 @@ let bulletHitArray = [ 0, .18, .38, .58, .78];
 
 
 export const updateBackground = () => {
-	let pos = character.mesh.position;
-
-	farBackground.position.x = character.mesh.position;
+	// let pos = character.mesh.position;
+	farBackground.position.x = character.mesh.position.x;
 }
 
 export const updateSprite = (sprite, crashed) => {
@@ -243,7 +245,7 @@ export const updateSprite = (sprite, crashed) => {
 
 //For arm sprite
 export const getMaterial = (image) => {
-	image.anisotropy = renderer.getMaxAnisotropy();
+	image.anisotropy = maxAnisotropy;
 	let mat = new THREE.MeshBasicMaterial({map: image, side: THREE.FrontSide});
 	mat.transparent = true;
 	mat.opacity = 1;
@@ -251,7 +253,7 @@ export const getMaterial = (image) => {
 }
 
 //Background
-let foreground;
+// let foreground;
 let mdForeground;
 let background;
 let farBackground;
@@ -268,19 +270,178 @@ export const getBulletHit = (scale) => {
 	return new spriteSheet(bulletHitSpr, 0, 1, 5, scale, scale, 'bulletHit');
 }
 
-const getBackgroundMesh = (tex, zPos, yPos) => {
-	tex.anisotropy = renderer.getMaxAnisotropy();
+const getBackgroundMesh = (tex, zPos, yPos, geom, repeat) => {
+	tex.anisotropy = maxAnisotropy;
 	tex.wrapS = THREE.RepeatWrapping;
-	tex.repeat.set(10,1);
+	tex.repeat.set( repeat , 1 );
 	let mat = new THREE.MeshBasicMaterial({map: tex, side: THREE.FrontSide });
 	mat.transparent = true;
 	mat.opacity = 1;
-	let bgGeom = new THREE.PlaneGeometry(192* 10, 108, 32);
-	let mesh = new THREE.Mesh(bgGeom, mat);
+	// let bgGeom = new THREE.PlaneGeometry(192* 10, 108, 32);
+	let mesh = new THREE.Mesh(geom, mat);
 	mesh.position.z = zPos;
 	mesh.position.y = yPos;
 	scene.add(mesh);
 	return mesh;
+}
+
+const getTexture = (path) => {
+	let tex = new THREE.TextureLoader().load(path.toString());
+	tex.anisotropy = maxAnisotropy;
+	return tex;
+}
+
+export let instructionsButton;
+export let startGameButton;
+export let creditsButton;
+
+let buttonGeom = new THREE.PlaneGeometry(50, 10);
+let titleGeom = new THREE.PlaneGeometry(50, 50);
+let instructionsUpTex = getTexture(require('../pics/instructionsButtonUp.png'));
+let instructionsDownTex = getTexture(require('../pics/instructionsButtonDown.png'));
+let startGameUpTex = getTexture(require('../pics/startGameButtonUp.png'));
+let startGameDownTex = getTexture(require('../pics/startGameButtonDown.png'));
+let creditsUpTex = getTexture(require('../pics/creditsButtonUp.png'));
+let creditsDownTex = getTexture(require('../pics/creditsButtonDown.png'));
+let titleTex = getTexture(require('../pics/title.png'));
+
+export const mainMenu = () => {
+	scene.remove.apply(scene, scene.children);
+	//Background
+	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
+	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
+	let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
+	mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
+	background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
+	farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
+	let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
+	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
+	tintMat.transparent = true;
+	tintMat.opacity = .15;
+	let tintMesh = new THREE.Mesh(tintGeom, tintMat);
+	scene.add(tintMesh);
+	tintMesh.position.z = 4;
+
+	// let test = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.FrontSide});
+
+	instructionsButton = new THREE.Mesh(buttonGeom, getMaterial(instructionsUpTex));
+	startGameButton = new THREE.Mesh(buttonGeom, getMaterial(startGameUpTex));
+	creditsButton = new THREE.Mesh(buttonGeom, getMaterial(creditsUpTex));
+	let title = new THREE.Mesh(titleGeom, getMaterial(titleTex));
+	// instructionsButton = new THREE.Mesh(buttonGeom, test);
+	// startGameButton = new THREE.Mesh(buttonGeom, test);
+	// creditsButton = new THREE.Mesh(buttonGeom, test);
+
+	scene.add(instructionsButton);
+	scene.add(startGameButton);
+	scene.add(creditsButton);
+	scene.add(title);
+
+	title.position.x = -30;
+	title.position.z = 4;
+
+	startGameButton.position.y = 11;
+	creditsButton.position.y = -11;
+	startGameButton.position.x = 30;
+	creditsButton.position.x = 30;
+	instructionsButton.position.x = 30;
+	startGameButton.position.z = 3;
+	creditsButton.position.z = 3;
+	instructionsButton.position.z = 3;
+}
+
+let arrowKeysFile = require('../pics/arrowKeys.png');
+let arrowKeysImage;
+export let backButton;
+
+export const instructions = () => {
+	scene.remove.apply(scene, scene.children);
+
+	//Background
+	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
+	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
+	let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
+	mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
+	background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
+	farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
+	let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
+	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
+	tintMat.transparent = true;
+	tintMat.opacity = .15;
+	let tintMesh = new THREE.Mesh(tintGeom, tintMat);
+	scene.add(tintMesh);
+	tintMesh.position.z = 4;
+	//
+
+	let arrowKeysImageGeom = new THREE.PlaneGeometry( 60, 60, 32);
+	let arrowKeysImageTex = getTexture(arrowKeysFile);
+	let arrowKeysMat = getMaterial(arrowKeysImageTex);
+	let arrowKeysImage = new THREE.Mesh(arrowKeysImageGeom, arrowKeysMat);
+	console.log(arrowKeysImage);
+	scene.add(arrowKeysImage);
+	// arrowKeysImage.position.x = -20;
+
+	backButton = new THREE.Mesh(buttonGeom, getMaterial(getTexture(require('../pics/backButtonUp.png'))));
+	backButton.position.y = -36;
+	scene.add(backButton);
+}
+
+let backButtonUpTex = getTexture(require('../pics/backButtonUp.png'));
+let backButtonDownTex = getTexture(require('../pics/backButtonDown.png'));
+
+export const credits = () => {
+	scene.remove.apply(scene, scene.children);
+	//Background
+	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
+	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
+	let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
+	mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
+	background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
+	farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
+	let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
+	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
+	tintMat.transparent = true;
+	tintMat.opacity = .15;
+	let tintMesh = new THREE.Mesh(tintGeom, tintMat);
+	scene.add(tintMesh);
+	tintMesh.position.z = 4;
+	//
+	let creditsGeom = new THREE.PlaneGeometry(40,40,32);
+	let creditsTex = getTexture(require('../pics/credits.png'));
+	let creditsMat = getMaterial(creditsTex);
+	
+
+}
+
+export const buttonHover = (button, dir) => {
+	if (dir == 'up') {
+		if (button == 'startGameButton'){
+			startGameButton.material.map = startGameUpTex;
+			startGameButton.material.needsUpdate = true;
+		} else if (button == 'instructionsButton'){
+			instructionsButton.material.map = instructionsUpTex ;
+			instructionsButton.material.needsUpdate = true;
+		} else if (button == 'creditsButton'){
+			creditsButton.material.map = creditsUpTex ;
+			creditsButton.material.needsUpdate = true;
+		} else if (button == 'backButton'){
+			backButton.material.map = backButtonUpTex;
+			creditsButton.material.needsUpdate = true;
+		}
+	} else {
+		if (button == 'startGameButton'){
+			startGameButton.material.map = startGameDownTex;
+			startGameButton.material.needsUpdate = true;
+		} else if (button == 'instructionsButton'){
+			instructionsButton.material.map = instructionsDownTex;
+			instructionsButton.material.needsUpdate = true;
+		} else if (button == 'creditsButton'){
+			creditsButton.material.map = creditsDownTex;
+			creditsButton.material.needsUpdate = true;
+		} else if (button == 'backButton'){
+			backButton.material.map = backButtonDownTex;
+		}
+	}
 }
 
 export const init = () => {
@@ -290,45 +451,35 @@ export const init = () => {
 		sheet: null
 	}
 	//Background
-	let bgGeom = new THREE.PlaneGeometry(192* 10, 108, 32);
-	let foregroundTex = new THREE.TextureLoader().load(require('../pics/layers/foreground.png'));
-	let mdForegroundTex = new THREE.TextureLoader().load(require('../pics/layers/buildings.png'));
-	let backgroundTex = new THREE.TextureLoader().load(require('../pics/layers/far-buildings.png'));
-	let farBackgroundTex = new THREE.TextureLoader().load(require('../pics/layers/bg.png'));
-	foreground = getBackgroundMesh( foregroundTex, -20, -20 );
-	mdForeground = getBackgroundMesh( mdForegroundTex, -250, 20 );
-	background = getBackgroundMesh( backgroundTex, -370, 40 );
-	farBackground = getBackgroundMesh( farBackgroundTex, -400, 40 );
+	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
+	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
+	let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
+	mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
+	background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
+	farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
+	let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
+	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
+	tintMat.transparent = true;
+	tintMat.opacity = .15;
+	let tintMesh = new THREE.Mesh(tintGeom, tintMat);
+	scene.add(tintMesh);
+	tintMesh.position.z = 10;
+
+	// farBackground2 = getBackgroundMesh( getTexture( require('../pics/skyline-b')), -400.1, 40, false );
 	//
 
 	//Character sprites
-	let standingRightSpr = new THREE.TextureLoader().load(require('../pics/roboWalkingLarge.png'));
-	standingRightSpr.anisotropy = renderer.getMaxAnisotropy();
-	standingRight = new spriteSheet(standingRightSpr, 0, 1, 11, 10, 10);
-	let standingLeftSpr = new THREE.TextureLoader().load(require('../pics/roboWalkingLarge2.png'));
-	standingLeftSpr.anisotropy = renderer.getMaxAnisotropy();
-	standingLeft = new spriteSheet(standingLeftSpr, 0, 1, 11, 10, 10);
-	let rightFootSpr = new THREE.TextureLoader().load(require('../pics/roboWalkingLarge.png'));
-	rightFootSpr.anisotropy = renderer.getMaxAnisotropy();
-	rightFoot = new spriteSheet(rightFootSpr, 0, 1, 11, 10, 10);
-	let leftFootSpr = new THREE.TextureLoader().load(require('../pics/roboWalkingLarge2.png'));
-	leftFootSpr.anisotropy = renderer.getMaxAnisotropy();
-	leftFoot = new spriteSheet(leftFootSpr, 0, 1, 11, 10, 10);
-	let jumpingRightSpr = new THREE.TextureLoader().load(require('../pics/roboJumping.png'));
-	jumpingRightSpr.anisotropy = renderer.getMaxAnisotropy();
-	jumpingRight = new spriteSheet(jumpingRightSpr, 0,1,11,10,10);
-	let jumpingLeftSpr = new THREE.TextureLoader().load(require('../pics/roboJumping2.png'));
-	jumpingLeftSpr.anisotropy = renderer.getMaxAnisotropy();
-	jumpingLeft = new spriteSheet(jumpingLeftSpr, 0,1,11,10,10);
+	standingRight = new spriteSheet( getTexture(require('../pics/roboWalkingLarge.png')) , 0, 1, 11, 10, 10);
+	standingLeft = new spriteSheet( getTexture(require('../pics/roboWalkingLarge2.png')) , 0, 1, 11, 10, 10);
+	rightFoot = new spriteSheet( getTexture(require('../pics/roboWalkingLarge.png')) , 0, 1, 11, 10, 10);
+	leftFoot = new spriteSheet( getTexture(require('../pics/roboWalkingLarge2.png')) , 0, 1, 11, 10, 10);
+	jumpingRight = new spriteSheet( getTexture(require('../pics/roboJumping.png')) , 0,1,11,10,10);
+	jumpingLeft = new spriteSheet( getTexture(require('../pics/roboJumping2.png')) , 0,1,11,10,10);
 	//
 	
 	//Heli sprites
-	let heliFlyingSpr = new THREE.TextureLoader().load(require('../pics/heli5.png'));
-	heliFlyingSpr.anisotropy = renderer.getMaxAnisotropy();
-	heliFlying = new spriteSheet(heliFlyingSpr, 0, 1, 8, 40, 20);
-
-	crashedHeliSpr = new THREE.TextureLoader().load(require('../pics/crashedHeli.png'));
-	heliFlyingSpr.anisotropy = renderer.getMaxAnisotropy();
+	heliFlying = new spriteSheet( getTexture(require('../pics/heli5.png')) , 0, 1, 8, 40, 20);
+	crashedHeliSpr = getTexture( require('../pics/crashedHeli.png' ));
 	//
 
 	//Arms
@@ -355,30 +506,25 @@ export const init = () => {
 	}
 	materials[3].opacity = 1;
 	arm = new THREE.Mesh( new THREE.BoxGeometry( 1.5, 0, 5 ), materials );// 12px * 50px, 4.16:1
-	// arm = new THREE.Mesh( new THREE.BoxGeometry( 1.5, 0, 6.25 ), materials );// 12px * 50px, 4.16:1
 	arm.up = new THREE.Vector3(0,0,-1);
 	scene.add( arm );
-	console.log(arm);
 	//
 
 	//Rockets
 	rocketTex = getMaterial(new THREE.TextureLoader().load(require('../pics/rocketTex.png')));
-	rocketTex.anisotropy = renderer.getMaxAnisotropy();
+	rocketTex.anisotropy = maxAnisotropy;
 	rocketTex2 = getMaterial(new THREE.TextureLoader().load(require('../pics/rocketTex2.png')));
-	rocketTex2.anisotropy = renderer.getMaxAnisotropy();
+	rocketTex2.anisotropy = maxAnisotropy;
 	let geometry = new THREE.PlaneGeometry(4, 4, 32);
 	rocket = new THREE.Mesh(geometry, rocketTex);
-	// rocket.up = new THREE.Vector3(0,0,-1);
 	//
 
 	//Explosion
-	explosionSpr = new THREE.TextureLoader().load(require('../pics/explosion.png'));
-	explosionSpr.anisotropy = renderer.getMaxAnisotropy();
+	explosionSpr = getTexture( require('../pics/explosion.png' ));
 	//
 
 	//Bullet hit explosion
-	bulletHitSpr = new THREE.TextureLoader().load(require('../pics/bulletHit.png'));
-	bulletHitSpr.anisotropy = renderer.getMaxAnisotropy();
+	bulletHitSpr = getTexture( require('../pics/bulletHit.png' ));
 	//
 
 
@@ -390,7 +536,7 @@ export const init = () => {
 	scene.add(ambientLight);
 
 	//Character mesh
-	character.sheet = standingRight;
+	character.sheet = jumpingRight;
 	character.texture = character.sheet.spr;
 	scene.add( character.texture );
 	let geometry2 = new THREE.PlaneGeometry( 3.5, 7, 32);
@@ -408,11 +554,27 @@ export const init = () => {
 
 	for (var i = 0; i < sceneryX.length; i++) {
 		let geometry = new THREE.PlaneGeometry( 50, 20, 32 );
-		let floorTex = new THREE.TextureLoader().load(require('../pics/floor.png'));
-		floorTex.wrapS = THREE.RepeatWrapping;
-		floorTex.wrapT = THREE.RepeatWrapping;
-		floorTex.repeat.set( 4, 2 );
-		let material = new THREE.MeshBasicMaterial( {map: floorTex, side: THREE.DoubleSide} );
+		let floorTex;
+		if (Math.random() < .5){
+			floorTex = new THREE.TextureLoader().load(require('../pics/buildings/building1.png'));
+		} else {
+			floorTex = new THREE.TextureLoader().load(require('../pics/buildings/building2.png'));
+		}
+		if (Math.random() < .5){
+			let railingTex = new THREE.TextureLoader().load(require('../pics/rail.png'));
+			let material = new THREE.MeshBasicMaterial( {map: railingTex, side: THREE.FrontSide} );
+			material.transparent = true;
+			material.opacity = 1;
+			let rail = new THREE.Mesh( geometry, material );
+			scene.add( rail );
+			rail.position.x = sceneryX[i];
+			rail.position.y = sceneryY[i] + geometry.parameters.height;
+			rail.position.z = -.1;
+			// objects.push(rail);
+		}
+		let material = new THREE.MeshBasicMaterial( {map: floorTex, side: THREE.FrontSide} );
+		material.transparent = true;
+		material.opacity = 1;
 		let ground = new THREE.Mesh( geometry, material );
 		scene.add( ground );
 		ground.position.x = sceneryX[i];
@@ -432,7 +594,8 @@ export const moveCharacter = (x, y) => {
 }
 
 export const walk = (dir) => {
-	footsteps.play();
+	if (footsteps.isPlaying == false)
+		footsteps.play();
 	if (dir == 'left'){
 		scene.remove(character.texture);
 		character.sheet = leftFoot;
