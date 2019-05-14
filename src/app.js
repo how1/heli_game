@@ -4,11 +4,15 @@ import { bodies, camera, renderer, scene, init, character, objects,
     moveCharacter, walk, stand, jump, updateSprite, 
     arm, armTex, armTex2, armTex3, armTexLeft, armTex2Left, armTex3Left, leftFoot, rightFoot, 
     rocket, rocketTex, rocketTex2, changeJumpingDir, getExplosion, getBulletHit, updateBackground,
-    startGameButton, instructionsButton, creditsButton, mainMenu, buttonHover, instructions, backButton, credits } from "./physics/Initialize.js";
-import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision, checkMenuCollision } from "./physics/checkForCollision.js";
+    startGameButton, instructionsButton, creditsButton, mainMenu, buttonHover, instructions, 
+    backButton, credits, resumeButton, restartButton, mainMenuButton, pause, resume, 
+    showGameOverButtons, buttonHighlight} from "./physics/Initialize.js";
+import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision,
+ checkMenuCollision } from "./physics/checkForCollision.js";
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
-    shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume, slowSound } from "./physics/spawn.js";
+    shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume, slowSound, 
+    getDropIconMesh, healthpack, hoverSound } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 
@@ -22,8 +26,8 @@ const GRAVITATION = 0.028;
 const BOUNDS = 500;
 const DRAG = 0.028;
 let hasContactedGround = false;
-const HELIHEALTHMAX = 20;
-let heliHealth = 20;
+const HELIHEALTHMAX = 2;
+let heliHealth = 2;
 export let gameStatus = "play";
 let standardGun = {
     color: 0x00ff00,
@@ -40,14 +44,15 @@ let standardGun = {
     shotSound: null,
     hitSound: null,
     pickupSound: null,
-    getBullet: function() {return getBulletMesh('0x00ff00', 1.1)}
+    getBullet: function() {return getBulletMesh('0x00ff00', 1.1)},
+    getDropIcon: function() { return getDropIconMesh('standard', 8);}
 }
 let equippedWeapon = standardGun;
 
 export let heliCount = 0;
 export let playerHealth = 8;
 const PLAYERHEALTHMAX = 8;
-let mute = false;
+export let mute = false;
 
 
 let xVelocity = 0;
@@ -68,7 +73,7 @@ let mouse = {
 let song = require('./sounds/gameplayMusic.wav');
 let menuSong = require('./sounds/menuMusic.wav');
 
-let heliShooting;
+let heliShooting = false;
 let heliFlyoff;
 let heliDodging;
 let dodger;
@@ -76,6 +81,7 @@ let dodger;
 let music;
 
 const start = () => {
+    xVelocity = 0;
     displayWeaponInfo();
     displayScore();
     scene.remove.apply(scene, scene.children);
@@ -83,10 +89,10 @@ const start = () => {
     menuMusic.stop();
     healthBarInit();
     displayReloadBar();
+    updateWeaponIcon();
     // slowSound.stop();
     character.mesh.position.y = 120;
     character.mesh.position.x = 0;
-    playSound(explosion);
     spawn();
     gameStatus = 'play'
     rpg.mesh = rocket;
@@ -95,12 +101,12 @@ const start = () => {
     heliHealth = HELIHEALTHMAX;
     heliCount = 0;
     playerHealth = PLAYERHEALTHMAX;
+    displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
-    if (!mute){
-        music = playSound(song);
-        console.log(music);
-    }
-    heliShooting = setInterval(shootHeliBullet, 500);
+    music = playSound(song, new THREE.Audio(listener), true, 'fast', 0);
+    if (mute){
+        music.setVolume(0);
+    } else playSound(explosion, new THREE.Audio(listener));
     heliFlyoff = setInterval(flyOff, 20000);
     dodger = setTimeout( function() {
         dodge();
@@ -119,58 +125,69 @@ let walkTime = 500;
 document.addEventListener("keydown", onDocumentKeyDown, false);
 function onDocumentKeyDown(event) {
     let keyCode = event.which;
-    if (keyCode == 38) { // jump
-        //Allows jump only if on ground
-    	if (Math.abs(yVelocity) == 0){
-            yVelocity = ySpeed;
-            gravity = GRAVITATION;
-            walkingRight = false;
-            walkingLeft = false;
-            if (!jumping){
-                jumping = true;
-                jump(standDir);
+    if (gameStatus == 'play'){
+        if (keyCode == 38) { // jump
+            //Allows jump only if on ground
+        	if (Math.abs(yVelocity) == 0){
+                yVelocity = ySpeed;
+                gravity = GRAVITATION;
+                walkingRight = false;
+                walkingLeft = false;
+                if (!jumping){
+                    jumping = true;
+                    jump(standDir);
+                }
             }
+            //
+            keyEvents[0] = 1;
+        } else if (keyCode == 40) { //down
+            //No ducking yet
+        } else if (keyCode == 37) { //left
+            if (!walkingLeft && yVelocity == 0){
+                walkingLeft = true;
+                walkingRight = false;
+                jumping = false;
+                walk('left');
+            } else if (jumping){
+                changeJumpingDir('left');
+            }
+            //Move left
+            xVelocity = -xSpeed;
+            //
+            keyEvents[2] = 1;
+        } else if (keyCode == 39) { //right
+            if (!walkingRight && yVelocity == 0){
+                walkingRight = true;
+                walkingLeft = false;
+                jumping = false;
+                walk('right');
+            } else if (jumping){
+                changeJumpingDir('right');
+            }
+            //Move right
+            xVelocity = xSpeed;
+            //
+    		keyEvents[3] = 1;
         }
-        //
-        keyEvents[0] = 1;
-    } else if (keyCode == 40) { //down
-        //No ducking yet
-    } else if (keyCode == 37) { //left
-        if (!walkingLeft && yVelocity == 0){
-            walkingLeft = true;
-            walkingRight = false;
-            jumping = false;
-            walk('left');
-        } else if (jumping){
-            changeJumpingDir('left');
-        }
-        //Move left
-        xVelocity = -xSpeed;
-        //
-        keyEvents[2] = 1;
-    } else if (keyCode == 39) { //right
-        if (!walkingRight && yVelocity == 0){
-            walkingRight = true;
-            walkingLeft = false;
-            jumping = false;
-            walk('right');
-        } else if (jumping){
-            changeJumpingDir('right');
-        }
-        //Move right
-        xVelocity = xSpeed;
-        //
-		keyEvents[3] = 1;
-    } else if (keyCode == 77) {
+    }
+    if (keyCode == 77) {
         mute = !mute;
         if (gameStatus == 'play' || gameStatus == "gameOver"){
-            if (music.isPlaying) 
-            music.pause();
-            else music.play();
+            if (music.getVolume() > 0) 
+                music.setVolume(0);
+            else music.setVolume(.5);
         } else {
-            if (menuMusic.isPlaying)
-                menuMusic.pause();
-            else menuMusic.play();
+            if (menuMusic.getVolume() > 0)
+                menuMusic.setVolume(0);
+            else menuMusic.setVolume(.5);
+        }
+    } else if (keyCode == 27){
+        if (gameStatus == 'play') {
+            gameStatus = 'pause';
+            pause();
+        } else {
+            gameStatus = 'play';
+            resume();
         }
     }
 };
@@ -178,69 +195,71 @@ function onDocumentKeyDown(event) {
 document.addEventListener("keyup", onDocumentKeyUp, false);
 function onDocumentKeyUp(event) {
     var keyCode = event.which;
-    if (keyCode == 38) {
-        //Stop jumping when released
-    	keyEvents[0] = 0;
-        //
-    } else if (keyCode == 40) {
-        //No ducking mechanics right now            
-    } else if (keyCode == 37) {
-        //If release left, and right is pressed, go right. otherwise stop
-        keyEvents[2] = 0;
-        if (keyEvents[3]){
-        	xVelocity = xSpeed;
-            if (yVelocity == 0){
-                jumping = false;
-                walkingRight = true;
-                walkingLeft = false;
-                walk('right');
-            } else if (jumping) {
-                changeJumpingDir('right');
-            }
-        } else{
-            walkingRight = false;
-            walkingLeft = false;
-            if (yVelocity == 0){
-                jumping = false;
-                stand('left');
-            } else if (!jumping) {
-                jumping = true;
-                jump('left');
-            } else if (jumping){
-                changeJumpingDir('left');
-            }
-            xVelocity = 0;
-        }
-        //
-    } else if (keyCode == 39) {
-        //See above
-        keyEvents[3] = 0;
-        if (keyEvents[2]){
-        	xVelocity = -xSpeed;
-            if (yVelocity == 0){
-                jumping = false;
+    if (gameStatus == 'play'){
+        if (keyCode == 38) {
+            //Stop jumping when released
+        	keyEvents[0] = 0;
+            //
+        } else if (keyCode == 40) {
+            //No ducking mechanics right now            
+        } else if (keyCode == 37) {
+            //If release left, and right is pressed, go right. otherwise stop
+            keyEvents[2] = 0;
+            if (keyEvents[3]){
+            	xVelocity = xSpeed;
+                if (yVelocity == 0){
+                    jumping = false;
+                    walkingRight = true;
+                    walkingLeft = false;
+                    walk('right');
+                } else if (jumping) {
+                    changeJumpingDir('right');
+                }
+            } else{
                 walkingRight = false;
-                walkingLeft = true;
-                walk('left');
-            } else if (jumping) {
-                changeJumpingDir('left');
+                walkingLeft = false;
+                if (yVelocity == 0){
+                    jumping = false;
+                    stand('left');
+                } else if (!jumping) {
+                    jumping = true;
+                    jump('left');
+                } else if (jumping){
+                    changeJumpingDir('left');
+                }
+                xVelocity = 0;
             }
-        } else {
-            walkingRight = false;
-            walkingLeft = false;
-            if (yVelocity == 0){
-                jumping = false;
-                stand('right');
+            //
+        } else if (keyCode == 39) {
+            //See above
+            keyEvents[3] = 0;
+            if (keyEvents[2]){
+            	xVelocity = -xSpeed;
+                if (yVelocity == 0){
+                    jumping = false;
+                    walkingRight = false;
+                    walkingLeft = true;
+                    walk('left');
+                } else if (jumping) {
+                    changeJumpingDir('left');
+                }
+            } else {
+                walkingRight = false;
+                walkingLeft = false;
+                if (yVelocity == 0){
+                    jumping = false;
+                    stand('right');
+                }
+                else if (!jumping) {
+                    jumping = true;
+                    jump('right');
+                } else if (jumping){
+                    changeJumpingDir('right');
+                }
+                xVelocity = 0;
             }
-            else if (!jumping) {
-                jumping = true;
-                jump('right');
-            } else if (jumping){
-                changeJumpingDir('right');
-            }
-            xVelocity = 0;
+            //
         }
-        //
     }
 };
 
@@ -248,51 +267,119 @@ let hovering = false;
 let hovering2 = false;
 let hovering3 = false;
 let hovering4 = false;
+let hovering5 = false;
+let hovering6 = false;
+let hovering7 = false;
+
+let highlighted = false;
+let highlighted2 = false;
+let highlighted3 = false;
+let highlighted4 = false;
+let highlighted5 = false;
+let highlighted6 = false;
+let highlighted7 = false;
 
 document.addEventListener("mousemove", function(event){
     getMouseCoords(event);
-    if (gameStatus == 'ready'){
-        getMousePos();
-        if (onMainMenu) {
-            if (checkMenuCollision(pos, startGameButton)){
-                if (!hovering && !mute)
-                    playSound(tick);
-                hovering = true;
-                buttonHover('startGameButton', 'down');
-            } else {
-                buttonHover('startGameButton', 'up');
-                hovering = false;
-            }
-            if (checkMenuCollision(pos, instructionsButton)){
-                if (!hovering2 && !mute)
-                    playSound(tick);
-                hovering2 = true;
-                buttonHover('instructionsButton', 'down');
-            } else {
-                buttonHover('instructionsButton', 'up');
-                hovering2 = false;
-            }
-            if (checkMenuCollision(pos, creditsButton)){
-                if (!hovering3 && !mute)
-                    playSound(tick);
-                hovering3 = true;
-                buttonHover('creditsButton', 'down');
-            } else {
-                buttonHover('creditsButton', 'up');
-                hovering3 = false;
-            }
-        }
-        if (instructionsMenu || onCredits)
-            if (checkMenuCollision(pos, backButton)){
-                if (!hovering4 && !mute)
-                    playSound(tick);
-                hovering4 = true;
-                buttonHover('backButton', 'down');
-            } else {
-                buttonHover('backButton', 'up');
-                hovering4 = false;
-            }
-    }
+    getMousePos();
+    // if (gameStatus != 'play'){
+    //     getMousePos();
+    //     if (onMainMenu) {
+    //         if (checkMenuCollision(pos, startGameButton)){
+    //             if (!highlighted) {
+    //                 if (!mute){
+    //                     playSound(tick, new THREE.Audio(listener));
+    //                 }  
+    //                 buttonHighlight('startGameButton', 'up');
+    //                 highlighted = true;
+    //             }
+    //         } else {
+    //             if (highlighted == true){
+    //                 buttonHighlight('startGameButton', 'down');
+    //                 highlighted = false;
+    //             }
+    //         }
+    //         if (checkMenuCollision(pos, instructionsButton)){
+    //            if (!highlighted2) {
+    //                 if (!mute){
+    //                     playSound(tick, new THREE.Audio(listener));
+    //                 }  
+    //                 buttonHighlight('instructionsButton', 'up');
+    //                 highlighted2 = true;
+    //             }
+    //         } else {
+    //             if (highlighted2 == true){
+    //                 buttonHighlight('instructionsButton', 'down');
+    //                 highlighted2 = false;
+    //             }
+    //         }
+    //         if (checkMenuCollision(pos, creditsButton)){
+    //             if (!highlighted3) {
+    //                 if (!mute){
+    //                     playSound(tick, new THREE.Audio(listener));
+    //                 }  
+    //                 buttonHighlight('creditsButton', 'up');
+    //                 highlighted3 = true;
+    //             }
+    //         } else {
+    //             if (highlighted3 == true){
+    //                 buttonHighlight('creditsButton', 'down');
+    //                 highlighted3 = false;
+    //             }
+    //         }
+    //     } else if (instructionsMenu || onCredits) {
+    //         if (checkMenuCollision(pos, backButton.currentMesh)){
+    //             backButton.highlight(mute);
+    //         } else {
+    //             backButton.unhighlight();
+    //         }
+    //     } else if (gameStatus == 'pause' || gameStatus == 'gameOver'){
+    //         if (gameStatus == 'pause'){
+    //             if (checkMenuCollision(pos, resumeButton)){
+    //                 if (!highlighted5) {
+    //                     if (!mute){
+    //                         playSound(tick, new THREE.Audio(listener));
+    //                     }  
+    //                     buttonHighlight('resumeButton', 'up');
+    //                     highlighted5 = true;
+    //                 } 
+    //             } else {
+    //                 if (highlighted5 == true){
+    //                     buttonHighlight('resumeButton', 'down');
+    //                     highlighted5 = false;
+    //                 }
+    //             }
+    //         }
+    //         if (checkMenuCollision(pos, restartButton)){
+    //             if (!highlighted6) {
+    //                 if (!mute){
+    //                     playSound(tick, new THREE.Audio(listener));
+    //                 }  
+    //                 buttonHighlight('restartButton', 'up');
+    //                 highlighted6 = true;
+    //             } 
+    //         } else {
+    //             if (highlighted6 == true){
+    //                 buttonHighlight('restartButton', 'down');
+    //                 highlighted6 = false;
+    //             }
+    //         } 
+    //         if (checkMenuCollision(pos, mainMenuButton)){
+    //             if (!highlighted7) {
+    //                 if (!mute){
+    //                     playSound(tick, new THREE.Audio(listener));
+    //                 }  
+    //                 buttonHighlight('mainMenuButton', 'up');
+    //                 highlighted7 = true;
+    //             } 
+    //         } else {
+    //             if (highlighted7 == true) {
+    //                 buttonHighlight('mainMenuButton', 'down');
+    //                 highlighted7 = false;
+    //             }
+    //         }
+    //     }
+    // }
 });
 
 const getMouseCoords = (event) => {
@@ -309,24 +396,79 @@ let onCredits = false;
 
 document.addEventListener("mousedown", function(event){
     mouseDown = true;
-    if (gameStatus == 'play'){
-        // if (reloaded){
-            // shootBullet();
-            // shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
-        // }
-    } else if (gameStatus == 'gameOver') {
-        text2.style.display = 'none';
-        start();
-        gameStatus = 'play';
-        for (var i = 0; i < heliBullets.length; i++) {
-            scene.remove(heliBullets[i].mesh);
+    if (gameStatus != 'play'){
+        getMousePos();
+        if (onMainMenu) {
+            if (checkMenuCollision(pos, startGameButton)){
+                if (!hovering && !mute)
+                    playSound(tick, new THREE.Audio(listener));
+                hovering = true;
+                buttonHover('startGameButton', 'down');
+            } else {
+                buttonHover('startGameButton', 'up');
+                hovering = false;
+            }
+            if (checkMenuCollision(pos, instructionsButton)){
+                if (!hovering2 && !mute)
+                    playSound(tick, new THREE.Audio(listener));
+                hovering2 = true;
+                buttonHover('instructionsButton', 'down');
+            } else {
+                buttonHover('instructionsButton', 'up');
+                hovering2 = false;
+            }
+            if (checkMenuCollision(pos, creditsButton)){
+                if (!hovering3 && !mute)
+                    playSound(tick, new THREE.Audio(listener));
+                hovering3 = true;
+                buttonHover('creditsButton', 'down');
+            } else {
+                buttonHover('creditsButton', 'up');
+                hovering3 = false;
+            }
+        } else if (instructionsMenu || onCredits) {
+            if (checkMenuCollision(pos, backButton.currentMesh)){
+                backButton.mouseDown();
+            } else {
+                backButton.mouseUp(mute);
+            }
+        } else if (gameStatus == 'pause' || gameStatus == 'gameOver'){
+            if (gameStatus == 'pause'){
+                if (checkMenuCollision(pos, resumeButton)){
+                    if (!hovering5 && !mute)
+                        playSound(tick, new THREE.Audio(listener));
+                    hovering5 = true;
+                    buttonHover('resumeButton', 'down');
+                } else {
+                    buttonHover('resumeButton', 'up');
+                    hovering5 = false;
+                }
+            }
+            if (checkMenuCollision(pos, restartButton)){
+                if (!hovering6 && !mute)
+                    playSound(tick, new THREE.Audio(listener));
+                hovering6 = true;
+                buttonHover('restartButton', 'down');
+            } else {
+                buttonHover('restartButton', 'up');
+                hovering6 = false;
+            } 
+            if (checkMenuCollision(pos, mainMenuButton)){
+                if (!hovering7 && !mute)
+                    playSound(tick, new THREE.Audio(listener));
+                hovering7 = true;
+                buttonHover('mainMenuButton', 'down');
+            } else {
+                buttonHover('mainMenuButton', 'up');
+                hovering7 = false;
+            }
         }
-        heliBullets = [];
-        displayHealthBar();
-        healthBar.position.y = healthBarPositionY;
-        healthBarPosition = healthBar.position.y;
+    }
+});
 
-    } else if (gameStatus == 'ready'){
+document.addEventListener("mouseup", function(event){
+    mouseDown = false;
+    if (gameStatus == 'ready'){
         if (checkMenuCollision(pos, startGameButton)){
             onMainMenu = false;
             start();
@@ -334,18 +476,42 @@ document.addEventListener("mousedown", function(event){
             onMainMenu = false;
             instructionsMenu = true;
             if (!mute)
-                playSound(tick);
+                playSound(tick, new THREE.Audio(listener));
             instructions();
         } else if (checkMenuCollision(pos, creditsButton)){
             onMainMenu = false;
             if (!mute)
-                playSound(tick);
+                playSound(tick, new THREE.Audio(listener));
             onCredits = true;
             credits();
-        } else if (checkMenuCollision(pos, backButton)){
+        } else if (checkMenuCollision(pos, backButton.currentMesh)){
             if (!mute)
-                playSound(tick);
+                playSound(tick, new THREE.Audio(listener));
             instructionsMenu = false;
+            onCredits = false;
+            onMainMenu = true;
+            mainMenu();
+        }
+    } else if (gameStatus == 'pause' || gameStatus == 'gameOver') {
+        if (checkMenuCollision(pos, resumeButton)){
+            resume();
+            if (!mute)
+                playSound(tick, new THREE.Audio(listener));
+            gameStatus = 'play';
+        } else if (checkMenuCollision(pos, restartButton)){
+            bullets = [];
+            heliBullets = [];
+            music.stop();
+            gameStatus = 'play';
+            start();
+        } else if (checkMenuCollision(pos, mainMenuButton)){
+            if (!mute)
+                playSound(tick, new THREE.Audio(listener));
+            music.stop();
+            hoverSound.stop();
+            gameStatus = 'ready';
+            instructionsMenu = false;
+            menuMusic.play();
             onCredits = false;
             onMainMenu = true;
             mainMenu();
@@ -353,17 +519,12 @@ document.addEventListener("mousedown", function(event){
     }
 });
 
-document.addEventListener("mouseup", function(event){
-    mouseDown = false;
-    // clearInterval(shoot);
-});
-
 const shootHeliBullet = () => {
     if (flyNormal){
         let square = getBulletMesh('heli', 1);
         scene.add( square );
         if (!mute){
-            playSound(gunshot, false, 1, volume);
+            playSound(gunshot, new THREE.Audio(listener), false, 1, volume);
         }
         square.position.x = heli.position.x;
         square.position.y = heli.position.y;
@@ -390,6 +551,7 @@ export const getMousePos = () => {
     vec.sub( camera.position ).normalize();
     var distance = - camera.position.z / vec.z;
     pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
+    console.log(pos);
 }
 
 const shootBullet = () => {
@@ -402,7 +564,7 @@ const shootBullet = () => {
     reloaded = false;
     setTimeout(function(){reloaded = true;}, equippedWeapon.reloadTime);
 
-    if (!mute) playSound(equippedWeapon.shotSound);
+    if (!mute) playSound(equippedWeapon.shotSound, new THREE.Audio(listener));
 
     getMousePos();
 
@@ -448,7 +610,7 @@ const shootBullet = () => {
         let square2 = equippedWeapon.getBullet();
         scene.add(square2);
         if (!mute)
-            playSound(equippedWeapon.shotSound);
+            playSound(equippedWeapon.shotSound, new THREE.Audio(listener));
         let tmpPos = new THREE.Vector3();
         tmpPos.copy(pos);
         let offset = 2;
@@ -516,6 +678,7 @@ let akimboMac10sShot = require('./sounds/akimbomac10sShot.wav');
 let rpgBlast = require('./sounds/rpgBlast.wav');
 let rpgHit = require('./sounds/explosion.wav');
 let ouch = require('./sounds/ouch.wav');
+let healthpackPickup = require('./sounds/healthpack.wav');
 export let hover = require('./sounds/hover.wav');
 export let fadeIn = require('./sounds/fadeIn.wav');
 export let fadeOut = require('./sounds/fadeOut.wav');
@@ -532,35 +695,43 @@ akimboMac10s.pickupSound = akimboPickup;
 rpg.shotSound = rpgBlast;
 rpg.hitSound = rpgHit;
 rpg.pickupSound = rpgPickup;
+healthpack.pickupSound = healthpackPickup;
 
-export const playSound = (src, loop, speed, volume) => {
+export let listener = new THREE.AudioListener();
+camera.add( listener );
+
+
+export const playSound = (src, audioObj, loop, speed, vol) => {
+    if (!vol) vol = .5; 
     // create an AudioListener and add it to the camera
-    var listener = new THREE.AudioListener();
-    camera.add( listener );
 
     // create a global audio source
-    var sound = new THREE.Audio( listener );
 
     // load a sound and set it as the Audio object's buffer
     var audioLoader = new THREE.AudioLoader();
     audioLoader.load( src, function(buffer){
-        sound.setBuffer( buffer );
-        if (!loop)
-            sound.setLoop( false );
-        else sound.setLoop(true);
-        if (speed == 'slow')
-            sound.setPlaybackRate(.1);
-        if (volume)
-            sound.setVolume( volume );
-        else sound.setVolume( 0.5 );
-        sound.play();
+        audioObj.setBuffer( buffer );
+        if (!loop) {
+            audioObj.setLoop( false );
+        }
+        else { 
+            audioObj.setLoop(true);
+        }
+        if (speed == 'slow') {
+            audioObj.setPlaybackRate(.1);
+        }
+        if (mute) {
+            audioObj.setVolume( 0 );
+        } else {
+            audioObj.setVolume( vol );
+        }
+        audioObj.play();
     });
-    return sound;
+    return audioObj
 }
 
 // playSound(explosion);
-let menuMusic = playSound(menuSong, true);
-console.log(menuMusic);
+let menuMusic = playSound(menuSong, new THREE.Audio(listener), true);
 menuMusic.pause();
 
 function sound (src) {
@@ -577,18 +748,17 @@ let text2;
 let deathPlane;
 
 const gameOver = () => {
-    text2 = document.createElement('div');
-    text2.style.position = 'absolute';
-    //text2.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
-    text2.style.width = 100;
-    text2.style.height = 100;
-    text2.style.backgroundColor = "blue";
-    // if (gameStatus == 'ready') text2.innerHTML = 'Click to Start';
-    // else text2.innerHTML = "GAME OVER";
-    text2.style.top = 200 + 'px';
-    text2.style.left = window.innerWidth/2 + 'px';
-    document.body.appendChild(text2);
-    clearInterval(heliShooting);
+    let geom = new THREE.PlaneGeometry(100, 30, 32);
+    let mat = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(require('./pics/gameOver.png')), side: THREE.FrontSide});
+    mat.transparent = true;
+    mat.opacity = 1;
+    let mesh = new THREE.Mesh(geom, mat);
+    mesh.position.x = character.mesh.position.x;
+    mesh.position.z = 4;
+    scene.add(mesh);
+
+    showGameOverButtons();
+
     if (gameStatus == 'gameOver'){
         let geometry = new THREE.PlaneGeometry( 1000, 1000, 32 );
         let material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.FrontSide} );
@@ -602,7 +772,11 @@ const gameOver = () => {
 
 }
 
-gameOver();
+export const setHeliShooting = (x) => {
+    heliShooting = x;
+}
+
+// gameOver();
 
 let reloadBar;
 let reloadBarPositionX = 45;
@@ -631,6 +805,7 @@ const updateScore = () => {
 }
 
 const displayScore = () => {
+    console.log(renderer.getSize().width);
     if (text)
         text.style.display = 'none';
     text = document.createElement('div');
@@ -644,17 +819,29 @@ const displayScore = () => {
     text.style.paddingRight = 5 + 'px';
     text.innerHTML = "Heli's: " + heliCount;
     text.style.top = 20 + 'px';
-    text.style.left = window.innerWidth/2 + 200 + 'px';
+    text.style.left = renderer.getSize().width + 'px';
     document.body.appendChild(text);
 }
 
 let weaponText;
+let weaponIcon;
+let weaponIconPositionX = 40;
+
+const updateWeaponIcon = () => {
+    if (weaponIcon)
+        scene.remove(weaponIcon);
+    weaponIcon = equippedWeapon.getDropIcon();
+    weaponIcon.position.x = character.mesh.position.x + weaponIconPositionX;
+    weaponIcon.position.y = -33;
+    weaponIcon.position.z = 3.9;
+    scene.add(weaponIcon);
+}
 
 const updateWeaponInfo = () => {
     if (equippedWeapon.name != standardGun.name)
-        weaponText.innerHTML = equippedWeapon.name + " x " + equippedWeapon.ammo;
+        weaponText.innerHTML = " x " + equippedWeapon.ammo;
     else 
-        weaponText.innerHTML = equippedWeapon.name + " x " + "INF";
+        weaponText.innerHTML = " x " + "INF";
 }
 
 const displayWeaponInfo = () => {
@@ -669,50 +856,69 @@ const displayWeaponInfo = () => {
     weaponText.style.borderRadius = 20 + 'px';
     weaponText.style.paddingLeft = 5 + 'px';
     weaponText.style.paddingRight = 5 + 'px';
-    weaponText.style.top = 350 + 'px';
-    weaponText.style.left = window.innerWidth/2 + 125 + 'px';
+    weaponText.style.top = 352 + 'px';
+    weaponText.style.left = window.innerWidth/2 + 218 + 'px';
     updateWeaponInfo();
     document.body.appendChild(weaponText);
 }
 
 let healthBar;
 let healthBarBackground;
+let healthLogo;
 let healthBarPosition;
-let healthBarPositionX = 35;
-let healthBarPositionY = 25;
+let healthBarPositionX = 55;
+let healthBarPositionY = 23;
 
 const healthBarInit = () => {
-    let geometry = new THREE.PlaneGeometry( 1, playerHealth, 32 );
-    let material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide} );
+    let geometry = new THREE.PlaneGeometry( 1.5, PLAYERHEALTHMAX * 1.5, 32 );
+    let material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.FrontSide} );
     healthBarBackground = new THREE.Mesh( geometry, material );
     scene.add( healthBarBackground ); 
-    geometry = new THREE.PlaneGeometry( 1, playerHealth, 32 );
-    material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
+   
+    geometry = new THREE.PlaneGeometry( 1.5, playerHealth * 1.5, 32 );
+    geometry.translate(0, PLAYERHEALTHMAX * 1.5 / 2, 0);
+    material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.FrontSide} );
     healthBar = new THREE.Mesh( geometry, material );
-    scene.add( healthBar );
-    healthBar.position.y = healthBarPositionY;
+    scene.add(healthBar);
+    
+    geometry = new THREE.PlaneGeometry( 4, 4, 32 );
+    material = new THREE.MeshBasicMaterial( {map: new THREE.TextureLoader().load(require('./pics/healthLogo.png'))
+        , side: THREE.FrontSide} );
+    material.transparent = true;
+    material.opacity = 1;
+    healthLogo = new THREE.Mesh( geometry, material );
+    scene.add( healthLogo );
+    
+    healthBar.position.y = healthBarPositionY - healthBar.geometry.parameters.height/2;
     healthBarBackground.position.y = healthBarPositionY;
     healthBarPosition = healthBar.position.y;
     healthBar.position.x = healthBarPositionX;
     healthBarBackground.position.x = healthBarPositionX;
+    healthLogo.position.y = healthBarPositionY - 8;
+    healthLogo.position.x = character.mesh.position.x + healthBarPositionX;
+    healthBar.position.z = 10;
+    healthBarBackground.position.z = 9.99;
+    healthLogo.position.z = 10;
 }
 
 export const displayHealthBar = () => {
-    if (healthBar){
-        scene.remove(healthBar);
-        scene.remove(healthBarBackground);
-    }
-    let geometry = new THREE.PlaneGeometry( 1, PLAYERHEALTHMAX, 32 );
-    let material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.DoubleSide} );
-    healthBarBackground = new THREE.Mesh( geometry, material );
-    scene.add( healthBarBackground ); 
-    geometry = new THREE.PlaneGeometry( 1, playerHealth, 32 );
-    material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
-    healthBar = new THREE.Mesh( geometry, material );
-    if (playerHealth > 0){
-        scene.add( healthBar );
-    }
-    healthBarPosition -= .5;
+    // if (healthBar){
+    //     scene.remove(healthBar);
+    //     scene.remove(healthBarBackground);
+    // }
+    // let geometry = new THREE.PlaneGeometry( 1.5, PLAYERHEALTHMAX * 1.5, 32 );
+    // let material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.FrontSide} );
+    // healthBarBackground = new THREE.Mesh( geometry, material );
+    // scene.add( healthBarBackground ); 
+
+
+
+    // if (playerHealth > 0){
+    //     scene.add( healthBar );
+    // }
+
+    healthBar.scale.set(1, playerHealth/PLAYERHEALTHMAX, 1);
+    // healthBarPosition -= .5;
     healthBar.position.y = healthBarPosition;
     healthBar.position.x = character.mesh.position.x + healthBarPositionX;
     healthBarBackground.position.y = healthBarPositionY;
@@ -802,6 +1008,8 @@ let interval = 1000/fps;
 let delta;
 let standDir = 'right';
 let rpgExplosions = [];
+let heliShootingFPS = 2000;
+let heliReloadDelta = 0;
 
 let reloadDelta = 0;
 
@@ -810,6 +1018,11 @@ const update = () => {
     curTime = Date.now();
     delta = curTime - oldTime;
     reloadDelta += delta;
+    heliReloadDelta += delta;
+    if (heliReloadDelta > heliShootingFPS && heliShooting){
+        shootHeliBullet();
+        heliReloadDelta = 0;
+    }
     if (reloadDelta > equippedWeapon.reloadTime && mouseDown){
         shootBullet();
         reloadDelta = 0;
@@ -850,15 +1063,23 @@ const update = () => {
             pickUps[i].mesh.position.y += pickUps[i].velocity * gameSpeed;
         }
         if (checkBulletCollision(character.mesh, pickUps[i].mesh)){
-            equippedWeapon = pickUps[i];
-            if (!mute)
-                playSound(equippedWeapon.pickupSound);
-            equippedWeapon.ammo = equippedWeapon.fullAmmoMax;
-            updateWeaponInfo();
-            if (mouseDown){
-                shootBullet();
-                // clearInterval(shoot);  
-                // shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
+            if (pickUps[i].name == 'healthpack'){
+                if (!mute) playSound(pickUps[i].pickupSound, new THREE.Audio(listener), false, 1, 1);
+                playerHealth += 3;
+                if (playerHealth > PLAYERHEALTHMAX) playerHealth = PLAYERHEALTHMAX;
+                displayHealthBar();
+            } else {
+                equippedWeapon = pickUps[i];
+                if (!mute)
+                    playSound(equippedWeapon.pickupSound, new THREE.Audio(listener), false, 1, 1);
+                equippedWeapon.ammo = equippedWeapon.fullAmmoMax;
+                updateWeaponInfo();
+                updateWeaponIcon();
+                if (mouseDown){
+                    shootBullet();
+                    // clearInterval(shoot);  
+                    // shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
+                }
             }
             scene.remove(pickUps[i].mesh);
             pickUps.splice(i, 1);
@@ -869,10 +1090,12 @@ const update = () => {
     //Healthbar
     healthBarBackground.position.x = character.mesh.position.x + healthBarPositionX;  
     healthBar.position.x = character.mesh.position.x + healthBarPositionX;
+    healthLogo.position.x = character.mesh.position.x + healthBarPositionX;
     //
 
-    //Reload Bar
+    //Reload Bar, Weapon info
     reloadBar.position.x = character.mesh.position.x + reloadBarPositionX;
+    weaponIcon.position.x = character.mesh.position.x + weaponIconPositionX;
     //
 
     camera.position.x = character.mesh.position.x;
@@ -903,13 +1126,13 @@ const update = () => {
             heliBullets.splice(i, 1);
             playerHealth -= 1;
             if (!mute)
-                playSound(ouch);
+                playSound(ouch, new THREE.Audio(listener));
             displayHealthBar();
             if (playerHealth == 0){
                 gameStatus = "gameOver";
                 gameOver();
                 if (!mute)
-                    playSound(explosion);
+                    playSound(explosion, new THREE.Audio(listener));
                 updateWeaponInfo();
                 equippedWeapon = standardGun;
                 music.stop();
@@ -945,10 +1168,10 @@ const update = () => {
             scene.add(expl.spr);
             rpgExplosions.push(expl);
             if (!mute)
-                playSound(bullets[i].sound);
+                playSound(bullets[i].sound, new THREE.Audio(listener));
             if(heliHealth <= 0){
                 if (!mute && bullets[i].sound != explosion);
-                    playSound(explosion);
+                    playSound(explosion, new THREE.Audio(listener));
                 blowUp();
                 // bullets = [];
                 heliHealth = HELIHEALTHMAX;
@@ -985,7 +1208,7 @@ const update = () => {
         gameStatus = "gameOver";
         gameOver();
         if (!mute)
-            playSound(explosion);
+            playSound(explosion, new THREE.Audio(listener));
         updateWeaponInfo();
         equippedWeapon = standardGun;
         music.stop();
@@ -1071,9 +1294,9 @@ const update = () => {
             gravityThisTurn = GRAVITATION;
             walkingRight = false;
             walkingLeft = false;
-            // jumping = true;
-            // if (!jumping)
-            //     jump(standDir);
+            jumping = true;
+            if (!jumping)
+                jump(standDir);
             if (yVelocity > -1){
                 yVelocity += -gravityThisTurn;
             }

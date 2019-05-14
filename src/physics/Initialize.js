@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import "../styles/components/loader.scss";
-import { playerHealth, getMousePos } from "../app.js";
-
+import { playerHealth, getMousePos, listener, mute, playSound } from "../app.js";
 
 
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js';document.head.appendChild(script);})()
@@ -9,9 +8,10 @@ import { playerHealth, getMousePos } from "../app.js";
 export let scene = new THREE.Scene();
 export let renderer = new THREE.WebGLRenderer();
 
-let height = window.innerHeight - 5;
+let height = window.innerHeight - 4;
 let width = height * 1.5;
-// let width = window.innerWidth;
+// width = window.innerWidth;
+// height = window.innerHeight;
 renderer.setSize( width, height );
 document.body.appendChild( renderer.domElement );
 
@@ -35,6 +35,62 @@ export let arm;
 export let rocket;
 
 let maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
+
+//Buttons
+let buttonGeom = new THREE.PlaneGeometry(50, 10);
+let titleGeom = new THREE.PlaneGeometry(50, 50);
+let tick = require('../sounds/tick.wav');
+let backButtonUpTex = getTexture(require('../pics/backButtonUp.png'));
+let backButtonDownTex = getTexture(require('../pics/backButtonDown.png'));
+let backButtonUpHoverTex = getTexture(require('../pics/backButtonUpHover.png'));
+let resumeButtonUpTex = getTexture(require('../pics/resumeButtonUp.png'));
+let resumeButtonDownTex = getTexture(require('../pics/resumeButtonDown.png'));
+let resumeButtonUpHoverTex = getTexture(require('../pics/resumeButtonUpHover.png'));
+let restartButtonUpTex = getTexture(require('../pics/restartButtonUp.png'));
+let restartButtonUpHoverTex = getTexture(require('../pics/restartButtonUpHover.png'));
+let restartButtonDownTex = getTexture(require('../pics/restartButtonDown.png'));
+let mainMenuButtonUpTex = getTexture(require('../pics/mainMenuButtonUp.png'));
+let mainMenuButtonUpHoverTex = getTexture(require('../pics/mainMenuButtonUpHover.png'));
+let mainMenuButtonDownTex = getTexture(require('../pics/mainMenuButtonDown.png'));
+let instructionsUpTex = getTexture(require('../pics/instructionsButtonUp.png'));
+let instructionsUpHoverTex = getTexture(require('../pics/instructionsButtonUpHover.png'));
+let instructionsDownTex = getTexture(require('../pics/instructionsButtonDown.png'));
+let startGameUpTex = getTexture(require('../pics/startGameButtonUp.png'));
+let startGameUpHoverTex = getTexture(require('../pics/startGameButtonUpHover.png'));
+let startGameDownTex = getTexture(require('../pics/startGameButtonDown.png'));
+let creditsUpTex = getTexture(require('../pics/creditsButtonUp.png'));
+let creditsUpHoverTex = getTexture(require('../pics/creditsButtonUpHover.png'));
+let creditsDownTex = getTexture(require('../pics/creditsButtonDown.png'));
+
+export let buttons = [
+	new Button(backButtonUpTex, backButtonDownTex, backButtonUpHoverTex, tick, 0,-36,0),
+	new Button(resumeButtonUpTex, resumeButtonDownTex, resumeButtonUpHoverTex, tick, 0,-36,0),
+	new Button(mainMenuButtonUpTex, mainMenuButtonDownTex, mainMenuButtonUpHoverTex, tick, 0,-36,0),
+	new Button(restartButtonUpTex, restartButtonDownTex, restartButtonUpHoverTex, tick, 0,-36,0),
+	new Button(instructionsUpTex, instructionsDownTex, instructionsUpHoverTex, tick, 30,0,3),
+	new Button(startGameUpTex, startGameDownTex, startGameUpHoverTex, tick, 30,11,3),
+	new Button(creditsUpTex, creditsDownTex, creditsUpHoverTex, tick, 30,-11,3),
+];
+// export let resumeButton;
+// export let mainMenuButton;
+// export let restartButton;
+// export let pauseBackground;
+// export let backButton = new Button(backButtonUpTex, backButtonDownTex, backButtonUpHoverTex, tick, 0,-36,0);
+
+
+// export let instructionsButton;
+// export let startGameButton;
+// export let creditsButton;
+
+// let buttonGeom = new THREE.PlaneGeometry(50, 10);
+// let titleGeom = new THREE.PlaneGeometry(50, 50);
+// let instructionsUpTex = getTexture(require('../pics/instructionsButtonUp.png'));
+// let instructionsDownTex = getTexture(require('../pics/instructionsButtonDown.png'));
+// let startGameUpTex = getTexture(require('../pics/startGameButtonUp.png'));
+// let startGameDownTex = getTexture(require('../pics/startGameButtonDown.png'));
+// let creditsUpTex = getTexture(require('../pics/creditsButtonUp.png'));
+// let creditsDownTex = getTexture(require('../pics/creditsButtonDown.png'));
+//
 
 export const resetJumping = () => {
 	jumpingNewVal = 0;
@@ -79,7 +135,7 @@ export let rocketTex2;
 
 //
 
-const getSound = (src, loop) => {
+const getSound = (src, audioObj, loop) => {
     // create an AudioListener and add it to the camera
     var listener = new THREE.AudioListener();
     camera.add( listener );
@@ -90,18 +146,18 @@ const getSound = (src, loop) => {
     // load a sound and set it as the Audio object's buffer
     var audioLoader = new THREE.AudioLoader();
     audioLoader.load( src, function(buffer){
-        sound.setBuffer( buffer );
+        audioObj.setBuffer( buffer );
         if (!loop)
-            sound.setLoop( false );
+            audioObj.setLoop( false );
         else sound.setLoop(true);
-        sound.setVolume( 0.5 );
+        audioObj.setVolume( 0.5 );
     });
-    return sound;
+    return audioObj;
 }
 
 //Character Sounds
 let footstepsFile = require('../sounds/footsteps.wav');
-let footsteps = getSound(footstepsFile, true);
+let footsteps;
 //
 
 const spriteSheet = (sprite, x, y, d, scaleX, scaleY, type) => {
@@ -291,22 +347,12 @@ const getTexture = (path) => {
 	return tex;
 }
 
-export let instructionsButton;
-export let startGameButton;
-export let creditsButton;
-
-let buttonGeom = new THREE.PlaneGeometry(50, 10);
-let titleGeom = new THREE.PlaneGeometry(50, 50);
-let instructionsUpTex = getTexture(require('../pics/instructionsButtonUp.png'));
-let instructionsDownTex = getTexture(require('../pics/instructionsButtonDown.png'));
-let startGameUpTex = getTexture(require('../pics/startGameButtonUp.png'));
-let startGameDownTex = getTexture(require('../pics/startGameButtonDown.png'));
-let creditsUpTex = getTexture(require('../pics/creditsButtonUp.png'));
-let creditsDownTex = getTexture(require('../pics/creditsButtonDown.png'));
 let titleTex = getTexture(require('../pics/title.png'));
 
 export const mainMenu = () => {
+	camera.position.x = 0;
 	scene.remove.apply(scene, scene.children);
+	character = null;
 	//Background
 	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
 	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
@@ -339,20 +385,63 @@ export const mainMenu = () => {
 
 	title.position.x = -30;
 	title.position.z = 4;
+}
 
-	startGameButton.position.y = 11;
-	creditsButton.position.y = -11;
-	startGameButton.position.x = 30;
-	creditsButton.position.x = 30;
-	instructionsButton.position.x = 30;
-	startGameButton.position.z = 3;
-	creditsButton.position.z = 3;
-	instructionsButton.position.z = 3;
+export const pause = () => {
+    let pauseGeom = new THREE.PlaneGeometry( 60, 60, 32);
+    let pauseMat = new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.FrontSide});
+    pauseMat.transparent = true;
+    pauseMat.opacity = .6;
+    pauseBackground = new THREE.Mesh(pauseGeom, pauseMat);
+    scene.add(pauseBackground);
+
+    let buttonGeom = new THREE.PlaneGeometry(50, 10);
+    resumeButton = new THREE.Mesh(buttonGeom, getMaterial(getTexture(require('../pics/resumeButtonUp.png'))));
+    resumeButton.position.y = 11;
+    scene.add(resumeButton);
+
+    restartButton = new THREE.Mesh(buttonGeom, getMaterial(getTexture(require('../pics/restartButtonUp.png'))));
+    scene.add(restartButton);
+
+    mainMenuButton = new THREE.Mesh(buttonGeom, getMaterial(getTexture(require('../pics/mainMenuButtonUp.png'))));
+    mainMenuButton.position.y = -11;
+    scene.add(mainMenuButton);
+
+    restartButton.position.x = character.mesh.position.x;
+    mainMenuButton.position.x = character.mesh.position.x;
+    pauseBackground.position.x = character.mesh.position.x;
+    resumeButton.position.x = character.mesh.position.x;
+    resumeButton.position.z = 4;
+    pauseBackground.position.z = 3.8;
+    restartButton.position.z =  4;
+    mainMenuButton.position.z = 4;
+}
+
+export const resume = () => {
+	scene.remove(resumeButton);
+	scene.remove(pauseBackground);
+	scene.remove(mainMenuButton);
+	scene.remove(restartButton);
 }
 
 let arrowKeysFile = require('../pics/arrowKeys.png');
 let arrowKeysImage;
-export let backButton;
+
+
+export const showGameOverButtons = () => {
+    restartButton = new THREE.Mesh(buttonGeom, getMaterial(getTexture(require('../pics/restartButtonUp.png'))));
+    scene.add(restartButton);
+
+    mainMenuButton = new THREE.Mesh(buttonGeom, getMaterial(getTexture(require('../pics/mainMenuButtonUp.png'))));
+    scene.add(mainMenuButton);
+
+    mainMenuButton.position.y = -7;
+    restartButton.position.y = -7;
+    restartButton.position.x = character.mesh.position.x - 23;
+    mainMenuButton.position.x = character.mesh.position.x + 23;
+    restartButton.position.z =  4;
+    mainMenuButton.position.z = 4;
+}
 
 export const instructions = () => {
 	scene.remove.apply(scene, scene.children);
@@ -370,7 +459,7 @@ export const instructions = () => {
 	tintMat.opacity = .15;
 	let tintMesh = new THREE.Mesh(tintGeom, tintMat);
 	scene.add(tintMesh);
-	tintMesh.position.z = 4;
+	tintMesh.position.z = 5;
 	//
 
 	let arrowKeysImageGeom = new THREE.PlaneGeometry( 60, 60, 32);
@@ -386,8 +475,6 @@ export const instructions = () => {
 	scene.add(backButton);
 }
 
-let backButtonUpTex = getTexture(require('../pics/backButtonUp.png'));
-let backButtonDownTex = getTexture(require('../pics/backButtonDown.png'));
 
 export const credits = () => {
 	scene.remove.apply(scene, scene.children);
@@ -412,10 +499,128 @@ export const credits = () => {
 	let credits = new THREE.Mesh(creditsGeom, creditsMat);
 	scene.add(credits);
 
-	backButton = new THREE.Mesh(buttonGeom, getMaterial(getTexture(require('../pics/backButtonUp.png'))));
-	backButton.position.y = -36;
-	scene.add(backButton);
+	scene.add(backButton.upMesh);
+	backButton.positionButton();
 
+}
+
+function Button(up, high, down, tick, x, y, z) {
+	this.upMesh = new THREE.Mesh(buttonGeom, new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.FrontSide})); //getMaterial(up));
+	this.upHighMesh = new THREE.Mesh(buttonGeom, new THREE.MeshBasicMaterial({color: 0xffff00, side: THREE.FrontSide}));//getMaterial(high));
+	this.downMesh = new THREE.Mesh(buttonGeom, new THREE.MeshBasicMaterial({color: 0xff00ff, side: THREE.FrontSide}));//getMaterial(down));
+	this.currentMesh = this.upMesh;
+	this.highlighted = false;
+	this.down = false;
+	this.sound = tick;
+	this.x = x;
+	this.y = y;
+	this.z = z;
+	this.unhighlight = function(){
+		console.log('unhighlight');
+		if (this.highlighted){
+			scene.add(this.upMesh);
+			scene.remove(this.upHighMesh);
+			this.currentMesh = this.upHighMesh;
+			this.positionButton();
+			this.highlighted = false;
+		}
+	};
+	this.repositionButton = function(x,y,z) {
+		this.x = x;
+		this.y = y;
+		this.z = z;
+	};
+	this.highlight = function(mute) {
+		if (!this.highlighted){
+			console.log('highlight');
+			scene.add(this.upHighMesh);
+			scene.remove(this.upMesh);
+			if (!mute){
+				playSound(this.sound, new THREE.Audio(listener));
+			}
+			this.currentMesh = this.upMesh;
+			this.positionButton();  
+			this.highlighted = true;
+		}
+	};
+	this.mouseDown = function(){
+		console.log('back button down');
+		if (!this.down){
+			scene.add(this.downMesh);
+			scene.remove(this.upMesh);
+			this.currentMesh = this.upMesh;
+			this.positionButton();
+			this.down = true;
+		}
+	};
+	this.mouseUp = function(mute){
+		console.log('back button up');
+		if (this.down){
+			playSound(tick);
+			// scene.add(this.upMesh);
+			// scene.remove(this.downMesh);
+			// this.currentMesh = this.downMesh;
+			// this.positionButton();
+			// this.down = true;
+		}
+	};
+	this.positionButton = function() {
+		this.currentMesh.position.x = this.x;
+		this.currentMesh.position.y = this.y;
+		this.currentMesh.position.z = this.z;
+	};
+}
+
+
+export const buttonHighlight = (button, dir) => {
+	if (dir == 'up') {
+		if (button == 'startGameButton'){
+			startGameButton.material.map = getTexture(require('../pics/startGameButtonUpHover.png'));
+			startGameButton.material.needsUpdate = true;
+		} else if (button == 'instructionsButton'){
+			instructionsButton.material.map = getTexture(require('../pics/instructionsButtonUpHover.png'));
+			instructionsButton.material.needsUpdate = true;
+		} else if (button == 'creditsButton'){
+			creditsButton.material.map = getTexture(require('../pics/creditsButtonUpHover.png'));
+			creditsButton.material.needsUpdate = true;
+		} else if (button == 'backButton'){
+			backButton.material.map = getTexture(require('../pics/backButtonUpHover.png'));
+			creditsButton.material.needsUpdate = true;
+		} else if (button == 'resumeButton'){
+			resumeButton.material.map = getTexture(require('../pics/resumeButtonUpHover.png'));
+			resumeButton.material.needsUpdate = true;
+		} else if (button == 'restartButton'){
+			restartButton.material.map = getTexture(require('../pics/restartButtonUpHover.png'));
+			restartButton.material.needsUpdate = true;
+		} else if (button == 'mainMenuButton'){
+			mainMenuButton.material.map = getTexture(require('../pics/mainMenuButtonUpHover.png'));
+			mainMenuButton.material.needsUpdate = true;
+		}
+
+	} else {
+		if (button == 'startGameButton'){
+			startGameButton.material.map = getTexture(require('../pics/startGameButtonUp.png'));
+			startGameButton.material.needsUpdate = true;
+		} else if (button == 'instructionsButton'){
+			instructionsButton.material.map = getTexture(require('../pics/instructionsButtonUp.png'));
+			instructionsButton.material.needsUpdate = true;
+		} else if (button == 'creditsButton'){
+			creditsButton.material.map = getTexture(require('../pics/creditsButtonUp.png'));
+			creditsButton.material.needsUpdate = true;
+		} else if (button == 'backButton'){
+			backButton.material.map = getTexture(require('../pics/backButtonUp.png'));
+			backButton.material.needsUpdate = true;
+		} else if (button == 'resumeButton'){
+			resumeButton.material.map = getTexture(require('../pics/resumeButtonUp.png'));
+			resumeButton.material.needsUpdate = true;
+		} else if (button == 'restartButton'){
+			restartButton.material.map = getTexture(require('../pics/restartButtonUp.png'));
+			restartButton.material.needsUpdate = true;
+		} else if (button == 'mainMenuButton'){
+			mainMenuButton.material.map = getTexture(require('../pics/mainMenuButtonUp.png'));
+			mainMenuButton.material.needsUpdate = true;
+		}
+	}
 }
 
 export const buttonHover = (button, dir) => {
@@ -432,7 +637,17 @@ export const buttonHover = (button, dir) => {
 		} else if (button == 'backButton'){
 			backButton.material.map = backButtonUpTex;
 			creditsButton.material.needsUpdate = true;
+		} else if (button == 'resumeButton'){
+			resumeButton.material.map = resumeButtonUpTex;
+			resumeButton.material.needsUpdate = true;
+		} else if (button == 'restartButton'){
+			restartButton.material.map = restartButtonUpTex;
+			restartButton.material.needsUpdate = true;
+		} else if (button == 'mainMenuButton'){
+			mainMenuButton.material.map = mainMenuButtonUpTex;
+			mainMenuButton.material.needsUpdate = true;
 		}
+
 	} else {
 		if (button == 'startGameButton'){
 			startGameButton.material.map = startGameDownTex;
@@ -445,6 +660,16 @@ export const buttonHover = (button, dir) => {
 			creditsButton.material.needsUpdate = true;
 		} else if (button == 'backButton'){
 			backButton.material.map = backButtonDownTex;
+			backButton.material.needsUpdate = true;
+		} else if (button == 'resumeButton'){
+			resumeButton.material.map = resumeButtonDownTex;
+			resumeButton.material.needsUpdate = true;
+		} else if (button == 'restartButton'){
+			restartButton.material.map = restartButtonDownTex;
+			restartButton.material.needsUpdate = true;
+		} else if (button == 'mainMenuButton'){
+			mainMenuButton.material.map = mainMenuButtonDownTex;
+			mainMenuButton.material.needsUpdate = true;
 		}
 	}
 }
@@ -587,6 +812,9 @@ export const init = () => {
 		objects.push(ground);
 	}
 	//
+	//Footsteps sound
+	footsteps = getSound(footstepsFile, new THREE.Audio(listener) , true);
+	//
 
 }
 
@@ -599,8 +827,9 @@ export const moveCharacter = (x, y) => {
 }
 
 export const walk = (dir) => {
-	if (footsteps.isPlaying == false)
+	if (footsteps.isPlaying == false && !mute){
 		footsteps.play();
+	}
 	if (dir == 'left'){
 		scene.remove(character.texture);
 		character.sheet = leftFoot;

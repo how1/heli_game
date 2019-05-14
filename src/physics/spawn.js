@@ -1,31 +1,35 @@
 import { camera, renderer, scene, init, character, objects, heliFlying, 
 	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getExplosion, getMaterial } from "./Initialize.js";
-import { heliCount, gameSpeed, gameStatus, playSound } from "../app.js";
+import { heliCount, gameSpeed, gameStatus, playSound, mute, listener, setHeliShooting } from "../app.js";
 import * as THREE from 'three';
 
 export let heli;
-let mute = false;
+export let spawnMute = false;
 let crash = require('../sounds/crash.wav');
 let hover = require('../sounds/hover.wav');
 let fadeIn = require('../sounds/fadeIn.wav');
 let fadeOut = require('../sounds/fadeOut.wav');
 
-let hoverSound;
+export let hoverSound;
 
 document.addEventListener("keydown", onDocumentKeyDown, false);
 function onDocumentKeyDown(event) {
     let keyCode = event.which;
 	if (keyCode == 77) {
-        mute = !mute;
-        if (gameStatus == 'play')
-	        if (hoverSound.isPlaying) {
-	            hoverSound.pause();
-	        } else hoverSound.play();
+        spawnMute = !spawnMute;
+        // if (gameStatus == 'play')
+	       //  if (hoverSound.isPlaying) {
+	       //      hoverSound.pause();
+	       //  } else hoverSound.play();
     }
 };
 
 export const spawn = () => {
-	hoverSound = playSound(hover, true);
+	setHeliShooting(true);
+	spawnMute = mute;
+	hoverSound = playSound(hover, new THREE.Audio(listener), true);
+	if (spawnMute)
+		hoverSound.setVolume(0);
 	let geometry = new THREE.PlaneGeometry( 30, 10, 32 );
 	let material = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.FrontSide} );
 	heli = new THREE.Mesh( geometry, material );
@@ -119,12 +123,15 @@ export let volume;
 
 export const move = () => {
 	//Chopper volume
-	let tmpVec = new THREE.Vector3();
-	tmpVec.copy(character.mesh.position);
-	let distance = tmpVec.sub(heli.position).length();
-	volume = (1/(distance * distance)) * 2500;
-	if (volume > .5) volume = .5;
-	hoverSound.setVolume(volume);
+	if (spawnMute) hoverSound.setVolume(0);
+	else {
+		let tmpVec = new THREE.Vector3();
+		tmpVec.copy(character.mesh.position);
+		let distance = tmpVec.sub(heli.position).length();
+		volume = (1/(distance * distance)) * 2500;
+		if (volume > .5) volume = .5;
+		hoverSound.setVolume(volume);
+	}
 	//
 
 	curTime = Date.now();
@@ -245,10 +252,11 @@ export let pickUps = [];
 export let slowSound;
 
 export const blowUp = () => {
+	setHeliShooting(false);
 	hoverSound.stop();
-	if (gameStatus == 'gameOver')
-		slowSound = playSound(crash, false, 'slow');
-	else playSound(crash, false);
+	if (gameStatus == 'gameOver' && !spawnMute)
+		slowSound = playSound(crash, new THREE.Audio(listener), false, 'slow');
+	else if (!spawnMute) playSound(crash, new THREE.Audio(listener), false);
 	let geometry = new THREE.PlaneGeometry( 30, 10, 32 );
 	let material = new THREE.MeshBasicMaterial( {color: 0x0000ff, side: THREE.DoubleSide} );
 	material.transparent = true;
@@ -279,11 +287,9 @@ export const blowUp = () => {
 	// part2.position.y = heli.position.y;
 	// helipart2.push(part2);
 
-	if (heliCount % 3 == 0){
+	if (heliCount % 3 == 0 && gameStatus == 'play'){
 		let dropInfo = getDropInfo();
-		geometry = new THREE.PlaneGeometry( 4, 4, 32 );
-		material = new THREE.MeshBasicMaterial( {color: dropInfo.color, side: THREE.DoubleSide} );
-		let drop = new THREE.Mesh( geometry, material );
+		let drop = getDropIconMesh(dropInfo.name, 6);
 		scene.add( drop );
 		drop.position.x = heli.position.x;
 		drop.position.y = heli.position.y;
@@ -296,11 +302,14 @@ export const blowUp = () => {
 
 const getDropInfo = () => {
 	let dropInfo = akimboMac10s;
-	if (Math.random() < .30){
+	if (Math.random() < .25){
 		dropInfo = rpg;
-	} else if (Math.random() < .60){
+	} else if (Math.random() < .50){
 		dropInfo = shotgun;
+	} else if (Math.random() < .75){
+		dropInfo = healthpack;
 	}
+	return healthpack;
 	return dropInfo;
 }
 
@@ -327,6 +336,46 @@ export const getBulletMesh = (color, s) => {
 	return mesh;
 }
 
+let maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
+
+const getTexture = (path) => {
+	let tex = new THREE.TextureLoader().load(path.toString());
+	tex.anisotropy = maxAnisotropy;
+	return tex;
+}
+
+export const getDropIconMesh = (gun, scale) => {
+	let dropGeom = new THREE.PlaneGeometry( scale, scale, 32 );
+	let mesh;
+	console.log('dropping ' + gun);
+	if (gun == 'akimboMac10s'){
+		let mat = getMaterial(getTexture(require('../pics/akimboDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
+	} else if (gun == 'rpg'){
+		let mat = getMaterial(getTexture(require('../pics/rpgDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
+	} else if (gun == 'shotgun'){
+		let mat = getMaterial(getTexture(require('../pics/shotgunDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
+	} else if (gun == 'standard'){
+		let mat = getMaterial(getTexture(require('../pics/standardDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
+	} else if (gun == 'healthpack'){
+		let mat = getMaterial(getTexture(require('../pics/healthpackDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
+	}
+	mesh.transparent = true;
+	mesh.opacity = 1;
+	mesh.position.z = 2;
+	return mesh;
+}
+
+export let healthpack = {
+	name: 'healthpack',
+	pickupSound: null,
+	getDropIcon: function() { return getDropIconMesh('healthpack', 8);}
+}
+
 export let shotgun = {
 	color: 0xff0000,
 	name: 'shotgun',
@@ -341,7 +390,8 @@ export let shotgun = {
 	shotSound: null,
 	hitSound: null,
 	pickupSound: null,
-	getBullet: function() {return getBulletMesh('0xff0000', 1.1);}
+	getBullet: function() {return getBulletMesh('0xff0000', 1.1);},
+	getDropIcon: function() { return getDropIconMesh('shotgun', 8);}
 }
 
 export let rpg = {
@@ -358,7 +408,8 @@ export let rpg = {
 	shotSound: null,
 	hitSound: null,
 	pickupSound: null,
-	getBullet: function(){return getBulletMesh('rpg', 1.6);}
+	getBullet: function(){return getBulletMesh('rpg', 1.6);},
+	getDropIcon: function() { return getDropIconMesh('rpg', 8);}
 }
 
 export let akimboMac10s = {
@@ -375,5 +426,6 @@ export let akimboMac10s = {
 	shotSound: null,
 	hitSound: null,
 	pickupSound: null,
-	getBullet: function(){return getBulletMesh('0x0000ff',1.1);}
+	getBullet: function() { return getBulletMesh('0x0000ff',1.1);},
+	getDropIcon: function() { return getDropIconMesh('akimboMac10s', 8);}
 }

@@ -120,25 +120,18 @@ export const checkBulletCollision = (a, b) => {
 
 export const checkMenuCollision = (a, b) => {
 	if (!b) return false;
-	let aP = a;
 	let bP = b.position;
-	let aWidth = 0;
-	let aHeight = 0;
 	let bWidth = b.geometry.parameters.width;
 	let bHeight = b.geometry.parameters.height;
-	let aXmin = aP.x - aWidth/2;
-	let aXmax = aP.x + aWidth/2;
-	let aYmin = aP.y - aHeight/2;
-	let aYmax = aP.y + aHeight/2;
 	let bXmin = bP.x - bWidth/2;
 	let bXmax = bP.x + bWidth/2;
 	let bYmin = bP.y - bHeight/2;
 	let bYmax = bP.y + bHeight/2;
 
-	if (aXmin > bXmax) return false; // a is left of b
-	if (aXmax < bXmin) return false; // a is right of b
-	if (aYmax < bYmin) return false; // a is below 
-	if (aYmin > bYmax) return false; // a is above
+	if (a.x > bXmax) return false; // a is left of b
+	if (a.x < bXmin) return false; // a is right of b
+	if (a.y < bYmin) return false; // a is below 
+	if (a.y > bYmax) return false; // a is above
 
 	return true; // boxes overlap
 }
