@@ -6,7 +6,8 @@ import { bodies, camera, renderer, scene, init, character, objects,
     rocket, rocketTex, rocketTex2, changeJumpingDir, getExplosion, getBulletHit, updateBackground,
     startGameButton, instructionsButton, creditsButton, mainMenu, buttonHover, instructions, 
     backButton, credits, resumeButton, restartButton, mainMenuButton, pause, resume, 
-    showGameOverButtons, buttonHighlight} from "./physics/Initialize.js";
+    showGameOverButtons, buttonHighlight, buttons, mainMenuButtons, pauseButtons, gameOverButtons,
+     width, height, windowOffset, getAmmoCount} from "./physics/Initialize.js";
 import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision,
  checkMenuCollision } from "./physics/checkForCollision.js";
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
@@ -83,6 +84,7 @@ let music;
 const start = () => {
     xVelocity = 0;
     displayWeaponInfo();
+    getAmmoCount();
     displayScore();
     scene.remove.apply(scene, scene.children);
     init();
@@ -183,8 +185,8 @@ function onDocumentKeyDown(event) {
         }
     } else if (keyCode == 27){
         if (gameStatus == 'play') {
-            gameStatus = 'pause';
             pause();
+            gameStatus = 'pause';
         } else {
             gameStatus = 'play';
             resume();
@@ -263,128 +265,70 @@ function onDocumentKeyUp(event) {
     }
 };
 
-let hovering = false;
-let hovering2 = false;
-let hovering3 = false;
-let hovering4 = false;
-let hovering5 = false;
-let hovering6 = false;
-let hovering7 = false;
-
-let highlighted = false;
-let highlighted2 = false;
-let highlighted3 = false;
-let highlighted4 = false;
-let highlighted5 = false;
-let highlighted6 = false;
-let highlighted7 = false;
-
-document.addEventListener("mousemove", function(event){
+renderer.domElement.onmousemove = function(event){
     getMouseCoords(event);
-    getMousePos();
-    // if (gameStatus != 'play'){
-    //     getMousePos();
-    //     if (onMainMenu) {
-    //         if (checkMenuCollision(pos, startGameButton)){
-    //             if (!highlighted) {
-    //                 if (!mute){
-    //                     playSound(tick, new THREE.Audio(listener));
-    //                 }  
-    //                 buttonHighlight('startGameButton', 'up');
-    //                 highlighted = true;
-    //             }
-    //         } else {
-    //             if (highlighted == true){
-    //                 buttonHighlight('startGameButton', 'down');
-    //                 highlighted = false;
-    //             }
-    //         }
-    //         if (checkMenuCollision(pos, instructionsButton)){
-    //            if (!highlighted2) {
-    //                 if (!mute){
-    //                     playSound(tick, new THREE.Audio(listener));
-    //                 }  
-    //                 buttonHighlight('instructionsButton', 'up');
-    //                 highlighted2 = true;
-    //             }
-    //         } else {
-    //             if (highlighted2 == true){
-    //                 buttonHighlight('instructionsButton', 'down');
-    //                 highlighted2 = false;
-    //             }
-    //         }
-    //         if (checkMenuCollision(pos, creditsButton)){
-    //             if (!highlighted3) {
-    //                 if (!mute){
-    //                     playSound(tick, new THREE.Audio(listener));
-    //                 }  
-    //                 buttonHighlight('creditsButton', 'up');
-    //                 highlighted3 = true;
-    //             }
-    //         } else {
-    //             if (highlighted3 == true){
-    //                 buttonHighlight('creditsButton', 'down');
-    //                 highlighted3 = false;
-    //             }
-    //         }
-    //     } else if (instructionsMenu || onCredits) {
-    //         if (checkMenuCollision(pos, backButton.currentMesh)){
-    //             backButton.highlight(mute);
-    //         } else {
-    //             backButton.unhighlight();
-    //         }
-    //     } else if (gameStatus == 'pause' || gameStatus == 'gameOver'){
-    //         if (gameStatus == 'pause'){
-    //             if (checkMenuCollision(pos, resumeButton)){
-    //                 if (!highlighted5) {
-    //                     if (!mute){
-    //                         playSound(tick, new THREE.Audio(listener));
-    //                     }  
-    //                     buttonHighlight('resumeButton', 'up');
-    //                     highlighted5 = true;
-    //                 } 
-    //             } else {
-    //                 if (highlighted5 == true){
-    //                     buttonHighlight('resumeButton', 'down');
-    //                     highlighted5 = false;
-    //                 }
-    //             }
-    //         }
-    //         if (checkMenuCollision(pos, restartButton)){
-    //             if (!highlighted6) {
-    //                 if (!mute){
-    //                     playSound(tick, new THREE.Audio(listener));
-    //                 }  
-    //                 buttonHighlight('restartButton', 'up');
-    //                 highlighted6 = true;
-    //             } 
-    //         } else {
-    //             if (highlighted6 == true){
-    //                 buttonHighlight('restartButton', 'down');
-    //                 highlighted6 = false;
-    //             }
-    //         } 
-    //         if (checkMenuCollision(pos, mainMenuButton)){
-    //             if (!highlighted7) {
-    //                 if (!mute){
-    //                     playSound(tick, new THREE.Audio(listener));
-    //                 }  
-    //                 buttonHighlight('mainMenuButton', 'up');
-    //                 highlighted7 = true;
-    //             } 
-    //         } else {
-    //             if (highlighted7 == true) {
-    //                 buttonHighlight('mainMenuButton', 'down');
-    //                 highlighted7 = false;
-    //             }
-    //         }
-    //     }
-    // }
+}
+
+renderer.domElement.addEventListener("mousemove", function(event){
+    // getMouseCoords(event);
+    if (gameStatus != 'play'){
+        getMousePos();
+        if (onMainMenu) {
+            for (var i = 0; i < mainMenuButtons.length; i++) {
+                let button = mainMenuButtons[i];
+                if (checkMenuCollision(pos, button.currentMesh)){
+                    if (!button.highlighted){
+                        button.highlight();
+                    }
+                } else if (button.highlighted) button.unhighlight();
+            }
+        } else if (instructionsMenu || onCredits) {
+            if (checkMenuCollision(pos, backButton.currentMesh)){
+                backButton.highlight(mute);
+            } else if (backButton.highlighted) {
+                backButton.unhighlight();
+            }
+        } else if (gameStatus == 'pause' || gameStatus == 'gameOver'){
+            if (gameStatus == 'pause'){
+                if (checkMenuCollision(pos, resumeButton.currentMesh)){
+                    if (!resumeButton.highlighted) {
+                        resumeButton.highlight();
+                    } 
+                } else if (resumeButton.highlighted) {
+                    resumeButton.unhighlight();
+                }
+            }
+            for (var i = 1; i < pauseButtons.length; i++) {
+                let button = pauseButtons[i];
+                if (checkMenuCollision(pos, button.currentMesh)){
+                    if (!button.highlighted){
+                        button.highlight();
+                    }
+                } else if (button.highlighted) button.unhighlight();
+            }
+        }
+    }
 });
 
 const getMouseCoords = (event) => {
     mouse.clientX = event.clientX;
     mouse.clientY = event.clientY;
+    mouse.clientX -= windowOffset;
+}
+
+export const getMousePos = () => {
+    let targetZ;
+    if (gameStatus == 'play'){
+        targetZ = 0;
+    } else targetZ = 3;
+    vec.set(
+    ( mouse.clientX / renderer.domElement.width ) * 2 - 1,
+    - ( mouse.clientY / renderer.domElement.height ) * 2 + 1,
+    0.5 );
+    vec.unproject( camera );
+    vec.sub( camera.position ).normalize();
+    let distance = ( targetZ - camera.position.z ) / vec.z;
+    pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
 }
 
 let shoot;
@@ -399,68 +343,35 @@ document.addEventListener("mousedown", function(event){
     if (gameStatus != 'play'){
         getMousePos();
         if (onMainMenu) {
-            if (checkMenuCollision(pos, startGameButton)){
-                if (!hovering && !mute)
-                    playSound(tick, new THREE.Audio(listener));
-                hovering = true;
-                buttonHover('startGameButton', 'down');
-            } else {
-                buttonHover('startGameButton', 'up');
-                hovering = false;
-            }
-            if (checkMenuCollision(pos, instructionsButton)){
-                if (!hovering2 && !mute)
-                    playSound(tick, new THREE.Audio(listener));
-                hovering2 = true;
-                buttonHover('instructionsButton', 'down');
-            } else {
-                buttonHover('instructionsButton', 'up');
-                hovering2 = false;
-            }
-            if (checkMenuCollision(pos, creditsButton)){
-                if (!hovering3 && !mute)
-                    playSound(tick, new THREE.Audio(listener));
-                hovering3 = true;
-                buttonHover('creditsButton', 'down');
-            } else {
-                buttonHover('creditsButton', 'up');
-                hovering3 = false;
+            for (var i = 0; i < mainMenuButtons.length; i++) {
+                let button = mainMenuButtons[i];
+                if (checkMenuCollision(pos, button.currentMesh)){
+                    if (!button.down){
+                        button.mouseDown();
+                    }
+                } //else button.mouseUp();
             }
         } else if (instructionsMenu || onCredits) {
             if (checkMenuCollision(pos, backButton.currentMesh)){
                 backButton.mouseDown();
             } else {
-                backButton.mouseUp(mute);
+                //backButton.mouseUp();
             }
         } else if (gameStatus == 'pause' || gameStatus == 'gameOver'){
             if (gameStatus == 'pause'){
-                if (checkMenuCollision(pos, resumeButton)){
-                    if (!hovering5 && !mute)
-                        playSound(tick, new THREE.Audio(listener));
-                    hovering5 = true;
-                    buttonHover('resumeButton', 'down');
+                if (checkMenuCollision(pos, resumeButton.currentMesh)){
+                    resumeButton.mouseDown();
                 } else {
-                    buttonHover('resumeButton', 'up');
-                    hovering5 = false;
+                    //resumeButton.mouseUp();
                 }
             }
-            if (checkMenuCollision(pos, restartButton)){
-                if (!hovering6 && !mute)
-                    playSound(tick, new THREE.Audio(listener));
-                hovering6 = true;
-                buttonHover('restartButton', 'down');
-            } else {
-                buttonHover('restartButton', 'up');
-                hovering6 = false;
-            } 
-            if (checkMenuCollision(pos, mainMenuButton)){
-                if (!hovering7 && !mute)
-                    playSound(tick, new THREE.Audio(listener));
-                hovering7 = true;
-                buttonHover('mainMenuButton', 'down');
-            } else {
-                buttonHover('mainMenuButton', 'up');
-                hovering7 = false;
+            for (var i = 1; i < pauseButtons.length; i++) {
+                let button = pauseButtons[i];
+                if (checkMenuCollision(pos, button.currentMesh)){
+                    if (!button.down){
+                        button.mouseDown();
+                    }
+                } //else button.mouseUp();
             }
         }
     }
@@ -469,16 +380,16 @@ document.addEventListener("mousedown", function(event){
 document.addEventListener("mouseup", function(event){
     mouseDown = false;
     if (gameStatus == 'ready'){
-        if (checkMenuCollision(pos, startGameButton)){
+        if (checkMenuCollision(pos, startGameButton.currentMesh)){
             onMainMenu = false;
             start();
-        } else if (checkMenuCollision(pos, instructionsButton)){
+        } else if (checkMenuCollision(pos, instructionsButton.currentMesh)){
             onMainMenu = false;
             instructionsMenu = true;
             if (!mute)
                 playSound(tick, new THREE.Audio(listener));
             instructions();
-        } else if (checkMenuCollision(pos, creditsButton)){
+        } else if (checkMenuCollision(pos, creditsButton.currentMesh)){
             onMainMenu = false;
             if (!mute)
                 playSound(tick, new THREE.Audio(listener));
@@ -492,19 +403,27 @@ document.addEventListener("mouseup", function(event){
             onMainMenu = true;
             mainMenu();
         }
+    } else if (instructionsMenu || onCredits) {
+        // if (checkMenuCollision(pos, backButton.currentMesh)){
+        //     onMainMenu = true;
+        //     if (!mute) playSound(tick, new THREE.Audio(listener));
+        //     instructionsMenu = false;
+        //     onCredits = false;
+        //     mainMenu();
+        // }
     } else if (gameStatus == 'pause' || gameStatus == 'gameOver') {
-        if (checkMenuCollision(pos, resumeButton)){
+        if (checkMenuCollision(pos, resumeButton.currentMesh)){
             resume();
             if (!mute)
                 playSound(tick, new THREE.Audio(listener));
             gameStatus = 'play';
-        } else if (checkMenuCollision(pos, restartButton)){
+        } else if (checkMenuCollision(pos, restartButton.currentMesh)){
             bullets = [];
             heliBullets = [];
             music.stop();
             gameStatus = 'play';
             start();
-        } else if (checkMenuCollision(pos, mainMenuButton)){
+        } else if (checkMenuCollision(pos, mainMenuButton.currentMesh)){
             if (!mute)
                 playSound(tick, new THREE.Audio(listener));
             music.stop();
@@ -516,6 +435,9 @@ document.addEventListener("mouseup", function(event){
             onMainMenu = true;
             mainMenu();
         }
+    }
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].highlighted = false;
     }
 });
 
@@ -542,22 +464,11 @@ let vec = new THREE.Vector3();
 let pos = new THREE.Vector3();
 let shotThisFrame = 2;
 
-export const getMousePos = () => {
-    vec.set(
-    ( mouse.clientX / window.innerWidth ) * 2 - 1,
-    - ( mouse.clientY / window.innerHeight ) * 2 + 1,
-    0.5 );
-    vec.unproject( camera );
-    vec.sub( camera.position ).normalize();
-    var distance = - camera.position.z / vec.z;
-    pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
-    console.log(pos);
-}
-
 const shootBullet = () => {
     shotThisFrame = 0;
     if (equippedWeapon.name != standardGun.name){
         equippedWeapon.ammo--;
+        getAmmoCount();
         updateWeaponInfo();
     }
     //Reload
@@ -569,7 +480,6 @@ const shootBullet = () => {
     getMousePos();
 
     if (equippedWeapon.name == rpg.name) {
-        // console.log(rocket);
         let rocketMesh = equippedWeapon.getBullet();
         scene.add(rocketMesh);
         rocketMesh.position.x = arm.position.x;
@@ -660,6 +570,7 @@ const shootBullet = () => {
 
     if (equippedWeapon.ammo == 0){
         equippedWeapon = standardGun;
+        getAmmoCount();
         updateWeaponInfo();
         //clearInterval(shoot);
         //shoot = setInterval(shootBullet, equippedWeapon.reloadTime);
@@ -746,19 +657,9 @@ function sound (src) {
 
 let text2;
 let deathPlane;
+let gameOverImage = new THREE.TextureLoader().load(require('./pics/gameOver.png'));
 
 const gameOver = () => {
-    let geom = new THREE.PlaneGeometry(100, 30, 32);
-    let mat = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(require('./pics/gameOver.png')), side: THREE.FrontSide});
-    mat.transparent = true;
-    mat.opacity = 1;
-    let mesh = new THREE.Mesh(geom, mat);
-    mesh.position.x = character.mesh.position.x;
-    mesh.position.z = 4;
-    scene.add(mesh);
-
-    showGameOverButtons();
-
     if (gameStatus == 'gameOver'){
         let geometry = new THREE.PlaneGeometry( 1000, 1000, 32 );
         let material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.FrontSide} );
@@ -769,6 +670,16 @@ const gameOver = () => {
         scene.add( deathPlane );
         blowUp();
     } 
+    let geom = new THREE.PlaneGeometry(100, 30, 32);
+    let mat = new THREE.MeshBasicMaterial({map: gameOverImage, side: THREE.FrontSide});
+    mat.transparent = true;
+    mat.opacity = 1;
+    let mesh = new THREE.Mesh(geom, mat);
+    mesh.position.x = character.mesh.position.x;
+    mesh.position.z = 4;
+    scene.add(mesh);
+
+    showGameOverButtons();
 
 }
 
@@ -804,22 +715,23 @@ const updateScore = () => {
     text.innerHTML = "Heli's: " + heliCount;
 }
 
+console.log(window.innerHeight / 75, 'qera');
+
 const displayScore = () => {
-    console.log(renderer.getSize().width);
     if (text)
         text.style.display = 'none';
     text = document.createElement('div');
     text.style.position = 'absolute';
     //text.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
-    text.style.width = 100;
-    text.style.height = 100;
+    text.style.width = window.innerHeight / 4;
+    text.style.height = window.innerHeight / 4;
     text.style.backgroundColor = 'rgba(255,0,0,.5)';
-    text.style.borderRadius = 20 + 'px';
-    text.style.paddingLeft = 5 + 'px';
-    text.style.paddingRight = 5 + 'px';
+    text.style.borderRadius = window.innerHeight/20 + 'px';
+    text.style.paddingLeft = window.innerHeight/78 + 'px';
+    text.style.paddingRight = window.innerHeight/78 + 'px';
     text.innerHTML = "Heli's: " + heliCount;
-    text.style.top = 20 + 'px';
-    text.style.left = renderer.getSize().width + 'px';
+    text.style.top = window.innerHeight/20 + 'px';
+    text.style.left = renderer.domElement.width + 'px';
     document.body.appendChild(text);
 }
 
@@ -859,6 +771,7 @@ const displayWeaponInfo = () => {
     weaponText.style.top = 352 + 'px';
     weaponText.style.left = window.innerWidth/2 + 218 + 'px';
     updateWeaponInfo();
+    getAmmoCount();
     document.body.appendChild(weaponText);
 }
 
@@ -1074,6 +987,7 @@ const update = () => {
                     playSound(equippedWeapon.pickupSound, new THREE.Audio(listener), false, 1, 1);
                 equippedWeapon.ammo = equippedWeapon.fullAmmoMax;
                 updateWeaponInfo();
+                getAmmoCount();
                 updateWeaponIcon();
                 if (mouseDown){
                     shootBullet();
@@ -1133,6 +1047,7 @@ const update = () => {
                 gameOver();
                 if (!mute)
                     playSound(explosion, new THREE.Audio(listener));
+                getAmmoCount();
                 updateWeaponInfo();
                 equippedWeapon = standardGun;
                 music.stop();
@@ -1209,6 +1124,7 @@ const update = () => {
         gameOver();
         if (!mute)
             playSound(explosion, new THREE.Audio(listener));
+        getAmmoCount();
         updateWeaponInfo();
         equippedWeapon = standardGun;
         music.stop();

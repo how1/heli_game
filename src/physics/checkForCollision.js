@@ -119,14 +119,17 @@ export const checkBulletCollision = (a, b) => {
 }
 
 export const checkMenuCollision = (a, b) => {
+	// console.log(a, 'asdf');
 	if (!b) return false;
 	let bP = b.position;
 	let bWidth = b.geometry.parameters.width;
 	let bHeight = b.geometry.parameters.height;
 	let bXmin = bP.x - bWidth/2;
 	let bXmax = bP.x + bWidth/2;
+	// let bXmax = bP.x;
 	let bYmin = bP.y - bHeight/2;
 	let bYmax = bP.y + bHeight/2;
+	// console.log(bXmax, bXmin, bP);
 
 	if (a.x > bXmax) return false; // a is left of b
 	if (a.x < bXmin) return false; // a is right of b
