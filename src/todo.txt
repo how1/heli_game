@@ -20,8 +20,6 @@ add passing cars from demo?
 
 make drop voice louder
 
-fix flashing menu buttons
+fix healthpack pickup sound
 
-fix html position bug
-
-fix mouse position bug
+add change weapon mechanics

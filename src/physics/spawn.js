@@ -42,24 +42,6 @@ export const spawn = () => {
 	scene.add(heliFlying.spr);
 }
 
-function rotateAboutPoint(obj, point, axis, theta, pointIsWorld){
-	pointIsWorld = (pointIsWorld === undefined)? false : pointIsWorld;
-  
-	if(pointIsWorld){
-		obj.parent.localToWorld(obj.position); // compensate for world coordinate
-	}
-  
-	obj.position.sub(point); // remove the offset
-	obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
-	obj.position.add(point); // re-add the offset
-  
-	if(pointIsWorld){
-		obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
-	}
-  
-	obj.rotateOnAxis(axis, theta); // rotate the OBJECT
-}
-
 let heliHeight = 30;
 let heliMaxSpeed = 1.2;
 export let flyNormal = true;
@@ -210,9 +192,6 @@ export const getQueueToFly = () => {
 let flyOffDirection;
 
 export const flyOff = () => {
-	// hoverSound.pause();
-	// if (!mute)
-	// 	playSound(fadeOut, false).onEnded(playSound(fadeIn, false).onEnded(hoverSound.play()));
 	flyNormal = false;
 	if (Math.random() < .5){
 		flyOffDirection = 'left';
@@ -220,7 +199,6 @@ export const flyOff = () => {
 }
 
 export const flyOn = () => {
-	// playSound(fadeIn).onEnded(hoverSound.play());
 	if (flyOffDirection == 'left'){
 		heli.position.x = character.mesh.position.x + 100;
 	} else {
@@ -278,22 +256,13 @@ export const blowUp = () => {
 	scene.remove(heliFlying.spr);
 	heliPartVelocityX.push(1);
 	heliPartVelocityY.push(.0005);
-	
-	// geometry = new THREE.PlaneGeometry( 15, 10, 32 );
-	// material = new THREE.MeshBasicMaterial( {color: 0x0000ff, side: THREE.DoubleSide} );
-	// let part2 = new THREE.Mesh( geometry, material );
-	// scene.add( part2 );
-	// part2.position.x = heli.position.x - heli.geometry.parameters.width / 4;
-	// part2.position.y = heli.position.y;
-	// helipart2.push(part2);
 
 	if (heliCount % 3 == 0 && gameStatus == 'play'){
 		let dropInfo = getDropInfo();
-		let drop = getDropIconMesh(dropInfo.name, 6);
-		scene.add( drop );
-		drop.position.x = heli.position.x;
-		drop.position.y = heli.position.y;
-		dropInfo.mesh = drop;
+		scene.add(dropInfo.dropMesh);
+		dropInfo.dropMesh.position.x = heli.position.x;
+		dropInfo.dropMesh.position.y = heli.position.y;
+		dropInfo.dropMesh.position.z = 2;
 		pickUps.push(dropInfo);
 	}
 	if (gameStatus == 'play')
@@ -301,15 +270,21 @@ export const blowUp = () => {
 }
 
 const getDropInfo = () => {
-	let dropInfo = akimboMac10s;
-	if (Math.random() < .25){
-		dropInfo = rpg;
-	} else if (Math.random() < .50){
-		dropInfo = shotgun;
-	} else if (Math.random() < .75){
-		dropInfo = healthpack;
+	let random = Math.random();
+	let dropInfo;
+	if (random < .2){
+		dropInfo = getRpg();
+	} else if (random < .4){
+		dropInfo = getShotgun();
+	} else if (random < .5){
+		dropInfo = getHealthpack();
+	} else if (random < 1){
+		dropInfo = getAkimbo();
+	// } else if (random < .8){
+	// 	dropInfo = antiMatterDevice;
+	} else {
+		dropInfo = new Flamethrower();
 	}
-	return healthpack;
 	return dropInfo;
 }
 
@@ -347,7 +322,6 @@ const getTexture = (path) => {
 export const getDropIconMesh = (gun, scale) => {
 	let dropGeom = new THREE.PlaneGeometry( scale, scale, 32 );
 	let mesh;
-	console.log('dropping ' + gun);
 	if (gun == 'akimboMac10s'){
 		let mat = getMaterial(getTexture(require('../pics/akimboDrop.png')));
 		mesh = new THREE.Mesh(dropGeom, mat);
@@ -357,11 +331,14 @@ export const getDropIconMesh = (gun, scale) => {
 	} else if (gun == 'shotgun'){
 		let mat = getMaterial(getTexture(require('../pics/shotgunDrop.png')));
 		mesh = new THREE.Mesh(dropGeom, mat);
-	} else if (gun == 'standard'){
+	} else if (gun == 'standardGun'){
 		let mat = getMaterial(getTexture(require('../pics/standardDrop.png')));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'healthpack'){
 		let mat = getMaterial(getTexture(require('../pics/healthpackDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
+	} else if (gun == 'flamethrower'){
+		let mat = getMaterial(getTexture(require('../pics/flamethrowerDrop.png')));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	}
 	mesh.transparent = true;
@@ -370,62 +347,124 @@ export const getDropIconMesh = (gun, scale) => {
 	return mesh;
 }
 
-export let healthpack = {
-	name: 'healthpack',
-	pickupSound: null,
-	getDropIcon: function() { return getDropIconMesh('healthpack', 8);}
+
+let rpgPickup = require('../sounds/rpg.wav');
+let akimboPickup = require('../sounds/akimboMac10s.wav');
+let shotgunPickup = require('../sounds/shotgun.wav');
+let shotgunBlast = require('../sounds/shotgunBlast.wav');
+let explosion = require('../sounds/explosion.wav');
+let metalHit = require('../sounds/metalHit.wav');
+let gunshot = require('../sounds/gunshot.wav');
+let gunshot2 = require('../sounds/gunshot2.wav');
+let akimboMac10sShot = require('../sounds/akimbomac10sShot.wav');
+let rpgBlast = require('../sounds/rpgBlast.wav');
+let rpgHit = require('../sounds/explosion.wav');
+let ouch = require('../sounds/ouch.wav');
+let healthpackPickup = require('../sounds/healthpackPickup.wav');
+let flamethrowerPickup = require('../sounds/flamethrowerPickup.wav');
+let flamethrowerShot = require('../sounds/flamethrowerShot.wav');
+// export let hover = require('../sounds/hover.wav');
+// export let fadeIn = require('../sounds/fadeIn.wav');
+// export let fadeOut = require('../sounds/fadeOut.wav');
+let tick = require('../sounds/tick.wav');
+
+export const Gun = function (color, name, size, speed, ammo, fullAmmoMax, damage, velocity, reloadTime, shotSound, hitSound, pickupSound) {
+	this.color = color;
+	this.name = name;
+	this.size = size;
+	this.dropMesh = getDropIconMesh(name, 6);
+	this.mesh = null;
+	this.speed = speed;
+	this.ammo = ammo;
+	this.fullAmmoMax = fullAmmoMax;
+	this.damage = damage;
+	this.velocity = velocity;
+	this.reloadTime = reloadTime;
+	this.shotSound = shotSound;
+	this.hitSound = hitSound;
+	this.pickupSound = pickupSound;
+	this.getBullet = function() {return getBulletMesh(name, size);};
+	this.getDropIcon = function(name, scale) { return getDropIconMesh(name, scale);}
 }
 
-export let shotgun = {
-	color: 0xff0000,
-	name: 'shotgun',
-	size: 1.1,
-	speed: .5,
-	ammo: 15,
-	fullAmmoMax: 15,
-	damage: 1,
-	velocity: 0,
-	mesh: null,
-	reloadTime: 1700,
-	shotSound: null,
-	hitSound: null,
-	pickupSound: null,
-	getBullet: function() {return getBulletMesh('0xff0000', 1.1);},
-	getDropIcon: function() { return getDropIconMesh('shotgun', 8);}
+let getShotgun = () => { return new Gun(
+	0xff0000, //color
+	'shotgun',//name
+	1.1,//name
+	.5,//size
+	15,//ammo
+	15,//ammomax
+	1,// damage
+	0,//vel
+	1700,//reload time
+	shotgunBlast,
+	metalHit,
+	shotgunPickup
+);} 
+export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .45,   6,  6,  7,    0,     7000, rpgBlast, rpgHit, rpgPickup);}
+export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.1, .5,   50,  50,  1,    0,  550, akimboMac10sShot, metalHit, akimboPickup);}
+export let getHealthpack = () => {return new Gun(0x000000, 'healthpack', 1, .5, 1,1,1,0,1, null, null, healthpackPickup);}
+export let getStandard = () => {return new Gun(0x000000, 'standardGun', 1.1, .5, -1, -1, 1, 0, 1000, gunshot2, metalHit, null);}
+
+export let rpg = getRpg();
+export let akimboMac10s = getAkimbo();
+export let shotgun = getShotgun();
+export let standardGun = getStandard();
+export let healthpack = getHealthpack();
+
+
+// export let antiMatterDevice = {
+// 	color = 0x0000ff;
+// 	name = 'antiMatterDevice';
+// 	mesh = getDropIconMesh('antiMatterDevice'; 6);
+// 	size = 2;
+// 	speed = .35;
+// 	ammo = 1;
+// 	fullAmmoMax = 1;
+// 	damage = 50;
+// 	velocity = 0;
+// 	reloadTime = 20000;
+// 	shotSound = null;
+// 	hitSound = null;
+// 	pickupSound = null;
+// 	getBullet = function() { return getBulletMesh('0x0000ff';2);};
+// 	getDropIcon = function(name; scale) { return getDropIconMesh(name; scale);}
+// }
+
+export const Flamethrower = function () {
+	this.color = 0x0000ff;
+	this.name = 'flamethrower';
+	this.mesh = getDropIconMesh('flamethrower', 6);
+	this.size = 2;
+	this.flames = [];
+	this.speed = .5;
+	this.ammo = 100;
+	this.fullAmmoMax = 100;
+	this.damage = .1;
+	this.velocity = 0;
+	this.reloadTime = 200;
+	this.shotSound = flamethrowerShot;
+	this.hitSound = metalHit;
+	this.pickupSound = flamethrowerPickup;
+	this.getBullet = function() { return new Flame();};
+	this.getDropIcon = function(name, scale) { return getDropIconMesh(name, scale);};
+	this.getFlame = function() { return new Flame();};
+}
+export const Flame = function () {
+	this.maxSize = 50;
+	this.lifeSpan = 60;
+	this.opacity = 1;
+	this.speed = 2;
+	this.size = 1;
+	this.mesh = getFlameMesh();
+	this.velocityVector = new THREE.Vector3();
 }
 
-export let rpg = {
-	color: 0xffff00,
-	name: 'rpg',
-	size: 1.6,
-	speed: .45,
-	ammo: 6,
-	fullAmmoMax: 6,
-	damage: 7,
-	velocity: 0,
-	mesh: null,
-	reloadTime: 7000,
-	shotSound: null,
-	hitSound: null,
-	pickupSound: null,
-	getBullet: function(){return getBulletMesh('rpg', 1.6);},
-	getDropIcon: function() { return getDropIconMesh('rpg', 8);}
+export const getFlameMesh = () => {
+	let mesh = new THREE.Mesh(new THREE.PlaneGeometry(1,1,32), getMaterial(getTexture(require('../pics/flame.png'))));
+	mesh.transparent = true;
+	mesh.opacity = 1;
+	return mesh;
 }
 
-export let akimboMac10s = {
-	color: 0x0000ff,
-	name: 'akimboMac10s',
-	size: 1.1,
-	speed: .5,
-	ammo: 50,
-	fullAmmoMax: 50,
-	damage: 1,
-	velocity: 0,
-	mesh: null,
-	reloadTime: 550,
-	shotSound: null,
-	hitSound: null,
-	pickupSound: null,
-	getBullet: function() { return getBulletMesh('0x0000ff',1.1);},
-	getDropIcon: function() { return getDropIconMesh('akimboMac10s', 8);}
-}
+export let flamethrower = new Flamethrower();

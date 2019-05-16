@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import "../styles/components/loader.scss";
-import { playerHealth, getMousePos, listener, mute, playSound, gameStatus } from "../app.js";
+import { playerHealth, getMousePos, listener, mute, playSound, gameStatus, displayWeaponInfo, updateWeaponInfo, displayScore } from "../app.js";
 
 
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js';document.head.appendChild(script);})()
@@ -31,6 +31,11 @@ window.addEventListener('resize', () => {
 	renderer.setSize(width, height);
 	camera.aspect = width/height;
 	camera.updateProjectionMatrix();
+	if (gameStatus == 'play'){
+		displayWeaponInfo();
+		updateWeaponInfo();
+		displayScore();
+	}
 });
 
 export let objects = [];
@@ -448,7 +453,6 @@ export const instructions = () => {
 	let arrowKeysImageTex = getTexture(arrowKeysFile);
 	let arrowKeysMat = getMaterial(arrowKeysImageTex);
 	let arrowKeysImage = new THREE.Mesh(arrowKeysImageGeom, arrowKeysMat);
-	console.log(arrowKeysImage);
 	scene.add(arrowKeysImage);
 	// arrowKeysImage.position.x = -20;
 
@@ -487,7 +491,7 @@ export const credits = () => {
 // let upMat = getMaterial(getTexture(require('../pics/backButtonUp.png')));
 // let upMat = getMaterial(getTexture(require('../pics/backButtonUp.png')));
 
-function Button(up, high, down, tick, x, y, z) {
+function Button(up, down, high, tick, x, y, z) {
 	this.getMaterial = function(image){
 		image.anisotropy = maxAnisotropy;
 		let mat = new THREE.MeshBasicMaterial({map: image, side: THREE.FrontSide});
@@ -507,7 +511,6 @@ function Button(up, high, down, tick, x, y, z) {
 	this.down = false;
 	this.sound = tick;
 	this.unhighlight = function(){
-		console.log('unhighlight');
 		if (this.highlighted){
 			scene.add(this.upMesh);
 			this.upMesh.position.copy(this.position);
@@ -523,7 +526,6 @@ function Button(up, high, down, tick, x, y, z) {
 	};
 	this.highlight = function(mute) {
 		if (!this.highlighted){
-			console.log('highlight');
 			scene.add(this.upHighMesh);
 			this.upHighMesh.position.copy(this.position);
 			scene.remove(this.upMesh);
@@ -536,7 +538,6 @@ function Button(up, high, down, tick, x, y, z) {
 		}
 	};
 	this.mouseDown = function(){
-		console.log('back button down');
 		if (!this.down){
 			scene.add(this.downMesh);
 			this.downMesh.position.copy(this.position);
@@ -548,6 +549,7 @@ function Button(up, high, down, tick, x, y, z) {
 	};
 	this.mouseUp = function(mute){
 		this.highlighted = false;
+		this.down = false;
 		// console.log('back button up');
 		// if (this.down){
 		// 	playSound(tick);
@@ -578,60 +580,6 @@ function Button(up, high, down, tick, x, y, z) {
 		this.currentMesh = mesh;
 		scene.add(this.currentMesh);
 	};
-}
-
-let numberGeometry = new THREE.PlaneGeometry(6,6,32);
-
-let numbers = [
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/0.png')))),
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/1.png')))),
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/2.png')))),
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/3.png')))),
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/4.png')))),
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/5.png')))),
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/6.png')))),
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/7.png')))),
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/8.png')))),
-getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/9.png'))))
-];
-
-let x = getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/x.png'))));
-let inf = getMesh(numberGeometry, getMaterial(getTexture(require('../pics/numbers/inf.png'))));
-let ammoCounter = getMesh(new THREE.PlaneGeometry(20, 6, 32), getMaterial(getTexture(require('../pics/numbers/ammoCounter.png'))));
-
-// let group = new THREE.Group();
-
-// ammoCounter.add(x);
-// ammoCounter.add(inf);
-ammoCounter.position.z = 10;
-scene.add(ammoCounter);
-console.log(ammoCounter);
-
-export const getScore = () => {
-	scene.remove(group);
-
-}
-
-let ammoCounterOffset = 100;
-
-export const getAmmoCount = (ammo) => {
-	// console.log('get ammo');
-	scene.remove(ammoCounter);
-
-	// group.position.x = character.mesh.position.x;
-	// if (ammo = 'inf'){
-	// 	inf.position.x = character.mesh.position.x + ammoCounterOffset + 6;
-	// 	group.add(inf);
-	// } else {
-	// 	let digits = [];
-	// 	let ammoString = ammo.toString();
-	// 	for (var i = 0; i < ammoString.length; i++) {
-	// 		let mesh = numbers[parseInt(ammoString[i, i+1])];
-	// 		mesh.position.x = character.mesh.position.x + ammoCounterOffset + i * 3.5;
-	// 		group.add(mesh);
-	// 	}
-	// }
-	scene.add(ammoCounter);
 }
 
 export const init = () => {
