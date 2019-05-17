@@ -22,6 +22,12 @@ function onDocumentKeyDown(event) {
 	       //      hoverSound.pause();
 	       //  } else hoverSound.play();
     }
+    if (keyCode == 56){
+		heliFlying.spr.position.x = heli.position.x;
+		heliFlying.spr.position.y = heli.position.y;
+		updateSprite(heliFlying);
+    	scene.add(heliFlying.spr);
+    }
 };
 
 export const spawn = () => {
@@ -35,22 +41,24 @@ export const spawn = () => {
 	heli = new THREE.Mesh( geometry, material );
 	material.transparent = true;
 	material.opacity = 0;
-	heli.position.y = 150;
+	heli.position.y = 100;
 	scene.add( heli );
 	heliFlying.spr.position.x = heli.position.x;
 	heliFlying.spr.position.y = heli.position.y;
+	updateSprite(heliFlying);
 	scene.add(heliFlying.spr);
 }
 
-let heliHeight = 30;
-let heliMaxSpeed = 1.2;
+let heliHeight = 15;
+let heliMaxSpeed = 1;
 export let flyNormal = true;
 let findMode = true;
 let dodgeMode = false;
 let dodgeDirection = -50;
 let gravity = 0.002;
-let boost = 0.1;
+let boost = 0.2;
 let velocityVector = new THREE.Vector3();
+velocityVector.clampLength(-heliMaxSpeed, heliMaxSpeed);
 let forceVector = new THREE.Vector3(0,0,0);
 let maxRotation = 20;
 let margin = 20;
@@ -61,7 +69,7 @@ let targetPosition;
 const brake = () => {
 	if (THREE.Math.radToDeg(heli.rotation.z) < 0){ //if tilted right
 			heli.rotation.z += tiltRate * gameSpeed; //tilt left towards zero tilt
-			if (heli.rotation.z > 0) heli.rotation.z = 0;
+			if (heli.rotation.z > 15) heli.rotation.z = 0;
 	}		
 	else if (THREE.Math.radToDeg(heli.rotation.z) > 0){ //if tilted left
 		heli.rotation.z -= tiltRate * gameSpeed; //tilt right towards zero tilt
@@ -69,18 +77,18 @@ const brake = () => {
 	}
 	
 	if (velocityVector.x > 0){ //if going right
-		velocityVector.x += -boost*5;
+		velocityVector.x += -boost*.1;
 	}
 	else if (velocityVector.x < 0){
-		velocityVector.x += boost*5;
+		velocityVector.x += boost*.1;
 	}
 }
 
 const accelerate = (direction, multiplier) => {
 	if (direction == 'left'){
-		velocityVector.x = -boost * multiplier;
-	} else {
-		velocityVector.x = boost * multiplier;
+		velocityVector.x += -boost * multiplier;
+	} else if (direction =='right') {
+		velocityVector.x += boost * multiplier;
 	}
 }
 
@@ -102,6 +110,8 @@ let interval = 1000/fps;
 let delta;
 
 export let volume;
+
+let drag = .1;
 
 export const move = () => {
 	//Chopper volume
@@ -144,10 +154,10 @@ export const move = () => {
 				brake();
 			} else if (targetPosition + margin/4 < heli.position.x){
 				tiltLeft();
-				accelerate('left', 5);
+				accelerate('left', .1);
 			} else if (targetPosition - margin/4 > heli.position.x){
 				tiltRight();
-				accelerate('right', 5);
+				accelerate('right', .1);
 			}
 		} else {
 			//if within margin
@@ -157,7 +167,12 @@ export const move = () => {
 		}
 		v1.copy( forceVector ).applyQuaternion( heli.quaternion );
 		velocityVector.add(v1);
+		if (velocityVector.length() > heliMaxSpeed) velocityVector.normalize().multiplyScalar(heliMaxSpeed);
 		heli.position.add(velocityVector.multiplyScalar(gameSpeed));
+		// if (velocityVector.length() > 1){
+		// 	console.log('somethings aint good', velocityVector, heli.position);
+		// }
+		// console.log(heli.position);
 	
 
 	} else {
@@ -169,14 +184,22 @@ export const move = () => {
 		}
 		if (flyOffDirection == 'left'){
 			tiltLeft();
-			accelerate('left', 25);
+			accelerate('left', .1);
 		} else {
 			tiltRight();
-			accelerate('right', 25);
+			accelerate('right', .1);
 		}
 		v1.copy( forceVector ).applyQuaternion( heli.quaternion );
 		velocityVector.add(v1);
+		//drag
+		// velocityVector.add(velocityVector.normalize().negate().multiplyScalar(drag * (velocityVector.length * velocityVector.length)));
+		//
+		if (velocityVector.length() > heliMaxSpeed) velocityVector.normalize().multiplyScalar(heliMaxSpeed);
 		heli.position.add(velocityVector.multiplyScalar(gameSpeed));
+		if (velocityVector.length() > 1){
+			// console.log('somethings aint good', velocityVector, heli.position);
+		}
+	
 	}
 
 	
@@ -199,6 +222,7 @@ export const flyOff = () => {
 }
 
 export const flyOn = () => {
+	console.log('fly on');
 	if (flyOffDirection == 'left'){
 		heli.position.x = character.mesh.position.x + 100;
 	} else {
@@ -209,11 +233,12 @@ export const flyOn = () => {
 
 export const dodge = () => {
 	if (flyNormal){
-		if (dodgeMode) dodgeMode = false;
-		else {
+		if (dodgeMode) {
+			dodgeMode = false;
+		} else {
 			if (Math.random() < .5){
-				dodgeDirection = -50;
-			} else dodgeDirection = 50;
+				dodgeDirection = -30;
+			} else dodgeDirection = 30;
 			dodgeMode = true;
 		}
 	}
@@ -265,8 +290,10 @@ export const blowUp = () => {
 		dropInfo.dropMesh.position.z = 2;
 		pickUps.push(dropInfo);
 	}
-	if (gameStatus == 'play')
+	if (gameStatus == 'play'){
+		console.log('spawn');
 		spawn();
+	}
 }
 
 const getDropInfo = () => {
@@ -278,11 +305,11 @@ const getDropInfo = () => {
 		dropInfo = getShotgun();
 	} else if (random < .5){
 		dropInfo = getHealthpack();
-	} else if (random < 1){
+	} else if (random < .6){
 		dropInfo = getAkimbo();
-	} else if (random < .8){
+	} else if (random < .7){
 		dropInfo = getHeatSeekers();
-	} else {
+	} else if (random < 1) {
 		dropInfo = new Flamethrower();
 	}
 	return dropInfo;
@@ -293,7 +320,7 @@ let bullet2Mat = getMaterial(new THREE.TextureLoader().load(require('../pics/bul
 let seekerTex = getMaterial(new THREE.TextureLoader().load(require('../pics/seekerTex.png')));
 
 export const getBulletMesh = (color, s) => {
-	let size = 1.6;
+	let size = s;
 	let mesh;
 	if (color == 'rpg'){
 		let geometry = new THREE.PlaneGeometry(3.5, 3.5, 32);
@@ -397,8 +424,8 @@ export const Gun = function (color, name, size, speed, ammo, fullAmmoMax, damage
 let getShotgun = () => { return new Gun(
 	0xff0000, //color
 	'shotgun',//name
-	1.1,//name
-	.5,//size
+	1.2,//size
+	.8,//speed
 	15,//ammo
 	15,//ammomax
 	1,// damage
@@ -408,11 +435,11 @@ let getShotgun = () => { return new Gun(
 	metalHit,
 	shotgunPickup
 );} 
-export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .45,   6,  6,  7,    0,     7000, rpgBlast, rpgHit, rpgPickup);}
-export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.1, .5,   50,  50,  1,    0,  550, akimboMac10sShot, metalHit, akimboPickup);}
-export let getHealthpack = () => {return new Gun(0x000000, 'healthpack', 1, .5, 1,1,1,0,1, null, null, healthpackPickup);}
-export let getStandard = () => {return new Gun(0x000000, 'standardGun', 1.1, .5, -1, -1, 1, 0, 1000, gunshot2, metalHit, null);}
-export let getHeatSeekers = () => {return new Gun(0x000000, 'heatSeekers', 1.6, .45, 3, 3, 7, 0, 7000, rpgBlast, rpgHit, heatSeekersPickup);}
+export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .45,   6,  6,  10,    0,     7000, rpgBlast, rpgHit, rpgPickup);}
+export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.2, .8,   50,  50,  1,    0,  550, akimboMac10sShot, metalHit, akimboPickup);}
+export let getHealthpack = () => {return new Gun(0x000000, 'healthpack', 1.2, .5, 1,1,1,0,1, null, null, healthpackPickup);}
+export let getStandard = () => {return new Gun(0x000000, 'standardGun', 1.2, .8, -1, -1, 1, 0, 600, gunshot2, metalHit, null);}
+export let getHeatSeekers = () => {return new Gun(0x000000, 'heatSeekers', 1.6, .45, 3, 3, 10, 0, 7000, rpgBlast, rpgHit, heatSeekersPickup);}
 
 export let rpg = getRpg();
 export let akimboMac10s = getAkimbo();

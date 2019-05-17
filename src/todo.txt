@@ -16,4 +16,10 @@ refactor app.js
 
 add passing cars from demo?
 
-make drop voice louder
+add records
+
+mute hover ticks
+
+add change weapon and mute to instructions
+
+fix heli speed ,bullet speed , character speed, dodging, etc

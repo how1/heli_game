@@ -19,16 +19,16 @@ import './styles/styles.scss';
 
 mainMenu();
 
-let ySpeed = 1;
+let ySpeed = .75;
 let xSpeed = .3;
 let gravity = 0;
-let bulletSpeed = .5;
+let bulletSpeed = .7;
 const GRAVITATION = 0.028;
 const BOUNDS = 500;
 const DRAG = 0.028;
 let hasContactedGround = false;
-const HELIHEALTHMAX = 2;
-let heliHealth = 2;
+const HELIHEALTHMAX = 30;
+let heliHealth = 30;
 export let gameStatus = "play";
 
 let equippedWeapons = [];
@@ -66,7 +66,7 @@ let music;
 
 const start = () => {
     xVelocity = 0;
-    equippedWeapons.push(heatSeekers);
+    equippedWeapons.push(standardGun);
     displayWeaponInfo();
     
     displayScore();
@@ -77,7 +77,7 @@ const start = () => {
     displayReloadBar();
     updateWeaponIcon();
     // slowSound.stop();
-    character.mesh.position.y = 120;
+    character.mesh.position.y = 80;
     character.mesh.position.x = 0;
     spawn();
     gameStatus = 'play'
@@ -86,6 +86,7 @@ const start = () => {
     scene.remove(deathPlane);
     heliHealth = HELIHEALTHMAX;
     heliCount = 0;
+    displayScore();
     playerHealth = PLAYERHEALTHMAX;
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
@@ -171,8 +172,10 @@ function onDocumentKeyDown(event) {
         if (gameStatus == 'play') {
             pause();
             gameStatus = 'pause';
+            music.pause()
         } else {
             gameStatus = 'play';
+            music.play();
             resume();
         }
     } else if (keyCode == 16 || keyCode == 13){
@@ -422,6 +425,8 @@ document.addEventListener("mouseup", function(event){
             menuMusic.play();
             onCredits = false;
             onMainMenu = true;
+            weaponText.style.display = 'none';
+            text.style.display = 'none';
             mainMenu();
         }
     }
@@ -431,8 +436,8 @@ document.addEventListener("mouseup", function(event){
 });
 
 const shootHeliBullet = () => {
-    if (flyNormal){
-        let square = getBulletMesh('heli', 1);
+    // if (flyNormal){
+        let square = getBulletMesh('heli', 1.2);
         scene.add( square );
         if (!mute){
             playSound(gunshot, new THREE.Audio(listener), false, 1, volume);
@@ -446,7 +451,7 @@ const shootHeliBullet = () => {
             mesh: square,
         }
         heliBullets.push(bullet);
-    }
+    // }
 }
 
 let vec = new THREE.Vector3(); 
@@ -598,7 +603,7 @@ const shootBullet = () => {
 
     if (equippedWeapons[0].ammo == 0){
         equippedWeapons[0] = standardGun;
-        
+        updateWeaponIcon();
         updateWeaponInfo();
         //clearInterval(shoot);
         //shoot = setInterval(shootBullet, equippedWeapons[0].reloadTime);
@@ -636,7 +641,7 @@ let gunshot2 = require('./sounds/gunshot2.wav');
 let akimboMac10sShot = require('./sounds/akimbomac10sShot.wav');
 let rpgBlast = require('./sounds/rpgBlast.wav');
 let rpgHit = require('./sounds/explosion.wav');
-let ouch = require('./sounds/ouch.wav');
+let ouch = require('./sounds/ouch2.wav');
 let healthpackPickup = require('./sounds/healthpackPickup.wav');
 let flamethrowerPickup = require('./sounds/flamethrowerPickup.wav');
 export let hover = require('./sounds/hover.wav');
@@ -839,7 +844,7 @@ const healthBarInit = () => {
     healthBarBackground = new THREE.Mesh( geometry, material );
     scene.add( healthBarBackground ); 
    
-    geometry = new THREE.PlaneGeometry( 1.5, playerHealth * 1.5, 32 );
+    geometry = new THREE.PlaneGeometry( 1.5, PLAYERHEALTHMAX * 1.5, 32 );
     geometry.translate(0, PLAYERHEALTHMAX * 1.5 / 2, 0);
     material = new THREE.MeshBasicMaterial( {color: 0xff0000, side: THREE.FrontSide} );
     healthBar = new THREE.Mesh( geometry, material );
@@ -853,6 +858,7 @@ const healthBarInit = () => {
     healthLogo = new THREE.Mesh( geometry, material );
     scene.add( healthLogo );
     
+    healthBar.scale.set(1, playerHealth/PLAYERHEALTHMAX, 1);
     healthBar.position.y = healthBarPositionY - healthBar.geometry.parameters.height/2;
     healthBarBackground.position.y = healthBarPositionY;
     healthBarPosition = healthBar.position.y;
@@ -868,6 +874,7 @@ const healthBarInit = () => {
 export const displayHealthBar = () => {
 
     healthBar.scale.set(1, playerHealth/PLAYERHEALTHMAX, 1);
+    console.log(playerHealth/PLAYERHEALTHMAX, 'health');
     // healthBarPosition -= .5;
     healthBar.position.y = healthBarPosition;
     healthBar.position.x = character.mesh.position.x + healthBarPositionX;
@@ -975,6 +982,7 @@ const update = () => {
     reloadDelta += delta;
     heliReloadDelta += delta;
     if (heliReloadDelta > heliShootingFPS && heliShooting){
+        console.log('heli is shooting');
         shootHeliBullet();
         heliReloadDelta = 0;
     }
@@ -1129,8 +1137,8 @@ const update = () => {
         bullets[i].mesh.position.y += bullets[i].velocity.y * gameSpeed;
         //remove when out of bounds
         if (Math.abs(bullets[i].mesh.position.x) > BOUNDS || Math.abs(bullets[i].mesh.position.y) > BOUNDS){
-            bullets.splice(i, 1);
             scene.remove(bullets[i].mesh);
+            bullets.splice(i, 1);
             continue;
         }
         //check for collision with objects
@@ -1140,30 +1148,33 @@ const update = () => {
             continue;
         }
         //check for collision with heli
-        if (checkHeliBulletCollision(bullets[i].mesh)){
-            heliHealth -= bullets[i].damage;
-            let expl;
-            if (bullets[i].sound == explosion)
-                expl = getExplosion(10, 10);
-            else expl = getBulletHit(6, 6);
-            expl.spr.position.x = bullets[i].mesh.position.x;
-            expl.spr.position.y = bullets[i].mesh.position.y;
-            scene.add(expl.spr);
-            rpgExplosions.push(expl);
-            if (!mute)
-                playSound(bullets[i].sound, new THREE.Audio(listener));
-            if(heliHealth <= 0){
-                if (!mute && bullets[i].sound != explosion);
-                    playSound(explosion, new THREE.Audio(listener));
-                blowUp();
-                // bullets = [];
-                heliHealth = HELIHEALTHMAX;
-                heliCount++;
-                updateScore();
-            }
-            if (!bullets[i].flame) {
-                scene.remove(bullets[i].mesh);
-                bullets.splice(i, 1);
+        if (heliHealth > 0){
+            if (checkHeliBulletCollision(bullets[i].mesh)){
+                heliHealth -= bullets[i].damage;
+                let expl;
+                if (bullets[i].sound == explosion)
+                    expl = getExplosion(10, 10);
+                else expl = getBulletHit(6, 6);
+                expl.spr.position.x = bullets[i].mesh.position.x;
+                expl.spr.position.y = bullets[i].mesh.position.y;
+                scene.add(expl.spr);
+                rpgExplosions.push(expl);
+                if (!mute)
+                    playSound(bullets[i].sound, new THREE.Audio(listener));
+                if(heliHealth <= 0){
+
+                    if (!mute && bullets[i].sound != explosion);
+                        playSound(explosion, new THREE.Audio(listener));
+                    heliHealth = HELIHEALTHMAX;
+                    blowUp();
+                    // bullets = [];
+                    heliCount++;
+                    updateScore();
+                }
+                if (!bullets[i].flame) {
+                    scene.remove(bullets[i].mesh);
+                    bullets.splice(i, 1);
+                }
             }
         }
     }
@@ -1289,7 +1300,8 @@ const update = () => {
     }
     //
     //Final movement of character
-    moveCharacter(character.mesh.position.x += tmpXVel * gameSpeed, 
+    if (gameStatus == 'play')
+        moveCharacter(character.mesh.position.x += tmpXVel * gameSpeed, 
         character.mesh.position.y += yVelocity * gameSpeed);
     //
 };

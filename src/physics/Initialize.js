@@ -56,6 +56,85 @@ const getMesh = (geom, mat) => {
 	return new THREE.Mesh(geom, mat);
 }
 
+export const getMaterial = (image) => {
+	image.anisotropy = maxAnisotropy;
+	let mat = new THREE.MeshBasicMaterial({map: image, side: THREE.FrontSide});
+	mat.transparent = true;
+	mat.opacity = 1;
+	return mat;
+}
+
+
+//Neon Signs
+let bigGeom = new THREE.PlaneGeometry(4,16,32);
+let cokeGeom = new THREE.PlaneGeometry(4,16,32);
+let neonGeom = new THREE.PlaneGeometry(4,16,32);
+let scrollGeom = new THREE.PlaneGeometry(4,16,32);
+let sideGeom = new THREE.PlaneGeometry(4,16,32);
+let sushiGeom = new THREE.PlaneGeometry(9,3,32);
+let faceGeom = new THREE.PlaneGeometry(8,8,32);
+let hotelGeom = new THREE.PlaneGeometry(9,12,32);
+
+
+let bannerBig = [
+getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-1.png')))),
+getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-2.png')))),
+getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-3.png')))),
+getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-4.png'))))
+];
+
+let bannerCoke = [
+getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-1.png')))),
+getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-2.png')))),
+getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-3.png'))))
+];
+
+let bannerNeon = [
+getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-1.png')))),
+getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-2.png')))),
+getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-3.png')))),
+getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-4.png'))))
+];
+
+let bannerScroll = [
+getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-1.png')))),
+getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-2.png')))),
+getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-3.png')))),
+getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-4.png'))))
+];
+
+let bannerSide = [
+getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-1.png')))),
+getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-2.png')))),
+getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-3.png')))),
+getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-4.png'))))
+];
+
+let bannerSushi = [
+getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-1.png')))),
+getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-2.png')))),
+getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-3.png'))))
+];
+
+let monitorFace = [
+getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-1.png')))),
+getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-2.png')))),
+getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-3.png')))),
+getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-4.png'))))
+];
+
+let hotelSign = getMesh(hotelGeom, getMaterial(getTexture(require('../pics/props/hotel-sign.png'))));
+//
+
+let props = [
+bannerBig,
+bannerCoke,
+bannerScroll,
+bannerSushi,
+bannerSide,
+monitorFace,
+];
+
 //Buttons
 let buttonGeom = new THREE.PlaneGeometry(50, 10);
 let titleGeom = new THREE.PlaneGeometry(50, 50);
@@ -313,15 +392,6 @@ export const updateSprite = (sprite, crashed) => {
 		}
 	}
 
-}
-
-//For arm sprite
-export const getMaterial = (image) => {
-	image.anisotropy = maxAnisotropy;
-	let mat = new THREE.MeshBasicMaterial({map: image, side: THREE.FrontSide});
-	mat.transparent = true;
-	mat.opacity = 1;
-	return mat;
 }
 
 //Background
@@ -688,10 +758,13 @@ export const init = () => {
 
 	//Floor
 	let sceneryX = [0,-50,50,100,150,200];
-	let sceneryY = [-50, -40, -35,-40,-50, -40];
+	let sceneryY = [-40, -30, -25,-30,-40, -30];
+
+	let propsX = [ -50, 0, -50, 50, 100, 150, 200];
+	let propsY = [ -20,-40, -30, -25, -30, -40, -30];
 
 	for (var i = 0; i < sceneryX.length; i++) {
-		let geometry = new THREE.PlaneGeometry( 50, 20, 32 );
+		let geometry = new THREE.PlaneGeometry( 50, 40, 32 );
 		let floorTex;
 		if (Math.random() < .5){
 			floorTex = new THREE.TextureLoader().load(require('../pics/buildings/building1.png'));
@@ -718,6 +791,14 @@ export const init = () => {
 		ground.position.x = sceneryX[i];
 		ground.position.y = sceneryY[i];
 		objects.push(ground);
+	}
+	for (var i = 0; i < props.length; i++) {
+		let mesh = props[i][0];
+		mesh.position.x = propsX[i];
+		mesh.position.y = propsY[i];
+		mesh.position.z = 1;
+		scene.add(mesh);
+
 	}
 	//
 	//Footsteps sound
