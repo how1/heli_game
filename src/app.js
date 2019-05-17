@@ -13,7 +13,7 @@ import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBul
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
     shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume, slowSound, 
-    getDropIconMesh, healthpack, hoverSound, Gun, standardGun, flamethrower } from "./physics/spawn.js";
+    getDropIconMesh, healthpack, hoverSound, Gun, standardGun, flamethrower, heatSeekers } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 
@@ -36,7 +36,7 @@ let equippedWeapons = [];
 export let heliCount = 0;
 export let playerHealth = 8;
 const PLAYERHEALTHMAX = 8;
-export let mute = false;
+export let mute = true;
 
 
 let xVelocity = 0;
@@ -66,7 +66,7 @@ let music;
 
 const start = () => {
     xVelocity = 0;
-    equippedWeapons.push(flamethrower);
+    equippedWeapons.push(heatSeekers);
     displayWeaponInfo();
     
     displayScore();
@@ -484,8 +484,7 @@ const shootBullet = () => {
             flame
         }
         bullets.push(bullet);
-    }
-    else if (equippedWeapons[0].name == rpg.name) {
+    } else if (equippedWeapons[0].name == rpg.name) {
         let rocketMesh = equippedWeapons[0].getBullet();
         scene.add(rocketMesh);
         rocketMesh.position.x = arm.position.x;
@@ -503,6 +502,29 @@ const shootBullet = () => {
             damage:equippedWeapons[0].damage,
             sound: equippedWeapons[0].hitSound
         }
+        bullets.push(bullet);
+    } else if (equippedWeapons[0].name == heatSeekers.name) {
+        let rocketMesh = equippedWeapons[0].getBullet();
+        scene.add(rocketMesh);
+        rocketMesh.position.x = arm.position.x;
+        rocketMesh.position.y = arm.position.y;
+        // rocket.lookAt(pos);
+        let tmpCharPos = new THREE.Vector3();
+        tmpCharPos.copy(arm.position);
+        tmpCharPos.z = 0;
+        let bulletVelocity = tmpCharPos.sub(pos).normalize().negate();
+        let degrees = bulletVelocity.angleTo(new THREE.Vector3(1,0,0));
+        rocketMesh.rotation.z = degrees;
+        let bullet = {
+            velocity: bulletVelocity.multiplyScalar(equippedWeapons[0].speed),
+            mesh: rocketMesh,
+            damage:equippedWeapons[0].damage,
+            sound: equippedWeapons[0].hitSound,
+            alpha: 0,
+            name: 'seeker',
+            speed: .45
+        }
+        // bullet.velocity.clampLength(0, equippedWeapons[0].speed);
         bullets.push(bullet);
     } else {
         let tmpCharPos = new THREE.Vector3();
@@ -844,20 +866,6 @@ const healthBarInit = () => {
 }
 
 export const displayHealthBar = () => {
-    // if (healthBar){
-    //     scene.remove(healthBar);
-    //     scene.remove(healthBarBackground);
-    // }
-    // let geometry = new THREE.PlaneGeometry( 1.5, PLAYERHEALTHMAX * 1.5, 32 );
-    // let material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.FrontSide} );
-    // healthBarBackground = new THREE.Mesh( geometry, material );
-    // scene.add( healthBarBackground ); 
-
-
-
-    // if (playerHealth > 0){
-    //     scene.add( healthBar );
-    // }
 
     healthBar.scale.set(1, playerHealth/PLAYERHEALTHMAX, 1);
     // healthBarPosition -= .5;
@@ -955,7 +963,12 @@ let heliReloadDelta = 0;
 
 let reloadDelta = 0;
 
+let clock = new THREE.Clock();
+let delta2 = clock.start();
+
+
 const update = () => {
+    delta2 = clock.getDelta();
     //Character sprite animation fps
     curTime = Date.now();
     delta = curTime - oldTime;
@@ -1099,6 +1112,17 @@ const update = () => {
                 continue;
             }
             bullets[i].flame.mesh.scale.set(flame.size, flame.size, 1);
+        } else if (bullets[i].name == 'seeker'){
+            let tmpRocketPos = new THREE.Vector3();
+            tmpRocketPos.copy(bullets[i].mesh.position);
+            let tmpHeliPos = new THREE.Vector3();
+            tmpHeliPos.copy(heli.position);
+            let newVec = new THREE.Vector3();
+            newVec = tmpRocketPos.sub(tmpHeliPos).normalize().negate();
+            newVec.multiplyScalar(bullets[i].speed);
+            bullets[i].velocity.lerp(newVec, bullets[i].alpha += delta2/200);
+            let degrees = bullets[i].velocity.angleTo(new THREE.Vector3(1,0,0));
+            bullets[i].mesh.rotation.z = degrees;
         }
         //move bullets
         bullets[i].mesh.position.x += bullets[i].velocity.x * gameSpeed;

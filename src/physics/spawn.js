@@ -4,7 +4,7 @@ import { heliCount, gameSpeed, gameStatus, playSound, mute, listener, setHeliSho
 import * as THREE from 'three';
 
 export let heli;
-export let spawnMute = false;
+export let spawnMute = true;
 let crash = require('../sounds/crash.wav');
 let hover = require('../sounds/hover.wav');
 let fadeIn = require('../sounds/fadeIn.wav');
@@ -280,8 +280,8 @@ const getDropInfo = () => {
 		dropInfo = getHealthpack();
 	} else if (random < 1){
 		dropInfo = getAkimbo();
-	// } else if (random < .8){
-	// 	dropInfo = antiMatterDevice;
+	} else if (random < .8){
+		dropInfo = getHeatSeekers();
 	} else {
 		dropInfo = new Flamethrower();
 	}
@@ -290,6 +290,7 @@ const getDropInfo = () => {
 
 let bulletMat = getMaterial(new THREE.TextureLoader().load(require('../pics/bullet.png')));
 let bullet2Mat = getMaterial(new THREE.TextureLoader().load(require('../pics/bullet2.png')));
+let seekerTex = getMaterial(new THREE.TextureLoader().load(require('../pics/seekerTex.png')));
 
 export const getBulletMesh = (color, s) => {
 	let size = 1.6;
@@ -302,6 +303,12 @@ export const getBulletMesh = (color, s) => {
 		mesh.position.z = .1;
 	} else if (color == 'heli') {
 		mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size, 32), bullet2Mat);
+		mesh.position.z = .1;
+	} else if (color == 'heatSeekers'){
+		let geometry = new THREE.PlaneGeometry(3.5, 3.5, 32);
+		mesh = new THREE.Mesh(geometry, seekerTex);
+		mesh.transparent = true;
+		mesh.opacity = 1;
 		mesh.position.z = .1;
 	} else {
 		mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size, 32), bulletMat);
@@ -340,6 +347,9 @@ export const getDropIconMesh = (gun, scale) => {
 	} else if (gun == 'flamethrower'){
 		let mat = getMaterial(getTexture(require('../pics/flamethrowerDrop.png')));
 		mesh = new THREE.Mesh(dropGeom, mat);
+	} else if (gun == 'heatSeekers'){
+		let mat = getMaterial(getTexture(require('../pics/heatSeekersDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
 	}
 	mesh.transparent = true;
 	mesh.opacity = 1;
@@ -363,10 +373,7 @@ let ouch = require('../sounds/ouch.wav');
 let healthpackPickup = require('../sounds/healthpackPickup.wav');
 let flamethrowerPickup = require('../sounds/flamethrowerPickup.wav');
 let flamethrowerShot = require('../sounds/flamethrowerShot.wav');
-// export let hover = require('../sounds/hover.wav');
-// export let fadeIn = require('../sounds/fadeIn.wav');
-// export let fadeOut = require('../sounds/fadeOut.wav');
-let tick = require('../sounds/tick.wav');
+let heatSeekersPickup = require('../sounds/heatSeekingMissilesPickup.wav');
 
 export const Gun = function (color, name, size, speed, ammo, fullAmmoMax, damage, velocity, reloadTime, shotSound, hitSound, pickupSound) {
 	this.color = color;
@@ -383,7 +390,7 @@ export const Gun = function (color, name, size, speed, ammo, fullAmmoMax, damage
 	this.shotSound = shotSound;
 	this.hitSound = hitSound;
 	this.pickupSound = pickupSound;
-	this.getBullet = function() {return getBulletMesh(name, size);};
+	this.getBullet = function() {return getBulletMesh(this.name, this.size);};
 	this.getDropIcon = function(name, scale) { return getDropIconMesh(name, scale);}
 }
 
@@ -405,12 +412,14 @@ export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .45,   6,  6,  7
 export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.1, .5,   50,  50,  1,    0,  550, akimboMac10sShot, metalHit, akimboPickup);}
 export let getHealthpack = () => {return new Gun(0x000000, 'healthpack', 1, .5, 1,1,1,0,1, null, null, healthpackPickup);}
 export let getStandard = () => {return new Gun(0x000000, 'standardGun', 1.1, .5, -1, -1, 1, 0, 1000, gunshot2, metalHit, null);}
+export let getHeatSeekers = () => {return new Gun(0x000000, 'heatSeekers', 1.6, .45, 3, 3, 7, 0, 7000, rpgBlast, rpgHit, heatSeekersPickup);}
 
 export let rpg = getRpg();
 export let akimboMac10s = getAkimbo();
 export let shotgun = getShotgun();
 export let standardGun = getStandard();
 export let healthpack = getHealthpack();
+export let heatSeekers = getHeatSeekers();
 
 
 // export let antiMatterDevice = {

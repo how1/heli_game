@@ -1,7 +1,5 @@
 To Do: 
 
-make drops random intervals
-
 allow bullets to fly during gameover screen
 
 add death animation of character
@@ -19,7 +17,3 @@ refactor app.js
 add passing cars from demo?
 
 make drop voice louder
-
-fix healthpack pickup sound
-
-add change weapon mechanics
