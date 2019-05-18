@@ -4,22 +4,17 @@ allow bullets to fly during gameover screen
 
 add death animation of character
 
-add gun
+add one more gun
 
 things will look good once everything is consistent
 
 make drop at 3rd heli rather than 1st after debugging
 
-add neon signs
-
 refactor app.js
 
-add passing cars from demo?
-
-add records
+add records, cookies
 
 mute hover ticks
 
-add change weapon and mute to instructions
+put cover in different location
 
-fix heli speed ,bullet speed , character speed, dodging, etc

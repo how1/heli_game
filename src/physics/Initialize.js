@@ -71,69 +71,109 @@ let cokeGeom = new THREE.PlaneGeometry(4,16,32);
 let neonGeom = new THREE.PlaneGeometry(4,16,32);
 let scrollGeom = new THREE.PlaneGeometry(4,16,32);
 let sideGeom = new THREE.PlaneGeometry(4,16,32);
-let sushiGeom = new THREE.PlaneGeometry(9,3,32);
+let sushiGeom = new THREE.PlaneGeometry(18,6,32);
 let faceGeom = new THREE.PlaneGeometry(8,8,32);
-let hotelGeom = new THREE.PlaneGeometry(9,12,32);
+let hotelGeom = new THREE.PlaneGeometry(40, 20,32);
 
+const Sign = function(images, x, y) {
+	this.images = images;
+	this.val = 0;
+	this.x = x;
+	this.y = y;
+	this.updateProp = function(){
+		let pos = this.images[this.val].position;
+		scene.remove(this.images[this.val]);
+		this.val++;
+		if (this.val == this.images.length){
+			this.val = 0;
+		}
+		this.images[this.val].position.copy(pos);
+		scene.add(this.images[this.val]);
+	}
+}
 
-let bannerBig = [
-getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-1.png')))),
-getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-2.png')))),
-getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-3.png')))),
-getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-4.png'))))
-];
+const bannerBig = (x, y) => {return new Sign([
+	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-1.png')))),
+	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-2.png')))),
+	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-3.png')))),
+	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-4.png'))))
+	], x, y);}
 
-let bannerCoke = [
-getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-1.png')))),
-getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-2.png')))),
-getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-3.png'))))
-];
+const bannerCoke = (x, y) => {return new Sign([
+	getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-1.png')))),
+	getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-2.png')))),
+	getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-3.png'))))
+	], x, y);}
 
-let bannerNeon = [
-getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-1.png')))),
-getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-2.png')))),
-getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-3.png')))),
-getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-4.png'))))
-];
+const bannerNeon = (x, y) => {return new Sign([
+	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-1.png')))),
+	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-2.png')))),
+	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-3.png')))),
+	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-4.png'))))
+	], x, y);}
 
-let bannerScroll = [
-getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-1.png')))),
-getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-2.png')))),
-getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-3.png')))),
-getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-4.png'))))
-];
+const bannerScroll = (x, y) => {return new Sign([
+	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-1.png')))),
+	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-2.png')))),
+	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-3.png')))),
+	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-4.png'))))
+	], x, y);}
 
-let bannerSide = [
-getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-1.png')))),
-getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-2.png')))),
-getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-3.png')))),
-getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-4.png'))))
-];
+const bannerSide = (x, y) => {return new Sign([
+	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-1.png')))),
+	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-2.png')))),
+	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-3.png')))),
+	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-4.png'))))
+	], x, y);}
 
-let bannerSushi = [
-getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-1.png')))),
-getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-2.png')))),
-getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-3.png'))))
-];
+const bannerSushi = (x, y) => {return new Sign( [
+	getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-1.png')))),
+	getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-2.png')))),
+	getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-3.png'))))
+	], x, y);}
 
-let monitorFace = [
-getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-1.png')))),
-getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-2.png')))),
-getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-3.png')))),
-getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-4.png'))))
-];
+const monitorFace = (x, y) => {return new Sign([
+	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-1.png')))),
+	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-2.png')))),
+	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-3.png')))),
+	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-4.png'))))
+	], x, y);}
 
 let hotelSign = getMesh(hotelGeom, getMaterial(getTexture(require('../pics/props/hotel-sign.png'))));
-//
+
+const getAircon = () => {
+	let geom = new THREE.PlaneGeometry(8,8,32);
+	let mesh = getMesh(geom, getMaterial(getTexture(require('../pics/buildings/airConditioner.png'))));
+	let obj = getMesh(new THREE.PlaneGeometry(7, 7, 23), new THREE.MeshBasicMaterial({color:0x000000, side: THREE.FrontSide}));
+	obj.material.opacity = 0;
+	let ac = {
+		mesh: mesh,
+		obj: obj
+	}
+	return ac;
+}
 
 let props = [
-bannerBig,
-bannerCoke,
-bannerScroll,
-bannerSushi,
-bannerSide,
-monitorFace,
+bannerBig(-75, -10),
+bannerCoke(25, -24),
+bannerScroll(-50, -25),
+bannerSushi(48, -50),
+bannerSide(100, -24),
+monitorFace(220, -15),
+monitorFace(-40, -35),
+bannerSide(50, -15),
+bannerSushi(80, -50),
+bannerScroll(150, -35),
+bannerCoke(-170, -10),
+bannerBig(200, -30),
+bannerSushi(18, -13)
 ];
+
+// let props = [
+// bannerSushi(130, -13)
+// ];
+
+// let props = [];
 
 //Buttons
 let buttonGeom = new THREE.PlaneGeometry(50, 10);
@@ -202,6 +242,7 @@ export let bgImage;
 //Sprite Sheets
 
 export let heliFlying;
+export let heliGrappled;
 export let crashedHeliSpr;
 let explosionSpr
 export let explosion;
@@ -350,7 +391,7 @@ export const updateSprite = (sprite, crashed) => {
 			sprite.tex.offset.x = jumpingArrayLeft[jumpingNewVal];
 			jumpingNewVal++;
 		}
-	} else if (crashed == 'crashed') {
+	} else if (crashed == 'crashed' || sprite == heliGrappled) {
 		if (sprite.newVal == 6){
 			sprite.newVal = 0;
 			sprite.tex.offset.x = heliArray[sprite.newVal];
@@ -472,6 +513,12 @@ export const pause = () => {
 		mainMenuButton.getMesh(character.mesh.position.x, -11, 3);
 	    
 	    pauseBackground.position.x = character.mesh.position.x;
+	}
+}
+
+export let updateProps = () => {
+	for (var i = 0; i < props.length; i++) {
+		props[i].updateProp();
 	}
 }
 
@@ -687,6 +734,7 @@ export const init = () => {
 	
 	//Heli sprites
 	heliFlying = new spriteSheet( getTexture(require('../pics/heli5.png')) , 0, 1, 8, 40, 20);
+	heliGrappled = new spriteSheet( getTexture(require('../pics/heli5.png')) , 0, 1, 8, 40, 20);
 	crashedHeliSpr = getTexture( require('../pics/crashedHeli.png' ));
 	//
 
@@ -757,11 +805,18 @@ export const init = () => {
 
 
 	//Floor
-	let sceneryX = [0,-50,50,100,150,200];
-	let sceneryY = [-40, -30, -25,-30,-40, -30];
-
-	let propsX = [ -50, 0, -50, 50, 100, 150, 200];
-	let propsY = [ -20,-40, -30, -25, -30, -40, -30];
+	let sceneryX = [-50, -0,   50, 100 , 150,  200];
+	let sceneryY = [-35, -45, -25, -35,  -45,  -38];
+	//-50,  0, 50, 100,150,200 
+	//-30,-40,-25, -30,-40,-30
+	//   10  15   5    10  10
+	// let airCon = getAircon();
+	// airCon.mesh.position.x = airCon.obj.position.x = 20;
+	// airCon.mesh.position.y = airCon.obj.position.y = -18;
+	// airCon.mesh.position.z = 1;
+	// scene.add(airCon.mesh);
+	// // scene.add(airCon.obj);
+	// objects.push(airCon.obj);
 
 	for (var i = 0; i < sceneryX.length; i++) {
 		let geometry = new THREE.PlaneGeometry( 50, 40, 32 );
@@ -793,13 +848,18 @@ export const init = () => {
 		objects.push(ground);
 	}
 	for (var i = 0; i < props.length; i++) {
-		let mesh = props[i][0];
-		mesh.position.x = propsX[i];
-		mesh.position.y = propsY[i];
+		let mesh = props[i].images[0];
+		mesh.position.x = props[i].x;
+		mesh.position.y = props[i].y;
 		mesh.position.z = 1;
 		scene.add(mesh);
+		objects.push(mesh);
 
 	}
+	scene.add(hotelSign);
+	hotelSign.position.x = 180;
+	hotelSign.position.y = -15;
+	hotelSign.position.z = -.05;
 	//
 	//Footsteps sound
 	footsteps = getSound(footstepsFile, new THREE.Audio(listener) , true);

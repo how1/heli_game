@@ -1,10 +1,10 @@
 import { camera, renderer, scene, init, character, objects, heliFlying, 
-	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getExplosion, getMaterial } from "./Initialize.js";
+	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getExplosion, getMaterial, heliGrappled } from "./Initialize.js";
 import { heliCount, gameSpeed, gameStatus, playSound, mute, listener, setHeliShooting } from "../app.js";
 import * as THREE from 'three';
 
 export let heli;
-export let spawnMute = true;
+export let spawnMute = false;
 let crash = require('../sounds/crash.wav');
 let hover = require('../sounds/hover.wav');
 let fadeIn = require('../sounds/fadeIn.wav');
@@ -207,7 +207,7 @@ export const move = () => {
 
 export const getQueueToFly = () => {
 	if (!flyNormal)
-		if (Math.abs(heli.position.x) >= character.mesh.position.x + 95){
+		if (Math.abs(heli.position.x) >= character.mesh.position.x + 68){
 			flyOn();
 		}
 }
@@ -215,6 +215,7 @@ export const getQueueToFly = () => {
 let flyOffDirection;
 
 export const flyOff = () => {
+	console.log('fly off');
 	flyNormal = false;
 	if (Math.random() < .5){
 		flyOffDirection = 'left';
@@ -224,9 +225,9 @@ export const flyOff = () => {
 export const flyOn = () => {
 	console.log('fly on');
 	if (flyOffDirection == 'left'){
-		heli.position.x = character.mesh.position.x + 100;
+		heli.position.x = character.mesh.position.x + 70;
 	} else {
-		heli.position.x = character.mesh.position.x - 100;
+		heli.position.x = character.mesh.position.x - 70;
 	}
 	flyNormal = true;
 }
@@ -237,8 +238,8 @@ export const dodge = () => {
 			dodgeMode = false;
 		} else {
 			if (Math.random() < .5){
-				dodgeDirection = -30;
-			} else dodgeDirection = 30;
+				dodgeDirection = -20;
+			} else dodgeDirection = 20;
 			dodgeMode = true;
 		}
 	}
@@ -253,6 +254,7 @@ export let heliPartVelocityX = [];
 export let pickUps = [];
 
 export let slowSound;
+export let grappled = false;
 
 export const blowUp = () => {
 	setHeliShooting(false);
@@ -271,14 +273,20 @@ export const blowUp = () => {
 	helipart1.push(part1);
 	let crashed= getCrashedHeli();
 	let explosion = getExplosion(40, 40);
-	scene.add(crashed.spr);
-	scene.add(explosion.spr);
-	crashedHelis.push(crashed);
-	explosions.push(explosion);
-	explosion.spr.position.x = heli.position.x + 4;
-	explosion.spr.position.y = heli.position.y;
-	scene.remove(heli);
-	scene.remove(heliFlying.spr);
+	if (grappled){
+		scene.add(heliGrappled.spr);
+		crashedHelis.push(heliGrappled);
+		scene.remove(heli);
+	} else {
+		scene.add(crashed.spr);
+		scene.add(explosion.spr);
+		crashedHelis.push(crashed);
+		explosions.push(explosion);
+		explosion.spr.position.x = heli.position.x + 4;
+		explosion.spr.position.y = heli.position.y;
+		scene.remove(heli);
+		scene.remove(heliFlying.spr);
+	}
 	heliPartVelocityX.push(1);
 	heliPartVelocityY.push(.0005);
 
@@ -294,6 +302,11 @@ export const blowUp = () => {
 		console.log('spawn');
 		spawn();
 	}
+	grappled = false;
+}
+
+export const pullDownHeli = (bullet) => {
+	grappled = true;
 }
 
 const getDropInfo = () => {
@@ -309,8 +322,10 @@ const getDropInfo = () => {
 		dropInfo = getAkimbo();
 	} else if (random < .7){
 		dropInfo = getHeatSeekers();
-	} else if (random < 1) {
+	} else if (random < .8) {
 		dropInfo = new Flamethrower();
+	} else if (random < .9) {
+		dropInfo = getGrappleCannon();
 	}
 	return dropInfo;
 }
@@ -337,7 +352,10 @@ export const getBulletMesh = (color, s) => {
 		mesh.transparent = true;
 		mesh.opacity = 1;
 		mesh.position.z = .1;
-	} else {
+	} else if (color == 'grappleCannon') {
+		mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size, 32), bullet2Mat);
+		mesh.position.z = .1;
+	}else {
 		mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size, 32), bulletMat);
 		mesh.position.z = .1;
 	}
@@ -377,6 +395,9 @@ export const getDropIconMesh = (gun, scale) => {
 	} else if (gun == 'heatSeekers'){
 		let mat = getMaterial(getTexture(require('../pics/heatSeekersDrop.png')));
 		mesh = new THREE.Mesh(dropGeom, mat);
+	} else if (gun == 'grappleCannon'){
+		let mat = getMaterial(getTexture(require('../pics/grappleCannonDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
 	}
 	mesh.transparent = true;
 	mesh.opacity = 1;
@@ -401,6 +422,8 @@ let healthpackPickup = require('../sounds/healthpackPickup.wav');
 let flamethrowerPickup = require('../sounds/flamethrowerPickup.wav');
 let flamethrowerShot = require('../sounds/flamethrowerShot.wav');
 let heatSeekersPickup = require('../sounds/heatSeekingMissilesPickup.wav');
+let grappleCannonPickup = require('../sounds/grappleCannonPickup.wav');
+let grappleShot = require('../sounds/grappleShot.wav');
 
 export const Gun = function (color, name, size, speed, ammo, fullAmmoMax, damage, velocity, reloadTime, shotSound, hitSound, pickupSound) {
 	this.color = color;
@@ -435,7 +458,11 @@ let getShotgun = () => { return new Gun(
 	metalHit,
 	shotgunPickup
 );} 
-export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .45,   6,  6,  10,    0,     7000, rpgBlast, rpgHit, rpgPickup);}
+
+export let getGrappleCannon = () => {
+	return new Gun(0x000000, 'grappleCannon', 1.5, .7, 1,1, 30, 0, 5000, grappleShot, metalHit, grappleCannonPickup);
+}
+export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .7,   6,  6,  10,    0,     7000, rpgBlast, rpgHit, rpgPickup);}
 export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.2, .8,   50,  50,  1,    0,  550, akimboMac10sShot, metalHit, akimboPickup);}
 export let getHealthpack = () => {return new Gun(0x000000, 'healthpack', 1.2, .5, 1,1,1,0,1, null, null, healthpackPickup);}
 export let getStandard = () => {return new Gun(0x000000, 'standardGun', 1.2, .8, -1, -1, 1, 0, 600, gunshot2, metalHit, null);}
@@ -447,6 +474,7 @@ export let shotgun = getShotgun();
 export let standardGun = getStandard();
 export let healthpack = getHealthpack();
 export let heatSeekers = getHeatSeekers();
+export let grappleCannon = getGrappleCannon();
 
 
 // export let antiMatterDevice = {

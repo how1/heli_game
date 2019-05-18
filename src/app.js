@@ -7,22 +7,23 @@ import { bodies, camera, renderer, scene, init, character, objects,
     startGameButton, instructionsButton, creditsButton, mainMenu, buttonHover, instructions, 
     backButton, credits, resumeButton, restartButton, mainMenuButton, pause, resume, 
     showGameOverButtons, buttonHighlight, buttons, mainMenuButtons, pauseButtons, gameOverButtons,
-     width, height, windowOffset} from "./physics/Initialize.js";
+     width, height, windowOffset, updateProps, heliFlying, heliGrappled, getCrashedHeli} from "./physics/Initialize.js";
 import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision,
  checkMenuCollision } from "./physics/checkForCollision.js";
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
     shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume, slowSound, 
-    getDropIconMesh, healthpack, hoverSound, Gun, standardGun, flamethrower, heatSeekers } from "./physics/spawn.js";
+    getDropIconMesh, healthpack, hoverSound, Gun, standardGun, flamethrower, heatSeekers, grappleCannon, 
+    pullDownHeli, grappled } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 
 mainMenu();
 
-let ySpeed = .75;
+let ySpeed = 1;
 let xSpeed = .3;
 let gravity = 0;
-let bulletSpeed = .7;
+let bulletSpeed = .5;
 const GRAVITATION = 0.028;
 const BOUNDS = 500;
 const DRAG = 0.028;
@@ -36,7 +37,7 @@ let equippedWeapons = [];
 export let heliCount = 0;
 export let playerHealth = 8;
 const PLAYERHEALTHMAX = 8;
-export let mute = true;
+export let mute = false;
 
 
 let xVelocity = 0;
@@ -540,11 +541,23 @@ const shootBullet = () => {
         scene.add(newBullet);
         newBullet.position.x = arm.position.x;
         newBullet.position.y = arm.position.y;
-        let bullet = {
-            velocity: bulletVelocity.multiplyScalar(equippedWeapons[0].speed),
-            mesh: newBullet,
-            damage:equippedWeapons[0].damage,
-            sound:equippedWeapons[0].hitSound
+        let bullet;
+        if (equippedWeapons[0].name == grappleCannon.name){
+            bullet = {
+                velocity: bulletVelocity.multiplyScalar(equippedWeapons[0].speed),
+                mesh: newBullet,
+                damage:equippedWeapons[0].damage,
+                sound:equippedWeapons[0].hitSound,
+                name: 'grapple',
+                line: null
+            }
+        } else {
+            bullet = {
+                velocity: bulletVelocity.multiplyScalar(equippedWeapons[0].speed),
+                mesh: newBullet,
+                damage:equippedWeapons[0].damage,
+                sound:equippedWeapons[0].hitSound
+            }
         }
         bullets.push(bullet);
     }
@@ -784,7 +797,7 @@ export const displayScore = () => {
     text.style.borderRadius = window.innerHeight/20 + 'px';
     text.style.paddingLeft = window.innerHeight/78 + 'px';
     text.style.paddingRight = window.innerHeight/78 + 'px';
-    text.innerHTML = "Chopper's x " + heliCount;
+    text.innerHTML = "Choppers x " + heliCount;
     text.style.top = window.innerHeight / 23 + 'px';
     text.style.left = window.innerWidth - windowOffset - window.innerHeight/2.7 + 'px';
     document.body.appendChild(text);
@@ -890,6 +903,8 @@ let blowUpInterval = 1000/blowUpFps;
 let blowUpDelta;
 let fallingSpeed = 0.01;
 
+let line;
+
 const heliPartAnimation = () => {
     blowUpCurTime = Date.now();
     blowUpDelta = blowUpCurTime - blowUpOldTime;
@@ -897,8 +912,38 @@ const heliPartAnimation = () => {
         for (var i = 0; i < helipart1.length; i++) {
             if (blowUpDelta > blowUpInterval){
                 blowUpOldTime = blowUpCurTime - (blowUpDelta % blowUpInterval);
-                updateSprite(crashedHelis[i], 'crashed');
-                updateSprite(explosions[i], 'explosion');
+                if (crashedHelis[i] == heliGrappled){
+                    updateSprite(crashedHelis[i]);
+                } else{
+                    updateSprite(crashedHelis[i], 'crashed');
+                    updateSprite(explosions[i], 'explosion');
+                }
+            }
+            if (crashedHelis[i] == heliGrappled){
+                if (crashedHelis[i].spr.position.y < -15){
+                    scene.remove(line);
+                    scene.remove(crashedHelis[i].spr);
+                    if (!mute) playSound(explosion, new THREE.Audio(listener));
+                    let crashed = getCrashedHeli();
+                    let expl = getExplosion(40,40);
+                    scene.add(crashed.spr);
+                    scene.add(expl.spr);
+                    crashedHelis[i] = crashed;
+                    explosions.push(expl);
+                    crashedHelis[i].spr.position.x = helipart1[i].position.x;
+                    crashedHelis[i].spr.position.y = helipart1[i].position.y;
+                    crashedHelis[i].spr.material.rotation = helipart1[i].rotation.z;
+                    expl.spr.position.x = helipart1[i].position.x + 4;
+                    expl.spr.position.y = helipart1[i].position.y;
+                } else {
+                    if (line) scene.remove(line);
+                    let lineMat = new THREE.LineBasicMaterial({color: 0xffffff});
+                    let lineGeom = new THREE.Geometry();
+                    lineGeom.vertices.push(character.mesh.position);
+                    lineGeom.vertices.push(crashedHelis[i].spr.position);
+                    line = new THREE.Line(lineGeom, lineMat);
+                    scene.add(line);
+                }
             }
             crashedHelis[i].spr.position.x = helipart1[i].position.x;
             crashedHelis[i].spr.position.y = helipart1[i].position.y;
@@ -906,6 +951,10 @@ const heliPartAnimation = () => {
             if (helipart1[i].position.y < -100){
                 scene.remove(helipart1[i]);
                 scene.remove(crashedHelis[i]);
+                if (crashedHelis[i] == heliGrappled) {
+                    scene.remove(line);
+                    line = null;
+                }
                 helipart1.splice[i, 1];
                 heliPartVelocityX.splice[i, 1];
                 heliPartVelocityY.splice[i, 1];
@@ -965,7 +1014,7 @@ let interval = 1000/fps;
 let delta;
 let standDir = 'right';
 let rpgExplosions = [];
-let heliShootingFPS = 2000;
+let heliShootingFPS = 1500;
 let heliReloadDelta = 0;
 
 let reloadDelta = 0;
@@ -973,16 +1022,29 @@ let reloadDelta = 0;
 let clock = new THREE.Clock();
 let delta2 = clock.start();
 
+let signsFps = 24;
+let curTime2;
+let oldTime2 = Date.now();
+let signsInterval = 1000/signsFps;
+let signsDelta;
+
 
 const update = () => {
     delta2 = clock.getDelta();
     //Character sprite animation fps
     curTime = Date.now();
     delta = curTime - oldTime;
+    curTime2 = Date.now();
+    signsDelta = curTime2 - oldTime2;
+
     reloadDelta += delta;
     heliReloadDelta += delta;
+
+    if (signsDelta > signsInterval){
+        oldTime2 = curTime2 - (signsDelta % signsInterval);
+        updateProps();
+    }
     if (heliReloadDelta > heliShootingFPS && heliShooting){
-        console.log('heli is shooting');
         shootHeliBullet();
         heliReloadDelta = 0;
     }
@@ -1135,15 +1197,34 @@ const update = () => {
         //move bullets
         bullets[i].mesh.position.x += bullets[i].velocity.x * gameSpeed;
         bullets[i].mesh.position.y += bullets[i].velocity.y * gameSpeed;
+
+        if (bullets[i].name == 'grapple'){
+            if (bullets[i].line) scene.remove(bullets[i].line);
+            if (bullets[i].mesh.position.distanceTo(character.mesh.position) < 100){
+                let lineMat = new THREE.LineBasicMaterial({color: 0xffffff});
+                let lineGeom = new THREE.Geometry();
+                lineGeom.vertices.push(character.mesh.position);
+                lineGeom.vertices.push(bullets[i].mesh.position);
+                bullets[i].line = new THREE.Line(lineGeom, lineMat);
+                scene.add(bullets[i].line);
+            }
+        }
+
         //remove when out of bounds
         if (Math.abs(bullets[i].mesh.position.x) > BOUNDS || Math.abs(bullets[i].mesh.position.y) > BOUNDS){
             scene.remove(bullets[i].mesh);
+            if (bullets[i].name == 'grapple'){
+                scene.remove(bullets[i].line);
+            }
             bullets.splice(i, 1);
             continue;
         }
         //check for collision with objects
         if (checkCollisions(objects, bullets[i].mesh).length != 0){
             scene.remove(bullets[i].mesh);
+            if (bullets[i].name == 'grapple'){
+                scene.remove(bullets[i].line);
+            }
             bullets.splice(i, 1);
             continue;
         }
@@ -1166,9 +1247,13 @@ const update = () => {
                     if (!mute && bullets[i].sound != explosion);
                         playSound(explosion, new THREE.Audio(listener));
                     heliHealth = HELIHEALTHMAX;
+                    if (bullets[i].name == 'grapple'){
+                        scene.remove(bullets[i].line);
+                        pullDownHeli();
+                    }
+                    heliCount++;
                     blowUp();
                     // bullets = [];
-                    heliCount++;
                     updateScore();
                 }
                 if (!bullets[i].flame) {
