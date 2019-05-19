@@ -684,6 +684,8 @@ musicLoader.load(song, function(buffer){
     music.setLoop(true);
     music.setVolume(0.5);
 });
+music.play();
+music.stop();
 
 let explosionStart = new THREE.Audio(listener);
 let explLoader = new THREE.AudioLoader();
