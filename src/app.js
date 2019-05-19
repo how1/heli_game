@@ -38,7 +38,6 @@ const playGame = () => {
     // playGameButton.style.display = 'none';
     // document.body.style.backgroundColor = 'black';
     // renderer.domElement.style.display = 'inline';
-    let audioContext = new AudioContext();
     listener = new THREE.AudioListener();
     camera.add( listener );
     init();
@@ -409,6 +408,7 @@ let onCredits = false;
 let musicStart = false;
 
 document.addEventListener("mousedown", function(event){
+    if (gameStatus == 'notReady') audioContext = new AudioContext();
     mouseDown = true;
     if (gameStatus != 'play'){
         getMousePos();
