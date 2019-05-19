@@ -1,6 +1,6 @@
 import { camera, renderer, scene, init, character, objects, heliFlying, 
-	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getExplosion, getMaterial, heliGrappled } from "./Initialize.js";
-import { heliCount, gameSpeed, gameStatus, playSound, mute, listener, setHeliShooting } from "../app.js";
+	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getExplosion, getMaterial, heliGrappled, listener } from "./Initialize.js";
+import { heliCount, gameSpeed, gameStatus, playSound, mute, setHeliShooting } from "../app.js";
 import * as THREE from 'three';
 
 export let heli;

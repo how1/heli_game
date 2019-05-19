@@ -7,7 +7,7 @@ import { bodies, camera, renderer, scene, init, character, objects,
     startGameButton, instructionsButton, creditsButton, mainMenu, buttonHover, instructions, 
     backButton, credits, resumeButton, restartButton, mainMenuButton, pause, resume, 
     showGameOverButtons, buttonHighlight, buttons, mainMenuButtons, pauseButtons, gameOverButtons,
-     width, height, windowOffset, updateProps, heliFlying, heliGrappled, getCrashedHeli} from "./physics/Initialize.js";
+     width, height, windowOffset, updateProps, heliFlying, heliGrappled, getCrashedHeli, listener, restart} from "./physics/Initialize.js";
 import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision,
  checkMenuCollision } from "./physics/checkForCollision.js";
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
@@ -18,6 +18,7 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
 import 'normalize.css';
 import './styles/styles.scss';
 
+init();
 mainMenu();
 
 let ySpeed = 1;
@@ -72,7 +73,7 @@ const start = () => {
     
     displayScore();
     scene.remove.apply(scene, scene.children);
-    init();
+    restart();
     menuMusic.stop();
     healthBarInit();
     displayReloadBar();
@@ -173,10 +174,12 @@ function onDocumentKeyDown(event) {
         if (gameStatus == 'play') {
             pause();
             gameStatus = 'pause';
-            music.pause()
+            music.pause();
+            hoverSound.pause();
         } else {
             gameStatus = 'play';
             music.play();
+            hoverSound.play();
             resume();
         }
     } else if (keyCode == 16 || keyCode == 13){
@@ -407,6 +410,8 @@ document.addEventListener("mouseup", function(event){
     } else if (gameStatus == 'pause' || gameStatus == 'gameOver') {
         if (checkMenuCollision(pos, resumeButton.currentMesh)){
             resume();
+            music.play();
+            hoverSound.play();
             if (!mute)
                 playSound(tick, new THREE.Audio(listener));
             gameStatus = 'play';
@@ -421,6 +426,7 @@ document.addEventListener("mouseup", function(event){
                 playSound(tick, new THREE.Audio(listener));
             music.stop();
             hoverSound.stop();
+            heliBullets = [];
             gameStatus = 'ready';
             instructionsMenu = false;
             menuMusic.play();
@@ -674,10 +680,6 @@ rpg.shotSound = rpgBlast;
 rpg.hitSound = rpgHit;
 rpg.pickupSound = rpgPickup;
 healthpack.pickupSound = healthpackPickup;
-
-export let listener = new THREE.AudioListener();
-camera.add( listener );
-
 
 export const playSound = (src, audioObj, loop, speed, vol) => {
     if (!vol) vol = .5; 

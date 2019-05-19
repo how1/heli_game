@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import "../styles/components/loader.scss";
-import { playerHealth, getMousePos, listener, mute, playSound, gameStatus, displayWeaponInfo, updateWeaponInfo, displayScore } from "../app.js";
+import { playerHealth, getMousePos, mute, playSound, gameStatus, displayWeaponInfo, updateWeaponInfo, displayScore } from "../app.js";
 
 
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js';document.head.appendChild(script);})()
@@ -21,6 +21,8 @@ export let camera = new THREE.PerspectiveCamera( 45, width / height, 0.1, 1000 )
 scene.add( camera );
 
 camera.position.z = 100;
+export let listener = new THREE.AudioListener();
+camera.add( listener );
 
 export let windowOffset = ((window.innerWidth) - (window.innerHeight - 4) * 1.5) / 2;
 
@@ -41,6 +43,7 @@ window.addEventListener('resize', () => {
 export let objects = [];
 
 export let character;
+let characterMesh;
 export let arm;
 export let rocket;
 
@@ -440,6 +443,7 @@ export const updateSprite = (sprite, crashed) => {
 let mdForeground;
 let background;
 let farBackground;
+let tintMesh;
 
 export const getCrashedHeli = () => {
 	return new spriteSheet(crashedHeliSpr, 0, 1, 8, 40, 20);
@@ -464,7 +468,7 @@ const getBackgroundMesh = (tex, zPos, yPos, geom, repeat) => {
 	let mesh = new THREE.Mesh(geom, mat);
 	mesh.position.z = zPos;
 	mesh.position.y = yPos;
-	scene.add(mesh);
+	// scene.add(mesh);
 	return mesh;
 }
 
@@ -476,17 +480,9 @@ export const mainMenu = () => {
 	scene.remove.apply(scene, scene.children);
 	character = null;
 	//Background
-	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
-	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
-	let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
-	mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
-	background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
-	farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
-	let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
-	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
-	tintMat.transparent = true;
-	tintMat.opacity = .15;
-	let tintMesh = new THREE.Mesh(tintGeom, tintMat);
+	scene.add(mdForeground);
+	scene.add(background);
+	scene.add(farBackground);
 	scene.add(tintMesh);
 	tintMesh.position.z = 4;
 
@@ -551,17 +547,9 @@ export const instructions = () => {
 	scene.remove.apply(scene, scene.children);
 
 	//Background
-	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
-	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
-	let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
-	mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
-	background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
-	farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
-	let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
-	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
-	tintMat.transparent = true;
-	tintMat.opacity = .15;
-	let tintMesh = new THREE.Mesh(tintGeom, tintMat);
+	scene.add(mdForeground);
+	scene.add(background);
+	scene.add(farBackground);
 	scene.add(tintMesh);
 	tintMesh.position.z = 5;
 	//
@@ -580,17 +568,9 @@ export const instructions = () => {
 export const credits = () => {
 	scene.remove.apply(scene, scene.children);
 	//Background
-	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
-	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
-	let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
-	mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
-	background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
-	farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
-	let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
-	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
-	tintMat.transparent = true;
-	tintMat.opacity = .15;
-	let tintMesh = new THREE.Mesh(tintGeom, tintMat);
+	scene.add(mdForeground);
+	scene.add(background);
+	scene.add(farBackground);
 	scene.add(tintMesh);
 	tintMesh.position.z = 4;
 	//
@@ -699,6 +679,39 @@ function Button(up, down, high, tick, x, y, z) {
 	};
 }
 
+
+export const restart = () => {
+	character = {
+		mesh: null,
+		texture: null,
+		sheet: null
+	}
+	scene.remove.apply(scene, scene.children);
+	scene.add(mdForeground);
+	scene.add(background);
+	scene.add(farBackground);
+	scene.add(tintMesh);
+	scene.add( arm );
+	character.sheet = jumpingRight;
+	character.texture = character.sheet.spr;
+	character.mesh = characterMesh;
+	scene.add( character.texture );
+	scene.add( character.mesh );
+
+	for (var i = 0; i < props.length; i++) {
+		scene.add(props[i].images[0]);
+	}
+	for (var i = 0; i < sceneryObjects.length; i++) {
+		scene.add(sceneryObjects[i]);
+	}
+	for (var i = 0; i < railings.length; i++) {
+		scene.add(railings[i]);
+	}
+}
+
+let sceneryObjects = [];
+let railings = [];
+
 export const init = () => {
 	character = {
 		mesh: null,
@@ -716,10 +729,9 @@ export const init = () => {
 	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
 	tintMat.transparent = true;
 	tintMat.opacity = .15;
-	let tintMesh = new THREE.Mesh(tintGeom, tintMat);
-	scene.add(tintMesh);
+	tintMesh = new THREE.Mesh(tintGeom, tintMat);
 	tintMesh.position.z = 10;
-
+//
 	// farBackground2 = getBackgroundMesh( getTexture( require('../pics/skyline-b')), -400.1, 40, false );
 	//
 
@@ -763,7 +775,6 @@ export const init = () => {
 	materials[3].opacity = 1;
 	arm = new THREE.Mesh( new THREE.BoxGeometry( 1.5, 0, 5 ), materials );// 12px * 50px, 4.16:1
 	arm.up = new THREE.Vector3(0,0,-1);
-	scene.add( arm );
 	//
 
 	//Rockets
@@ -784,23 +795,22 @@ export const init = () => {
 	//
 
 
-	const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
-	directionalLight.position.set( 1, 1, 0 );
-	scene.add(directionalLight);
+	// const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );
+	// directionalLight.position.set( 1, 1, 0 );
+	// scene.add(directionalLight);
 
-	const ambientLight = new THREE.AmbientLight( 0xcccccc, 1 );
-	scene.add(ambientLight);
+	// const ambientLight = new THREE.AmbientLight( 0xcccccc, 1 );
+	// scene.add(ambientLight);
 
 	//Character mesh
 	character.sheet = jumpingRight;
 	character.texture = character.sheet.spr;
-	scene.add( character.texture );
 	let geometry2 = new THREE.PlaneGeometry( 3.5, 7, 32);
 	let material2 = new THREE.MeshBasicMaterial( {color: 0x000000, side: THREE.FrontSide} );
 	material2.transparent = true;
 	material2.opacity = 0;
-	character.mesh = new THREE.Mesh( geometry2, material2);
-	scene.add(character.mesh);
+	characterMesh =  new THREE.Mesh( geometry2, material2);
+	character.mesh = characterMesh;
 	//
 
 
@@ -836,23 +846,23 @@ export const init = () => {
 			rail.position.x = sceneryX[i];
 			rail.position.y = sceneryY[i] + geometry.parameters.height;
 			rail.position.z = -.1;
+			railings.push(rail);
 			// objects.push(rail);
 		}
 		let material = new THREE.MeshBasicMaterial( {map: floorTex, side: THREE.FrontSide} );
 		material.transparent = true;
 		material.opacity = 1;
 		let ground = new THREE.Mesh( geometry, material );
-		scene.add( ground );
 		ground.position.x = sceneryX[i];
 		ground.position.y = sceneryY[i];
 		objects.push(ground);
+		sceneryObjects.push(ground);
 	}
 	for (var i = 0; i < props.length; i++) {
 		let mesh = props[i].images[0];
 		mesh.position.x = props[i].x;
 		mesh.position.y = props[i].y;
 		mesh.position.z = 1;
-		scene.add(mesh);
 		objects.push(mesh);
 
 	}
