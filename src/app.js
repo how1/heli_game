@@ -198,7 +198,7 @@ function onDocumentKeyDown(event) {
                 else menuMusic.setVolume(.5);
             }
         } else if (keyCode == 27){
-            if (gameStatus == 'play'){
+            if (gameStatus == 'play' || gameStatus == 'pause'){
                 if (gameStatus == 'play') {
                     pause();
                     gameStatus = 'pause';
