@@ -95,7 +95,8 @@ const start = () => {
     playerHealth = PLAYERHEALTHMAX;
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
-    setTimeout(function(){music.play();}, 500);
+    setTimeout(function(){music.play();
+        console.log('play for game');}, 500);
     if (mute){
         music.setVolume(0);
     } else explosionStart.play();
