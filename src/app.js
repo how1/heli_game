@@ -21,6 +21,7 @@ import './styles/styles.scss';
 
 export let gameStatus = "notReady";
 export let listener;
+let audioContext;
 
 mainMenu();
 let startTintMeshGeom = new THREE.PlaneGeometry(300,300,32);
@@ -37,6 +38,7 @@ const playGame = () => {
     // playGameButton.style.display = 'none';
     // document.body.style.backgroundColor = 'black';
     // renderer.domElement.style.display = 'inline';
+    let audioContext = new AudioContext();
     listener = new THREE.AudioListener();
     camera.add( listener );
     init();
