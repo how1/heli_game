@@ -18,3 +18,22 @@ button {
 button:disabled {
 	cursor: default;
 }
+
+
+#playGameButton {
+	/*display: inline-block;*/
+	background-color: blue;
+    color: white;
+    overflow: hidden;
+}
+
+#playGameButton:hover {
+	background-color: #ADD8E6;
+}
+
+#btnBg {
+	height: 80%;
+	float: left;
+	border-radius: 10px;
+	/*margin-right: 10px;*/
+}

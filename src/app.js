@@ -7,7 +7,7 @@ import { bodies, camera, renderer, scene, init, character, objects,
     startGameButton, instructionsButton, creditsButton, mainMenu, buttonHover, instructions, 
     backButton, credits, resumeButton, restartButton, mainMenuButton, pause, resume, 
     showGameOverButtons, buttonHighlight, buttons, mainMenuButtons, pauseButtons, gameOverButtons,
-     width, height, windowOffset, updateProps, heliFlying, heliGrappled, getCrashedHeli, listener, restart, 
+     width, height, windowOffset, updateProps, heliFlying, heliGrappled, getCrashedHeli, restart, 
      startScreen, pressEnter} from "./physics/Initialize.js";
 import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision,
  checkMenuCollision } from "./physics/checkForCollision.js";
@@ -19,8 +19,55 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
 import 'normalize.css';
 import './styles/styles.scss';
 
-export let gameStatus = "startScreen";
-startScreen();
+export let gameStatus = "notReady";
+export let listener;
+
+mainMenu();
+let startTintMeshGeom = new THREE.PlaneGeometry(300,300,32);
+let startTintMeshMat = new THREE.MeshBasicMaterial({color:0x000000, side: THREE.FrontSide});
+let startTintMesh = new THREE.Mesh(startTintMeshGeom, startTintMeshMat);
+startTintMesh.material.transparent= true;
+startTintMesh.material.opacity = .7;
+startTintMesh.position.z = 15;
+scene.add(startTintMesh);
+// document.body.style.backgroundColor = 'white';
+// renderer.domElement.style.display = 'none';
+
+const playGame = () => {
+    playGameButton.style.display = 'none';
+    // document.body.style.backgroundColor = 'black';
+    // renderer.domElement.style.display = 'inline';
+    listener = new THREE.AudioListener();
+    camera.add( listener );
+    init();
+    gameStatus = 'ready';
+    music = new THREE.Audio(listener);
+    let musicLoader = new THREE.AudioLoader();
+    musicLoader.load(song, function(buffer){
+        music.setBuffer( buffer );
+        music.setLoop(true);
+        music.setVolume(0.5);
+    });
+    music.play();
+    music.stop();
+
+    explosionStart = new THREE.Audio(listener);
+    let explLoader = new THREE.AudioLoader();
+    explLoader.load(explosion, function(buffer){
+        explosionStart.setBuffer(buffer);
+        explosionStart.setLoop(false);
+        explosionStart.setVolume(0.5);
+    });
+    // playSound(explosion);
+    menuMusic = playSound(menuSong, new THREE.Audio(listener), true, 'fast', .5);
+    // menuMusic.pause();
+    onMainMenu = true;
+    mainMenu();
+}
+
+let onMainMenu = false;
+
+// startScreen();
 
 let ySpeed = 1;
 let xSpeed = .3;
@@ -95,10 +142,7 @@ const start = () => {
     playerHealth = PLAYERHEALTHMAX;
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
-    setTimeout(function(){
-        music.play(); 
-        music.setVolume(0.5);
-    } , 500);
+    setTimeout(function(){music.play();}, 500);
     if (mute){
         music.setVolume(0);
     } else explosionStart.play();
@@ -118,34 +162,31 @@ let walkTime = 500;
 document.addEventListener("keydown", onDocumentKeyDown, false);
 function onDocumentKeyDown(event) {
     let keyCode = event.which;
-    if (gameStatus == 'startScreen') {
-        if (keyCode == 13){
-            gameStatus = 'ready';
-            music = new THREE.Audio(listener);
-            let musicLoader = new THREE.AudioLoader();
-            musicLoader.load(song, function(buffer){
-                music.setBuffer( buffer );
-                music.setLoop(true);
-                music.setVolume(0.5);
-            });
-            music.play();
-            music.stop();
+    // if (gameStatus == 'startScreen') {
+    //     if (keyCode == 13){
+    //         gameStatus = 'ready';
+    //         music = new THREE.Audio(listener);
+    //         let musicLoader = new THREE.AudioLoader();
+    //         musicLoader.load(song, function(buffer){
+    //             music.setBuffer( buffer );
+    //             music.setLoop(true);
+    //             music.setVolume(0.5);
+    //         });
+    //         music.play();
+    //         music.stop();
 
-            explosionStart = new THREE.Audio(listener);
-            let explLoader = new THREE.AudioLoader();
-            explLoader.load(explosion, function(buffer){
-                explosionStart.setBuffer(buffer);
-                explosionStart.setLoop(false);
-                explosionStart.setVolume(0.5);
-            });
-            // playSound(explosion);
-            menuMusic = playSound(menuSong, new THREE.Audio(listener), true, 'fast', .5);
-            // menuMusic.play();
-            init();
-            onMainMenu = true;
-            mainMenu();
-        }
-    } else {
+    //         explosionStart = new THREE.Audio(listener);
+    //         let explLoader = new THREE.AudioLoader();
+    //         explLoader.load(explosion, function(buffer){
+    //             explosionStart.setBuffer(buffer);
+    //             explosionStart.setLoop(false);
+    //             explosionStart.setVolume(0.5);
+    //         });
+    //         // playSound(explosion);
+    //         menuMusic = playSound(menuSong, new THREE.Audio(listener), true, 'fast', .5);
+    //         menuMusic.pause();
+    //     }
+    // } else {
         if (keyCode == 77) {
             mute = !mute;
             if (gameStatus == 'play' || gameStatus == "gameOver"){
@@ -170,7 +211,7 @@ function onDocumentKeyDown(event) {
                 }
             }
         } 
-    }
+    // }
     if (gameStatus == 'play'){
         if (keyCode == 38) { // jump
             //Allows jump only if on ground
@@ -361,7 +402,6 @@ let shoot;
 let reloaded = true;
 let mouseDown = false;
 let instructionsMenu = false;
-let onMainMenu = false;
 let onCredits = false;
 
 let musicStart = false;
@@ -745,16 +785,37 @@ export const playSound = (src, audioObj, loop, speed, vol) => {
     return audioObj
 }
 
+let description = document.createElement('p');
+description.innerHTML = 'This shoot em \' up is a throwback to early 2000\'s flash games. Controls: Arrow keys to move, mouse to aim, shift to change weapon.';
+// document.body.appendChild(description);
 
-function sound (src) {
-    this.sound = document.createElement("audio");
-    this.sound.src = src;
-    this.sound.setAttribute("preload", "auto");
-    this.sound.setAttribute("controls", "none");
-    this.sound.style.display = "none";
-    document.body.appendChild(this.sound);
-    //this.sound.play();
-}
+let playGameButton = document.createElement('button');
+// let btnBg = document.createElement('img');
+// btnBg.id = 'btnBg';
+// btnBg.src = require('./pics/littleTitle.png');
+playGameButton.id = 'playGameButton';
+// playGameButton.style.position = 'absolute';
+playGameButton.style.width = 250 + 'px';
+playGameButton.style.height = 60 + 'px';
+playGameButton.style.position = 'absolute';
+playGameButton.innerHTML = 'Play &#x25B6;';
+playGameButton.style.borderRadius = 10 + 'px';
+playGameButton.style.top = window.innerHeight / 2 - 30 + 'px';
+playGameButton.style.left = window.innerWidth / 2 - 125 + 'px';
+playGameButton.onclick = playGame;
+document.body.appendChild(playGameButton);
+// playGameButton.appendChild(btnBg);
+
+
+// function sound (src) {
+//     this.sound = document.createElement("audio");
+//     this.sound.src = src;
+//     this.sound.setAttribute("preload", "auto");
+//     this.sound.setAttribute("controls", "none");
+//     this.sound.style.display = "none";
+//     document.body.appendChild(this.sound);
+//     //this.sound.play();
+// }
 
 let text2;
 let deathPlane;
@@ -1039,22 +1100,23 @@ export const pointArm = () => {
     //
 }
 
-const pressEnterOpacity = () => {
-    if (gameStatus == 'startScreen'){
-        if (upOpacity){
-            pressEnter.material.opacity += .02;
-            if (pressEnter.material.opacity > 1){
-                upOpacity = false;
-            }
-        }
-        else {
-            pressEnter.material.opacity -= .02;
-            if (pressEnter.material.opacity < .5){
-                upOpacity = true;
-            }
-        }
-    }
-}
+// const pressEnterOpacity = () => {
+//     if (gameStatus == 'startScreen'){
+//         console.log(pressEnter.material.opacity);
+//         if (upOpacity){
+//             pressEnter.material.opacity += .02;
+//             if (pressEnter.material.opacity > 1){
+//                 upOpacity = false;
+//             }
+//         }
+//         else {
+//             pressEnter.material.opacity -= .02;
+//             if (pressEnter.material.opacity < .5){
+//                 upOpacity = true;
+//             }
+//         }
+//     }
+// }
 
 export let gameSpeed = 1;
 let frameCounter = 0;
@@ -1451,7 +1513,7 @@ const GameLoop = () => {
     if (gameStatus == 'play'){
     	update();
     }
-    pressEnterOpacity();
+    // pressEnterOpacity();
     //Blow up heli animation
     heliPartAnimation();
     render();

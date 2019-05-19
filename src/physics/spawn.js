@@ -1,6 +1,6 @@
 import { camera, renderer, scene, init, character, objects, heliFlying, 
-	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getExplosion, getMaterial, heliGrappled, listener } from "./Initialize.js";
-import { heliCount, gameSpeed, gameStatus, playSound, mute, setHeliShooting } from "../app.js";
+	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getExplosion, getMaterial, heliGrappled } from "./Initialize.js";
+import { heliCount, gameSpeed, gameStatus, playSound, mute, setHeliShooting, listener } from "../app.js";
 import * as THREE from 'three';
 
 export let heli;
@@ -337,15 +337,15 @@ const getDropInfo = () => {
 		dropInfo = getRpg();
 	} else if (random < .4){
 		dropInfo = getShotgun();
-	} else if (random < .5){
-		dropInfo = getHealthpack();
 	} else if (random < .6){
-		dropInfo = getAkimbo();
+		dropInfo = getHealthpack();
 	} else if (random < .7){
+		dropInfo = getAkimbo();
+	} else if (random < .8){
 		dropInfo = getHeatSeekers();
-	} else if (random < .8) {
-		dropInfo = new Flamethrower();
 	} else if (random < .9) {
+		dropInfo = new Flamethrower();
+	} else if (random < 1) {
 		dropInfo = getGrappleCannon();
 	}
 	return dropInfo;
