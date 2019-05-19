@@ -140,7 +140,7 @@ function onDocumentKeyDown(event) {
             });
             // playSound(explosion);
             menuMusic = playSound(menuSong, new THREE.Audio(listener), true, 'fast', .5);
-            menuMusic.play();
+            // menuMusic.play();
             init();
             onMainMenu = true;
             mainMenu();
