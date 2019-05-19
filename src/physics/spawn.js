@@ -407,7 +407,7 @@ export const getDropIconMesh = (gun, scale) => {
 
 
 let rpgPickup = require('../sounds/rpg.wav');
-let akimboPickup = require('../sounds/akimboMac10s.wav');
+let akimboPickup = require('../sounds/akimbomac10s.wav');
 let shotgunPickup = require('../sounds/shotgun.wav');
 let shotgunBlast = require('../sounds/shotgunBlast.wav');
 let explosion = require('../sounds/explosion.wav');

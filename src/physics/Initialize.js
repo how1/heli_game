@@ -776,7 +776,7 @@ export const init = () => {
 	//
 
 	//Explosion
-	explosionSpr = getTexture( require('../pics/explosion.png' ));
+	explosionSpr = getTexture( require('../pics/Explosion.png' ));
 	//
 
 	//Bullet hit explosion
