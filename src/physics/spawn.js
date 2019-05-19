@@ -260,7 +260,7 @@ export const blowUp = () => {
 	setHeliShooting(false);
 	hoverSound.stop();
 	if (gameStatus == 'gameOver' && !spawnMute)
-		slowSound = playSound(crash, new THREE.Audio(listener), false, 'slow');
+		slowSound = playSound(crash, new THREE.Audio(listener));
 	else if (!spawnMute) playSound(crash, new THREE.Audio(listener), false);
 	let geometry = new THREE.PlaneGeometry( 30, 10, 32 );
 	let material = new THREE.MeshBasicMaterial( {color: 0x0000ff, side: THREE.DoubleSide} );

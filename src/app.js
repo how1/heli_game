@@ -163,7 +163,7 @@ function onDocumentKeyDown(event) {
         if (gameStatus == 'play' || gameStatus == "gameOver"){
             if (music.getVolume() > 0) 
                 music.setVolume(0);
-            else music.setVolume(.5);
+            else music.setVolume(.7);
         } else {
             if (menuMusic.getVolume() > 0)
                 menuMusic.setVolume(0);
@@ -709,7 +709,7 @@ export const playSound = (src, audioObj, loop, speed, vol) => {
 }
 
 // playSound(explosion);
-let menuMusic = playSound(menuSong, new THREE.Audio(listener), true);
+let menuMusic = playSound(menuSong, new THREE.Audio(listener), true, 'fast', .7);
 menuMusic.pause();
 
 function sound (src) {
