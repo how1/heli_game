@@ -1173,7 +1173,7 @@ const update = () => {
                     playSound(explosion, new THREE.Audio(listener));
                 
                 updateWeaponInfo();
-                equippedWeapons[0] = getStandard();;
+                equippedWeapons[0] = standardGun;
                 music.stop();
                 gameSpeed = .01;
             }
@@ -1257,9 +1257,8 @@ const update = () => {
                 if (!mute)
                     playSound(bullets[i].sound, new THREE.Audio(listener));
                 if(heliHealth <= 0){
-
-                    if (!mute && bullets[i].sound != explosion);
-                        playSound(explosion, new THREE.Audio(listener));
+                    // if (!mute && bullets[i].sound != explosion);
+                        // playSound(explosion, new THREE.Audio(listener));
                     heliHealth = HELIHEALTHMAX;
                     if (bullets[i].name == 'grapple'){
                         scene.remove(bullets[i].line);

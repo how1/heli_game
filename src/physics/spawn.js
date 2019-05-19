@@ -30,7 +30,25 @@ function onDocumentKeyDown(event) {
     }
 };
 
+let blowUpSfx = [];
+
+const getSound = (src, audioObj, loop) => {
+
+    // load a sound and set it as the Audio object's buffer
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load( src, function(buffer){
+        audioObj.setBuffer( buffer );
+        if (!loop)
+            audioObj.setLoop( false );
+        else sound.setLoop(true);
+        audioObj.setVolume( 0.5 );
+    });
+    return audioObj;
+}
+
 export const spawn = () => {
+	blowUpSfx.push(getSound(crash, new THREE.Audio(listener)));
+	blowUpSfx.push(getSound(explosionSound, new THREE.Audio(listener)));
 	setHeliShooting(true);
 	spawnMute = mute;
 	hoverSound = playSound(hover, new THREE.Audio(listener), true);
@@ -262,7 +280,10 @@ export const blowUp = () => {
 	hoverSound.stop();
 	if (gameStatus == 'gameOver' && !spawnMute)
 		slowSound = playSound(crash, new THREE.Audio(listener));
-	else if (!spawnMute) playSound(crash, new THREE.Audio(listener), false);
+	else if (!spawnMute) {
+		blowUpSfx[0].play().onEnded(blowUpSfx.shift());
+		blowUpSfx[0].play().onEnded(blowUpSfx.shift());
+	}
 	let geometry = new THREE.PlaneGeometry( 30, 10, 32 );
 	let material = new THREE.MeshBasicMaterial( {color: 0x0000ff, side: THREE.DoubleSide} );
 	material.transparent = true;
@@ -410,7 +431,7 @@ let rpgPickup = require('../sounds/rpg.wav');
 let akimboPickup = require('../sounds/akimbomac10s.wav');
 let shotgunPickup = require('../sounds/shotgun.wav');
 let shotgunBlast = require('../sounds/shotgunBlast.wav');
-let explosion = require('../sounds/explosion.wav');
+let explosionSound = require('../sounds/explosion.wav');
 let metalHit = require('../sounds/metalHit.wav');
 let gunshot = require('../sounds/gunshot.wav');
 let gunshot2 = require('../sounds/gunshot2.wav');

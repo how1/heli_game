@@ -275,12 +275,6 @@ export let rocketTex2;
 //
 
 const getSound = (src, audioObj, loop) => {
-    // create an AudioListener and add it to the camera
-    var listener = new THREE.AudioListener();
-    camera.add( listener );
-
-    // create a global audio source
-    var sound = new THREE.Audio( listener );
 
     // load a sound and set it as the Audio object's buffer
     var audioLoader = new THREE.AudioLoader();
@@ -288,7 +282,7 @@ const getSound = (src, audioObj, loop) => {
         audioObj.setBuffer( buffer );
         if (!loop)
             audioObj.setLoop( false );
-        else sound.setLoop(true);
+        else audioObj.setLoop(true);
         audioObj.setVolume( 0.5 );
     });
     return audioObj;
