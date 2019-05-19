@@ -1039,7 +1039,6 @@ export const pointArm = () => {
 
 const pressEnterOpacity = () => {
     if (gameStatus == 'startScreen'){
-        console.log(pressEnter.material.opacity);
         if (upOpacity){
             pressEnter.material.opacity += .02;
             if (pressEnter.material.opacity > 1){
