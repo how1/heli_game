@@ -18,6 +18,8 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
 import 'normalize.css';
 import './styles/styles.scss';
 
+let audioContext;
+
 init();
 mainMenu();
 
@@ -328,7 +330,15 @@ let instructionsMenu = false;
 let onMainMenu = true;
 let onCredits = false;
 
+let musicStart = false;
+
 document.addEventListener("mousedown", function(event){
+    if (!musicStart) {
+        music.play();
+        explosionStart.play();
+        music.stop();
+        explosionStart.stop();
+    }
     mouseDown = true;
     if (gameStatus != 'play'){
         getMousePos();
