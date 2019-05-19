@@ -207,7 +207,7 @@ export const move = () => {
 
 export const getQueueToFly = () => {
 	if (!flyNormal)
-		if (Math.abs(heli.position.x) >= character.mesh.position.x + 68){
+		if (heli.position.distanceTo(character.mesh.position) > 85){
 			flyOn();
 		}
 }
@@ -225,11 +225,12 @@ export const flyOff = () => {
 export const flyOn = () => {
 	console.log('fly on');
 	if (flyOffDirection == 'left'){
-		heli.position.x = character.mesh.position.x + 70;
+		heli.position.x = character.mesh.position.x + 85;
 	} else {
-		heli.position.x = character.mesh.position.x - 70;
+		heli.position.x = character.mesh.position.x - 85;
 	}
 	flyNormal = true;
+
 }
 
 export const dodge = () => {
@@ -298,8 +299,10 @@ export const blowUp = () => {
 		dropInfo.dropMesh.position.z = 2;
 		pickUps.push(dropInfo);
 	}
+	console.log(gameStatus);
+	debugger;
 	if (gameStatus == 'play'){
-		console.log('spawn');
+		debugger;
 		spawn();
 	}
 	grappled = false;
