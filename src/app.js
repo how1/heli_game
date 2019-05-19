@@ -123,7 +123,7 @@ const start = () => {
     displayScore();
     scene.remove.apply(scene, scene.children);
     restart();
-    menuMusic.stop();
+    menuMusic.pause();
     healthBarInit();
     displayReloadBar();
     updateWeaponIcon();
@@ -141,10 +141,14 @@ const start = () => {
     playerHealth = PLAYERHEALTHMAX;
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
-    setTimeout(function(){music.play();}, 500);
+    music = playSound(song, new THREE.Audio(listener));
+    // setTimeout(function(){music.play();}, 500);
     if (mute){
         music.setVolume(0);
-    } else explosionStart.play();
+    } else {
+        // explosionStart.play();
+        playSound(explosion, new THREE.Audio(listener));
+    }
     heliFlyoff = setInterval(flyOff, 20000);
     dodger = setTimeout( function() {
         dodge();
