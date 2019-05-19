@@ -15,7 +15,7 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
     shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume, slowSound, 
     getDropIconMesh, healthpack, hoverSound, Gun, standardGun, flamethrower, heatSeekers, grappleCannon, 
-    pullDownHeli, grappled } from "./physics/spawn.js";
+    pullDownHeli, grappled, muteSpawn } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 
@@ -34,7 +34,7 @@ scene.add(startTintMesh);
 // renderer.domElement.style.display = 'none';
 
 const playGame = () => {
-    playGameButton.style.display = 'none';
+    // playGameButton.style.display = 'none';
     // document.body.style.backgroundColor = 'black';
     // renderer.domElement.style.display = 'inline';
     listener = new THREE.AudioListener();
@@ -785,25 +785,34 @@ export const playSound = (src, audioObj, loop, speed, vol) => {
     return audioObj
 }
 
-let description = document.createElement('p');
-description.innerHTML = 'This shoot em \' up is a throwback to early 2000\'s flash games. Controls: Arrow keys to move, mouse to aim, shift to change weapon.';
-// document.body.appendChild(description);
 
-let playGameButton = document.createElement('button');
-// let btnBg = document.createElement('img');
-// btnBg.id = 'btnBg';
-// btnBg.src = require('./pics/littleTitle.png');
-playGameButton.id = 'playGameButton';
+
+var r = confirm("Enable Audio?");
+if (r == true) {
+playGame();
+} else {
+mute = true;
+muteSpawn();
+playGame();
+}
+
+
+
+// let playGameButton = document.createElement('button');
+// // let btnBg = document.createElement('img');
+// // btnBg.id = 'btnBg';
+// // btnBg.src = require('./pics/littleTitle.png');
+// playGameButton.id = 'playGameButton';
+// // playGameButton.style.position = 'absolute';
+// playGameButton.style.width = 250 + 'px';
+// playGameButton.style.height = 60 + 'px';
 // playGameButton.style.position = 'absolute';
-playGameButton.style.width = 250 + 'px';
-playGameButton.style.height = 60 + 'px';
-playGameButton.style.position = 'absolute';
-playGameButton.innerHTML = 'Play &#x25B6;';
-playGameButton.style.borderRadius = 10 + 'px';
-playGameButton.style.top = window.innerHeight / 2 - 30 + 'px';
-playGameButton.style.left = window.innerWidth / 2 - 125 + 'px';
-playGameButton.onclick = playGame;
-document.body.appendChild(playGameButton);
+// playGameButton.innerHTML = 'Play &#x25B6;';
+// playGameButton.style.borderRadius = 10 + 'px';
+// playGameButton.style.top = window.innerHeight / 2 - 30 + 'px';
+// playGameButton.style.left = window.innerWidth / 2 - 125 + 'px';
+// playGameButton.onclick = playGame;
+// document.body.appendChild(playGameButton);
 // playGameButton.appendChild(btnBg);
 
 

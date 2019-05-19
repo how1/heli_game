@@ -616,7 +616,7 @@ function Button(up, down, high, tick, x, y, z) {
 		this.position = pos;
 		this.positionButton();
 	};
-	this.highlight = function(mute) {
+	this.highlight = function() {
 		if (!this.highlighted){
 			scene.add(this.upHighMesh);
 			this.upHighMesh.position.copy(this.position);
@@ -639,7 +639,7 @@ function Button(up, down, high, tick, x, y, z) {
 			this.down = true;
 		}
 	};
-	this.mouseUp = function(mute){
+	this.mouseUp = function(){
 		this.highlighted = false;
 		this.down = false;
 		// console.log('back button up');

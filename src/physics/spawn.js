@@ -12,6 +12,10 @@ let fadeOut = require('../sounds/fadeOut.wav');
 
 export let hoverSound;
 
+export const muteSpawn = () => {
+	spawnMute = true;
+}
+
 document.addEventListener("keydown", onDocumentKeyDown, false);
 function onDocumentKeyDown(event) {
     let keyCode = event.which;
@@ -333,17 +337,18 @@ export const pullDownHeli = (bullet) => {
 const getDropInfo = () => {
 	let random = Math.random();
 	let dropInfo;
-	if (random < .2){
+	let chance = 1/7;
+	if (random < chance){
 		dropInfo = getRpg();
-	} else if (random < .4){
+	} else if (random < chance * 2){
 		dropInfo = getShotgun();
-	} else if (random < .6){
+	} else if (random < chance * 3){
 		dropInfo = getHealthpack();
-	} else if (random < .7){
+	} else if (random < chance * 4){
 		dropInfo = getAkimbo();
-	} else if (random < .8){
+	} else if (random < chance * 5){
 		dropInfo = getHeatSeekers();
-	} else if (random < .9) {
+	} else if (random < chance * 6) {
 		dropInfo = new Flamethrower();
 	} else if (random < 1) {
 		dropInfo = getGrappleCannon();
