@@ -64,7 +64,10 @@ let heliFlyoff;
 let heliDodging;
 let dodger;
 
-let music;
+let music = playSound(song, new THREE.Audio(listener), true);
+music.stop();
+let explosionStart = playSound(song, new THREE.Audio(listener), true);
+music.stop();
 
 const start = () => {
     xVelocity = 0;
@@ -92,10 +95,10 @@ const start = () => {
     playerHealth = PLAYERHEALTHMAX;
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
-    music = playSound(song, new THREE.Audio(listener), true, 'fast', 0);
+    music.play();
     if (mute){
         music.setVolume(0);
-    } else playSound(explosion, new THREE.Audio(listener));
+    } else explosionSound.play();
     heliFlyoff = setInterval(flyOff, 20000);
     dodger = setTimeout( function() {
         dodge();
