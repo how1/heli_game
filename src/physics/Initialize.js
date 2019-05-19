@@ -483,10 +483,12 @@ export const mainMenu = () => {
 	instructionsButton.getMesh();
 	startGameButton.getMesh();
 	creditsButton.getMesh();
+	title.position.x = -30;
+	title.position.y = 0;
+	title.position.z = 4;
 	scene.add(title);
 
-	title.position.x = -30;
-	title.position.z = 4;
+
 }
 
 export const pause = () => {
@@ -673,6 +675,38 @@ function Button(up, down, high, tick, x, y, z) {
 	};
 }
 
+export let pressEnter;
+
+export const startScreen = () => {
+	//Background
+	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
+	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
+	let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
+	mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
+	background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
+	farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
+	scene.add(mdForeground);
+	scene.add(background);
+	scene.add(farBackground);
+	let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
+	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
+	tintMat.transparent = true;
+	tintMat.opacity = .15;
+	tintMesh = new THREE.Mesh(tintGeom, tintMat);
+	tintMesh.position.z = 10;
+	title.position.x = 0;
+	title.position.y = 10;
+	title.position.z = 4;
+	scene.add(title);
+	let pressEnterGeom = new THREE.PlaneGeometry(60, 10, 32);
+	let pressEnterMat = getMaterial(getTexture(require('../pics/pressEnter.png')));
+	pressEnter = getMesh(pressEnterGeom, pressEnterMat);
+	pressEnter.position.y = -25;
+	scene.add(pressEnter);
+	scene.add(tintMesh);
+
+}
+
 
 export const restart = () => {
 	character = {
@@ -713,18 +747,10 @@ export const init = () => {
 		sheet: null
 	}
 	//Background
-	let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
-	let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
-	let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
-	mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
-	background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
-	farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
-	let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
-	let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
-	tintMat.transparent = true;
-	tintMat.opacity = .15;
-	tintMesh = new THREE.Mesh(tintGeom, tintMat);
-	tintMesh.position.z = 10;
+	scene.add(mdForeground);
+	scene.add(background);
+	scene.add(farBackground);
+	scene.add(tintMesh);
 //
 	// farBackground2 = getBackgroundMesh( getTexture( require('../pics/skyline-b')), -400.1, 40, false );
 	//
