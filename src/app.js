@@ -163,6 +163,7 @@ function onDocumentKeyDown(event) {
     if (keyCode == 77) {
         mute = !mute;
         if (gameStatus == 'play' || gameStatus == "gameOver"){
+            if (!music.isPlaying) music.play();
             if (music.getVolume() > 0) 
                 music.setVolume(0);
             else music.setVolume(.7);
