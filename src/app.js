@@ -40,7 +40,7 @@ let equippedWeapons = [];
 export let heliCount = 0;
 export let playerHealth = 8;
 const PLAYERHEALTHMAX = 8;
-export let mute = true;
+export let mute = false;
 
 
 let xVelocity = 0;
