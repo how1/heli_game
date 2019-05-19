@@ -791,11 +791,13 @@ export const playSound = (src, audioObj, loop, speed, vol) => {
 
 var r = confirm("Enable Audio?");
 if (r == true) {
-playGame();
+    setTimeout(function(){playGame();}, 100);
 } else {
-mute = true;
-muteSpawn();
-playGame();
+    setTimeout(function(){
+        mute = true;
+        muteSpawn();
+        playGame();
+    }, 100);
 }
 
 
