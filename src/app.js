@@ -175,11 +175,9 @@ function onDocumentKeyDown(event) {
             pause();
             gameStatus = 'pause';
             music.pause();
-            hoverSound.pause();
         } else {
             gameStatus = 'play';
             music.play();
-            hoverSound.play();
             resume();
         }
     } else if (keyCode == 16 || keyCode == 13){
@@ -411,7 +409,6 @@ document.addEventListener("mouseup", function(event){
         if (checkMenuCollision(pos, resumeButton.currentMesh)){
             resume();
             music.play();
-            hoverSound.play();
             if (!mute)
                 playSound(tick, new THREE.Audio(listener));
             gameStatus = 'play';
