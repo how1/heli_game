@@ -49,8 +49,6 @@ const playGame = () => {
         music.setLoop(true);
         music.setVolume(0.5);
     });
-    music.play();
-    music.stop();
 
     explosionStart = new THREE.Audio(listener);
     let explLoader = new THREE.AudioLoader();
@@ -408,7 +406,6 @@ let onCredits = false;
 let musicStart = false;
 
 document.addEventListener("mousedown", function(event){
-    if (gameStatus == 'notReady') audioContext = new AudioContext();
     mouseDown = true;
     if (gameStatus != 'play'){
         getMousePos();
@@ -791,13 +788,11 @@ export const playSound = (src, audioObj, loop, speed, vol) => {
 
 var r = confirm("Enable Audio?");
 if (r == true) {
-    setTimeout(function(){playGame();}, 100);
+    playGame();
 } else {
-    setTimeout(function(){
-        mute = true;
-        muteSpawn();
-        playGame();
-    }, 100);
+    mute = true;
+    muteSpawn();
+    playGame();
 }
 
 
