@@ -18,3 +18,5 @@ mute hover ticks
 
 put cover in different location
 
+fix heli shooting postion
+
