@@ -64,10 +64,6 @@ let heliFlyoff;
 let heliDodging;
 let dodger;
 
-let music = playSound(song, new THREE.Audio(listener), true);
-music.stop();
-let explosionStart = playSound(song, new THREE.Audio(listener), true);
-music.stop();
 
 const start = () => {
     xVelocity = 0;
@@ -95,10 +91,10 @@ const start = () => {
     playerHealth = PLAYERHEALTHMAX;
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
-    music.play();
+    setTimeout(function(){music.play();}, 500);
     if (mute){
         music.setVolume(0);
-    } else explosionSound.play();
+    } else explosionStart.play();
     heliFlyoff = setInterval(flyOff, 20000);
     dodger = setTimeout( function() {
         dodge();
@@ -681,6 +677,22 @@ rpg.hitSound = rpgHit;
 rpg.pickupSound = rpgPickup;
 healthpack.pickupSound = healthpackPickup;
 
+let music = new THREE.Audio(listener);
+let musicLoader = new THREE.AudioLoader();
+musicLoader.load(song, function(buffer){
+    music.setBuffer( buffer );
+    music.setLoop(true);
+    music.setVolume(0.5);
+});
+
+let explosionStart = new THREE.Audio(listener);
+let explLoader = new THREE.AudioLoader();
+explLoader.load(explosion, function(buffer){
+    explosionStart.setBuffer(buffer);
+    explosionStart.setLoop(false);
+    explosionStart.setVolume(0.5);
+});
+
 export const playSound = (src, audioObj, loop, speed, vol) => {
     if (!vol) vol = .5; 
     // create an AudioListener and add it to the camera
@@ -711,7 +723,7 @@ export const playSound = (src, audioObj, loop, speed, vol) => {
 }
 
 // playSound(explosion);
-let menuMusic = playSound(menuSong, new THREE.Audio(listener), true, 'fast', .7);
+let menuMusic = playSound(menuSong, new THREE.Audio(listener), true, 'fast', .5);
 menuMusic.pause();
 
 function sound (src) {
