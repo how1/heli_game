@@ -812,7 +812,7 @@ playGameButton.style.top = window.innerHeight / 2 - 30 + 'px';
 playGameButton.style.left = window.innerWidth / 2 - 125 + 'px';
 playGameButton.onclick = playGame;
 document.body.appendChild(playGameButton);
-playGameButton.appendChild(btnBg);
+// playGameButton.appendChild(btnBg);
 
 
 // function sound (src) {
