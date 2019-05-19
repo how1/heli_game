@@ -35,7 +35,7 @@ scene.add(startTintMesh);
 // renderer.domElement.style.display = 'none';
 
 const playGame = () => {
-    // playGameButton.style.display = 'none';
+    playGameButton.style.display = 'none';
     // document.body.style.backgroundColor = 'black';
     // renderer.domElement.style.display = 'inline';
     listener = new THREE.AudioListener();
