@@ -4,7 +4,7 @@ import { heliCount, gameSpeed, gameStatus, playSound, mute, setHeliShooting } fr
 import * as THREE from 'three';
 
 export let heli;
-export let spawnMute = false;
+export let spawnMute = true;
 let crash = require('../sounds/crash.wav');
 let hover = require('../sounds/hover.wav');
 let fadeIn = require('../sounds/fadeIn.wav');
