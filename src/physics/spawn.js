@@ -299,10 +299,7 @@ export const blowUp = () => {
 		dropInfo.dropMesh.position.z = 2;
 		pickUps.push(dropInfo);
 	}
-	console.log(gameStatus);
-	debugger;
 	if (gameStatus == 'play'){
-		debugger;
 		spawn();
 	}
 	grappled = false;
