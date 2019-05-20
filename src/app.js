@@ -38,17 +38,8 @@ const playGame = () => {
     playGameButton.style.display = 'none';
     // document.body.style.backgroundColor = 'black';
     // renderer.domElement.style.display = 'inline';
-    listener = new THREE.AudioListener();
-    camera.add( listener );
     init();
     gameStatus = 'ready';
-    music = new THREE.Audio(listener);
-    let musicLoader = new THREE.AudioLoader();
-    musicLoader.load(song, function(buffer){
-        music.setBuffer( buffer );
-        music.setLoop(true);
-        music.setVolume(0.5);
-    });
 
     explosionStart = new THREE.Audio(listener);
     let explLoader = new THREE.AudioLoader();
@@ -102,9 +93,6 @@ let mouse = {
     clientY: 0
 };
 
-let song = require('./sounds/gameplayMusic.wav');
-let menuSong = require('./sounds/menuMusic.wav');
-
 let music;
 let explosionStart;
 let menuMusic;
@@ -117,7 +105,8 @@ let dodger;
 
 const start = () => {
     xVelocity = 0;
-    equippedWeapons.push(standardGun);
+    // equippedWeapons.push(standardGun);
+    equippedWeapons.push(grappleCannon);
     displayWeaponInfo();
     
     displayScore();
@@ -141,8 +130,8 @@ const start = () => {
     playerHealth = PLAYERHEALTHMAX;
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
-    music = playSound(song, new THREE.Audio(listener));
-    // setTimeout(function(){music.play();}, 500);
+    // music = playSound(song, new THREE.Audio(listener));
+    setTimeout(function(){music.play();}, 500);
     if (mute){
         music.setVolume(0);
     } else {
@@ -726,24 +715,28 @@ const addWeapon = (pickup) => {
         equippedWeapons.push(pickup);
 }
 
-let rpgPickup = require('./sounds/rpg.wav');
-let akimboPickup = require('./sounds/akimbomac10s.wav');
-let shotgunPickup = require('./sounds/shotgun.wav');
-let shotgunBlast = require('./sounds/shotgunBlast.wav');
-let explosion = require('./sounds/explosion.wav');
-let metalHit = require('./sounds/metalHit.wav');
-let gunshot = require('./sounds/gunshot.wav');
-let gunshot2 = require('./sounds/gunshot2.wav');
-let akimboMac10sShot = require('./sounds/akimbomac10sShot.wav');
-let rpgBlast = require('./sounds/rpgBlast.wav');
-let rpgHit = require('./sounds/explosion.wav');
-let ouch = require('./sounds/ouch2.wav');
-let healthpackPickup = require('./sounds/healthpackPickup.wav');
-let flamethrowerPickup = require('./sounds/flamethrowerPickup.wav');
-export let hover = require('./sounds/hover.wav');
-export let fadeIn = require('./sounds/fadeIn.wav');
-export let fadeOut = require('./sounds/fadeOut.wav');
-let tick = require('./sounds/tick.wav');
+let rpgPickup = require('./sounds/rpg.mp3');
+let akimboPickup = require('./sounds/akimbomac10s.mp3');
+let shotgunPickup = require('./sounds/shotgun.mp3');
+let shotgunBlast = require('./sounds/shotgunBlast.mp3');
+let explosion = require('./sounds/explosion.mp3');
+let metalHit = require('./sounds/metalHit.mp3');
+let gunshot = require('./sounds/gunshot.mp3');
+let gunshot2 = require('./sounds/gunshot2.mp3');
+let akimboMac10sShot = require('./sounds/akimbomac10sShot.mp3');
+let rpgBlast = require('./sounds/rpgBlast.mp3');
+let rpgHit = require('./sounds/explosion.mp3');
+let ouch = require('./sounds/ouch2.mp3');
+let healthpackPickup = require('./sounds/healthpackPickup.mp3');
+let flamethrowerPickup = require('./sounds/flamethrowerPickup.mp3');
+let song = require('./sounds/gameplayMusic.mp3');
+let menuSong = require('./sounds/menuMusic.mp3');
+export let hover = require('./sounds/hover.mp3');
+// export let fadeIn = require('./sounds/fadeIn.mp3');
+// export let fadeOut = require('./sounds/fadeOut.mp3');
+let tick = require('./sounds/tick.mp3');
+
+
 
 standardGun.shotSound = gunshot2;
 standardGun.hitSound = metalHit;
@@ -758,6 +751,57 @@ rpg.hitSound = rpgHit;
 rpg.pickupSound = rpgPickup;
 healthpack.pickupSound = healthpackPickup;
 
+let audioLoader = new THREE.AudioLoader();
+// loadingManager.onLoad = function() {
+//     playGame();
+//     console.log('audio loaded');
+// }
+// loadingManager.onProgress = function() {
+//     console.log('1 loaded');
+// }
+
+// export let explosionSounds = [];
+// export let gunshot2Sounds = [];
+// export let metalHitSounds = [];
+// export let gunshotSounds = [];
+// export let rpgBlastSounds = [];
+// export let mac10Sounds = [];
+// export let musicSounds = [];
+// export let pickupSounds = [];
+
+let loadingBar;
+let prog = 0;
+
+export let loadSounds = () => {
+    playGameButton.style.display = 'none';
+    let geom = new THREE.PlaneGeometry(20, 4, 32);
+    geom.translate( 20 / 2, 0, 0 );
+    let mat = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.FrontSide});
+    loadingBar = new THREE.Mesh(geom, mat);
+    loadingBar.position.x -= 10;
+    loadingBar.position.z = 20;
+    loadingBar.scale.set(0, 1, 1);
+    scene.add(loadingBar);
+
+    listener = new THREE.AudioListener();
+    camera.add( listener );
+    music = new THREE.Audio(listener);
+    let musicLoader = new THREE.AudioLoader();
+    musicLoader.load(song, 
+        function(buffer){
+            music.setBuffer( buffer );
+            music.setLoop(true);
+            music.setVolume(0.5);
+            playGame();
+    },
+    function ( xhr ) {
+        prog = xhr.loaded / xhr.total;
+        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        loadingBar.scale.set(prog, 1, 1);
+    },);  
+    // for (var i = 0; i < ; i++) {
+    //      }
+}
 
 export const playSound = (src, audioObj, loop, speed, vol) => {
     if (!vol) vol = .5; 
@@ -766,7 +810,7 @@ export const playSound = (src, audioObj, loop, speed, vol) => {
     // create a global audio source
 
     // load a sound and set it as the Audio object's buffer
-    var audioLoader = new THREE.AudioLoader();
+    // var audioLoader = new THREE.AudioLoader();
     audioLoader.load( src, function(buffer){
         audioObj.setBuffer( buffer );
         if (!loop) {
@@ -814,7 +858,7 @@ playGameButton.innerHTML = 'Play &#x25B6;';
 playGameButton.style.borderRadius = 10 + 'px';
 playGameButton.style.top = window.innerHeight / 2 - 30 + 'px';
 playGameButton.style.left = window.innerWidth / 2 - 125 + 'px';
-playGameButton.onclick = playGame;
+playGameButton.onclick = loadSounds;
 document.body.appendChild(playGameButton);
 // playGameButton.appendChild(btnBg);
 
@@ -1062,6 +1106,7 @@ const heliPartAnimation = () => {
                     scene.remove(line);
                     line = null;
                 }
+                crashedHelis.splice[i, 1];
                 helipart1.splice[i, 1];
                 heliPartVelocityX.splice[i, 1];
                 heliPartVelocityY.splice[i, 1];

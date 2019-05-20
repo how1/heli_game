@@ -180,7 +180,7 @@ bannerSushi(18, -13)
 //Buttons
 let buttonGeom = new THREE.PlaneGeometry(50, 10);
 let titleGeom = new THREE.PlaneGeometry(50, 50);
-let tick = require('../sounds/tick.wav');
+let tick = require('../sounds/tick.mp3');
 let backButtonUpTex = getTexture(require('../pics/backButtonUp.png'));
 let backButtonDownTex = getTexture(require('../pics/backButtonDown.png'));
 let backButtonUpHoverTex = getTexture(require('../pics/backButtonUpHover.png'));
@@ -288,7 +288,7 @@ const getSound = (src, audioObj, loop) => {
 }
 
 //Character Sounds
-let footstepsFile = require('../sounds/footsteps.wav');
+let footstepsFile = require('../sounds/footsteps.mp3');
 let footsteps;
 //
 
@@ -746,6 +746,8 @@ export const init = () => {
 		texture: null,
 		sheet: null
 	}
+
+
 	//Background
 	scene.add(mdForeground);
 	scene.add(background);

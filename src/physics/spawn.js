@@ -5,10 +5,10 @@ import * as THREE from 'three';
 
 export let heli;
 export let spawnMute = false;
-let crash = require('../sounds/crash.wav');
-let hover = require('../sounds/hover.wav');
-let fadeIn = require('../sounds/fadeIn.wav');
-let fadeOut = require('../sounds/fadeOut.wav');
+let crash = require('../sounds/crash.mp3');
+let hover = require('../sounds/hover.mp3');
+// let fadeIn = require('../sounds/fadeIn.mp3');
+// let fadeOut = require('../sounds/fadeOut.mp3');
 
 export let hoverSound;
 
@@ -330,7 +330,7 @@ export const blowUp = () => {
 	grappled = false;
 }
 
-export const pullDownHeli = (bullet) => {
+export const pullDownHeli = () => {
 	grappled = true;
 }
 
@@ -432,24 +432,24 @@ export const getDropIconMesh = (gun, scale) => {
 }
 
 
-let rpgPickup = require('../sounds/rpg.wav');
-let akimboPickup = require('../sounds/akimbomac10s.wav');
-let shotgunPickup = require('../sounds/shotgun.wav');
-let shotgunBlast = require('../sounds/shotgunBlast.wav');
-let explosionSound = require('../sounds/explosion.wav');
-let metalHit = require('../sounds/metalHit.wav');
-let gunshot = require('../sounds/gunshot.wav');
-let gunshot2 = require('../sounds/gunshot2.wav');
-let akimboMac10sShot = require('../sounds/akimbomac10sShot.wav');
-let rpgBlast = require('../sounds/rpgBlast.wav');
-let rpgHit = require('../sounds/explosion.wav');
-let ouch = require('../sounds/ouch.wav');
-let healthpackPickup = require('../sounds/healthpackPickup.wav');
-let flamethrowerPickup = require('../sounds/flamethrowerPickup.wav');
-let flamethrowerShot = require('../sounds/flamethrowerShot.wav');
-let heatSeekersPickup = require('../sounds/heatSeekingMissilesPickup.wav');
-let grappleCannonPickup = require('../sounds/grappleCannonPickup.wav');
-let grappleShot = require('../sounds/grappleShot.wav');
+let rpgPickup = require('../sounds/rpg.mp3');
+let akimboPickup = require('../sounds/akimbomac10s.mp3');
+let shotgunPickup = require('../sounds/shotgun.mp3');
+let shotgunBlast = require('../sounds/shotgunBlast.mp3');
+let explosionSound = require('../sounds/explosion.mp3');
+let metalHit = require('../sounds/metalHit.mp3');
+let gunshot = require('../sounds/gunshot.mp3');
+let gunshot2 = require('../sounds/gunshot2.mp3');
+let akimboMac10sShot = require('../sounds/akimbomac10sShot.mp3');
+let rpgBlast = require('../sounds/rpgBlast.mp3');
+let rpgHit = require('../sounds/explosion.mp3');
+let ouch = require('../sounds/ouch.mp3');
+let healthpackPickup = require('../sounds/healthpackPickup.mp3');
+let flamethrowerPickup = require('../sounds/flamethrowerPickup.mp3');
+let flamethrowerShot = require('../sounds/flamethrowerShot.mp3');
+let heatSeekersPickup = require('../sounds/heatSeekingMissilesPickup.mp3');
+let grappleCannonPickup = require('../sounds/grappleCannonPickup.mp3');
+let grappleShot = require('../sounds/grappleShot.mp3');
 
 export const Gun = function (color, name, size, speed, ammo, fullAmmoMax, damage, velocity, reloadTime, shotSound, hitSound, pickupSound) {
 	this.color = color;
