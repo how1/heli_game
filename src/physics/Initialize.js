@@ -245,6 +245,7 @@ export let bgImage;
 
 export let heliFlying;
 export let heliGrappled;
+export let heliGrappledSpr;
 export let crashedHeliSpr;
 let explosionSpr
 export let explosion;
@@ -288,8 +289,8 @@ const getSound = (src, audioObj, loop) => {
 }
 
 //Character Sounds
-let footstepsFile = require('../sounds/footsteps.mp3');
-let footsteps;
+// let footstepsFile = require('../sounds/footsteps.mp3');
+// let footsteps;
 //
 
 const spriteSheet = (sprite, x, y, d, scaleX, scaleY, type) => {
@@ -301,6 +302,7 @@ const spriteSheet = (sprite, x, y, d, scaleX, scaleY, type) => {
 		spr: null,
 		tex: null,
 		type: null,
+		name: null
 	}
 	sheet.tex = sprite;
 	sheet.tex.repeat.set( 1/d, 1);
@@ -387,7 +389,7 @@ export const updateSprite = (sprite, crashed) => {
 			sprite.tex.offset.x = jumpingArrayLeft[jumpingNewVal];
 			jumpingNewVal++;
 		}
-	} else if (crashed == 'crashed' || sprite == heliGrappled) {
+	} else if (crashed == 'crashed' || crashed == 'grappled') {
 		if (sprite.newVal == 6){
 			sprite.newVal = 0;
 			sprite.tex.offset.x = heliArray[sprite.newVal];
@@ -439,7 +441,15 @@ let farBackground;
 let tintMesh;
 
 export const getCrashedHeli = () => {
-	return new spriteSheet(crashedHeliSpr, 0, 1, 8, 40, 20);
+	let spr = new spriteSheet(crashedHeliSpr, 0, 1, 8, 40, 20);
+	spr.name = 'crashed';
+	return spr;
+}
+
+export const getGrappledHeli = () => {
+	let spr = new spriteSheet( heliGrappledSpr , 0, 1, 8, 40, 20);
+	spr.name = 'grappled';
+	return spr;
 }
 
 export const getExplosion = (scale) => {
@@ -767,8 +777,9 @@ export const init = () => {
 	//
 	
 	//Heli sprites
-	heliFlying = new spriteSheet( getTexture(require('../pics/heli5.png')) , 0, 1, 8, 40, 20);
-	heliGrappled = new spriteSheet( getTexture(require('../pics/heli5.png')) , 0, 1, 8, 40, 20);
+	heliFlying = new spriteSheet( getTexture(require('../pics/heli5.png')) , 0, 1, 8, 40, 20, 'heliFlying');
+	heliGrappled = new spriteSheet( getTexture(require('../pics/heli5.png')) , 0, 1, 8, 40, 20, 'heliGrappled');
+	heliGrappledSpr = getTexture(require('../pics/heli5.png'));
 	crashedHeliSpr = getTexture( require('../pics/crashedHeli.png' ));
 	//
 
@@ -894,7 +905,7 @@ export const init = () => {
 	hotelSign.position.z = -.05;
 	//
 	//Footsteps sound
-	footsteps = getSound(footstepsFile, new THREE.Audio(listener) , true);
+	// footsteps = getSound(footstepsFile, new THREE.Audio(listener) , false);
 	//
 
 }
@@ -908,9 +919,9 @@ export const moveCharacter = (x, y) => {
 }
 
 export const walk = (dir) => {
-	if (footsteps.isPlaying == false && !mute){
-		footsteps.play();
-	}
+	// if (footsteps.isPlaying == false && !mute){
+	// 	footsteps.play();
+	// }
 	if (dir == 'left'){
 		scene.remove(character.texture);
 		character.sheet = leftFoot;
@@ -930,7 +941,7 @@ export const walk = (dir) => {
 }
 
 export const stand = (dir) => {
-	footsteps.pause();
+	// footsteps.pause();
 	scene.remove(character.texture);
 	if (dir == 'right') {
 		character.sheet = standingRight;
@@ -947,7 +958,7 @@ export const stand = (dir) => {
 }
 
 export const jump = (dir) => {
-	footsteps.pause();
+	// footsteps.pause();
 	getMousePos();
 	jumpingNewVal = 0
 	scene.remove(character.texture);

@@ -1,6 +1,7 @@
 import { camera, renderer, scene, init, character, objects, heliFlying, 
-	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getExplosion, getMaterial, heliGrappled } from "./Initialize.js";
-import { heliCount, gameSpeed, gameStatus, playSound, mute, setHeliShooting, listener } from "../app.js";
+	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getGrappledHeli, 
+	getExplosion, getMaterial, heliGrappled } from "./Initialize.js";
+import { heliCount, gameSpeed, gameStatus, playSound, mute, setHeliShooting, listener, hoverSound } from "../app.js";
 import * as THREE from 'three';
 
 export let heli;
@@ -10,10 +11,12 @@ let hover = require('../sounds/hover.mp3');
 // let fadeIn = require('../sounds/fadeIn.mp3');
 // let fadeOut = require('../sounds/fadeOut.mp3');
 
-export let hoverSound;
-
 export const muteSpawn = () => {
 	spawnMute = true;
+}
+
+export const setSpawnSound = () => {
+	spawnMute = mute;
 }
 
 document.addEventListener("keydown", onDocumentKeyDown, false);
@@ -55,7 +58,7 @@ export const spawn = () => {
 	blowUpSfx.push(getSound(explosionSound, new THREE.Audio(listener)));
 	setHeliShooting(true);
 	spawnMute = mute;
-	hoverSound = playSound(hover, new THREE.Audio(listener), true);
+	hoverSound.play();
 	if (spawnMute)
 		hoverSound.setVolume(0);
 	let geometry = new THREE.PlaneGeometry( 30, 10, 32 );
@@ -237,7 +240,6 @@ export const getQueueToFly = () => {
 let flyOffDirection;
 
 export const flyOff = () => {
-	console.log('fly off');
 	flyNormal = false;
 	if (Math.random() < .5){
 		flyOffDirection = 'left';
@@ -245,7 +247,6 @@ export const flyOff = () => {
 }
 
 export const flyOn = () => {
-	console.log('fly on');
 	if (flyOffDirection == 'left'){
 		heli.position.x = character.mesh.position.x + 85;
 	} else {
@@ -297,13 +298,17 @@ export const blowUp = () => {
 	part1.position.x = heli.position.x;
 	part1.position.y = heli.position.y;
 	helipart1.push(part1);
-	let crashed= getCrashedHeli();
-	let explosion = getExplosion(40, 40);
 	if (grappled){
-		scene.add(heliGrappled.spr);
-		crashedHelis.push(heliGrappled);
+		let grappledMesh = getGrappledHeli();
+		grappledMesh.spr.position.copy(heli.position);
+		grappledMesh.spr.material.rotation = heli.rotation.z;
+		scene.add(grappledMesh.spr);
+		crashedHelis.push(grappledMesh);
 		scene.remove(heli);
+		scene.remove(heliFlying.spr);
 	} else {
+		let crashed= getCrashedHeli();
+		let explosion = getExplosion(40, 40);
 		scene.add(crashed.spr);
 		scene.add(explosion.spr);
 		crashedHelis.push(crashed);
@@ -350,7 +355,7 @@ const getDropInfo = () => {
 		dropInfo = getHeatSeekers();
 	} else if (random < chance * 6) {
 		dropInfo = new Flamethrower();
-	} else if (random < 1) {
+	} else {
 		dropInfo = getGrappleCannon();
 	}
 	return dropInfo;
