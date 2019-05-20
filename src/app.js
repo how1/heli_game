@@ -837,7 +837,7 @@ export let loadSounds = () => {
         }, function ( xhr ) {
             prog = (xhr.loaded / xhr.total) / 3;
             console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-            loadingBar.scale.set(prog + prog2, 1, 1);
+            loadingBar.scale.set(prog + prog2 + prog3, 1, 1);
             loadingPercentage.innerHTML = 'Loading ' + (prog + prog2 + prog3) * 100 + "%";
     });  
     // for (var i = 0; i < ; i++) {
