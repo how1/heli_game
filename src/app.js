@@ -771,6 +771,7 @@ let audioLoader = new THREE.AudioLoader();
 
 let loadingBar;
 let prog = 0;
+let prog2 = 0;
 
 export let loadSounds = () => {
     playGameButton.style.display = 'none';
