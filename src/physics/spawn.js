@@ -358,6 +358,10 @@ const getDropInfo = () => {
 	} else {
 		dropInfo = getGrappleCannon();
 	}
+	if (dropInfo == undefined) {
+		console.log(random);
+		debugger;
+	}
 	return dropInfo;
 }
 

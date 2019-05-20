@@ -10,9 +10,8 @@ things will look good once everything is consistent
 
 refactor app.js
 
-add records, cookies
-
 fix heli shooting postion
 
-loading screen label
+get better highscore displays
 
+fix highscore size bug
