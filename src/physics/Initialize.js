@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import "../styles/components/loader.scss";
 import { playerHealth, getMousePos, mute, playSound, gameStatus, displayWeaponInfo, updateWeaponInfo,
- displayScore, listener } from "../app.js";
+ displayScore, listener, highscore, heliCount, setCookie, setHighscore } from "../app.js";
 
 
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js';document.head.appendChild(script);})()
@@ -477,6 +477,7 @@ const getBackgroundMesh = (tex, zPos, yPos, geom, repeat) => {
 
 let titleTex = getTexture(require('../pics/title.png'));
 let title = new THREE.Mesh(titleGeom, getMaterial(titleTex));
+export let highscoreText;
 
 export const mainMenu = () => {
 	camera.position.x = 0;
@@ -497,6 +498,23 @@ export const mainMenu = () => {
 	title.position.z = 4;
 	scene.add(title);
 
+	if (highscoreText)
+        highscoreText.style.display = 'none';
+    highscoreText = document.createElement('div');
+    highscoreText.id = 'highscore';
+    highscoreText.style.position = 'absolute';
+    //highscoreText.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+    highscoreText.style.width = 12 + '%';
+    highscoreText.style.height = 5 + '%';
+    highscoreText.style.fontSize = window.innerHeight / 20 + 'px';
+    highscoreText.style.backgroundColor = 'rgba(255,0,0,.5)';
+    highscoreText.style.borderRadius = window.innerHeight/20 + 'px';
+    highscoreText.style.paddingLeft = window.innerHeight/78 + 'px';
+    highscoreText.style.paddingRight = window.innerHeight/78 + 'px';
+    highscoreText.innerHTML = "Highscore: " + highscore;
+    highscoreText.style.top = window.innerHeight / 23 + 'px';
+    highscoreText.style.left = window.innerWidth - windowOffset - window.innerHeight/2 + 'px';
+    document.body.appendChild(highscoreText);
 
 }
 
@@ -542,10 +560,33 @@ export const resume = () => {
 let arrowKeysFile = require('../pics/arrowKeys.png');
 let arrowKeysImage;
 
+export let newHighscore;
 
 export const showGameOverButtons = () => {
+	console.log(heliCount);
     restartButton.getMesh(character.mesh.position.x - 23, -7, 3);
     mainMenuButton.getMesh(character.mesh.position.x + 23, -7, 3);
+    if (heliCount > highscore){
+    	setHighscore(heliCount);
+    	setCookie('highscore', heliCount, 60);
+	    if (newHighscore)
+	        newHighscore.style.display = 'none';
+	    newHighscore = document.createElement('div');
+	    newHighscore.id = 'highscore';
+	    newHighscore.style.position = 'absolute';
+	    //newHighscore.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
+	    newHighscore.style.width = 17 + '%';
+	    newHighscore.style.height = 5 + '%';
+	    newHighscore.style.fontSize = window.innerHeight / 20 + 'px';
+	    newHighscore.style.backgroundColor = 'rgba(255,0,0,.5)';
+	    newHighscore.style.borderRadius = window.innerHeight/20 + 'px';
+	    newHighscore.style.paddingLeft = window.innerHeight/78 + 'px';
+	    newHighscore.style.paddingRight = window.innerHeight/78 + 'px';
+	    newHighscore.innerHTML = "New Highscore!: " + heliCount;
+	    newHighscore.style.top = window.innerHeight / 5 + 'px';
+	    newHighscore.style.left = window.innerWidth / 2 - 100 + 'px';
+	    document.body.appendChild(newHighscore);
+    }
 }
 
 export const instructions = () => {

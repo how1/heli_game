@@ -8,7 +8,7 @@ import { bodies, camera, renderer, scene, init, character, objects,
     backButton, credits, resumeButton, restartButton, mainMenuButton, pause, resume, 
     showGameOverButtons, buttonHighlight, buttons, mainMenuButtons, pauseButtons, gameOverButtons,
      width, height, windowOffset, updateProps, heliFlying, heliGrappled, getCrashedHeli, restart, 
-     startScreen, pressEnter} from "./physics/Initialize.js";
+     startScreen, pressEnter, highscoreText, newHighscore} from "./physics/Initialize.js";
 import { checkCollisions, checkBoundingBoxes, checkBulletCollision, checkHeliBulletCollision,
  checkMenuCollision } from "./physics/checkForCollision.js";
 import { spawn, rotateAboutPoint, move, heli, flyOff, dodge, 
@@ -18,6 +18,44 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
     pullDownHeli, grappled, muteSpawn, setSpawnSound } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}
+
+export function setCookie(cname, cvalue, exdays) {
+  var d = new Date();
+  d.setTime(d.getTime() + (exdays*24*60*60*1000));
+  var expires = "expires="+ d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+export let highscore = 0;
+
+export const setHighscore = (score) => {
+    highscore = score;
+}
+
+function checkCookie() {
+  let hs = getCookie("highscore");
+  if (!hs) {
+      setCookie("highscore", 0, 365);
+  } else highscore = hs;
+}
+
+checkCookie();
 
 export let gameStatus = "notReady";
 export let listener;
@@ -782,7 +820,7 @@ let loadingPercentage = document.createElement('div');
 loadingPercentage.id = 'loading';
 loadingPercentage.innerHTML = 'Loading ' + (prog + prog2 + prog3) * 100 + "%";
 loadingPercentage.style.top = window.innerHeight / 2 + 30 + 'px';
-loadingPercentage.style.left = window.innerWidth / 2 - 100 + 'px';
+loadingPercentage.style.left = window.innerWidth / 2 - 125 + 'px';
 let playGameButton = document.createElement('button');
 
 export let loadSounds = () => {
@@ -838,7 +876,7 @@ export let loadSounds = () => {
             prog = (xhr.loaded / xhr.total) / 3;
             console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
             loadingBar.scale.set(prog + prog2 + prog3, 1, 1);
-            loadingPercentage.innerHTML = 'Loading ' + (prog + prog2 + prog3) * 100 + "%";
+            loadingPercentage.innerHTML = 'Loading ' + Math.trunc((prog + prog2 + prog3) * 100) + "%";
     });  
     // for (var i = 0; i < ; i++) {
     //      }
@@ -1606,6 +1644,14 @@ const GameLoop = () => {
     window.requestAnimationFrame( GameLoop );
     if (gameStatus == 'play'){
     	update();
+    }
+    if (gameStatus != 'gameOver'){
+        if (newHighscore)
+            newHighscore.style.display = 'none';
+    }
+    if (!onMainMenu || gameStatus != 'ready') {
+        if (highscoreText)
+            highscoreText.style.display = 'none';
     }
     // pressEnterOpacity();
     //Blow up heli animation
