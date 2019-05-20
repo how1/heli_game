@@ -110,7 +110,7 @@ const start = () => {
     displayScore();
     scene.remove.apply(scene, scene.children);
     restart();
-    menuMusic.pause();
+    menuMusic.stop();
     healthBarInit();
     displayReloadBar();
     updateWeaponIcon();
@@ -778,7 +778,15 @@ let prog = 0;
 let prog2 = 0;
 let prog3 = 0;
 
+let loadingPercentage = document.createElement('div');
+loadingPercentage.id = 'loading';
+loadingPercentage.innerHTML = 'Loading ' + (prog + prog2 + prog3) * 100 + "%";
+loadingPercentage.style.top = window.innerHeight / 2 + 30 + 'px';
+loadingPercentage.style.left = window.innerWidth / 2 - 100 + 'px';
+let playGameButton = document.createElement('button');
+
 export let loadSounds = () => {
+    document.body.appendChild(loadingPercentage);
     playGameButton.style.display = 'none';
     let geom = new THREE.PlaneGeometry(40, 4, 32);
     geom.translate( 40 / 2, 0, 0 );
@@ -824,11 +832,13 @@ export let loadSounds = () => {
             music.setBuffer( buffer );
             music.setLoop(true);
             music.setVolume(0.5);
+            loadingPercentage.style.display = 'none';
             playGame();
         }, function ( xhr ) {
             prog = (xhr.loaded / xhr.total) / 3;
             console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
             loadingBar.scale.set(prog + prog2, 1, 1);
+            loadingPercentage.innerHTML = 'Loading ' + (prog + prog2 + prog3) * 100 + "%";
     });  
     // for (var i = 0; i < ; i++) {
     //      }
@@ -874,9 +884,6 @@ export const playSound = (src, audioObj, loop, speed, vol) => {
 //     playGame();
 // }
 
-
-
-let playGameButton = document.createElement('button');
 // let btnBg = document.createElement('img');
 // btnBg.id = 'btnBg';
 // btnBg.src = require('./pics/littleTitle.png');

@@ -37,3 +37,12 @@ button:disabled {
 	border-radius: 10px;
 	/*margin-right: 10px;*/
 }
+
+#loading {
+	border-radius: 10px;
+	color: red;
+	position: absolute;
+	height: 10%;
+	width: 20%;
+	padding: auto;
+}
