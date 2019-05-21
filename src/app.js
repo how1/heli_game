@@ -1483,6 +1483,11 @@ const update = () => {
                 if (bullets[i].sound == explosion){
                     heliHealth -= bullets[i].damage;
                     expl = getExplosion(10, 10);
+                    scene.add(expl.spr);
+                    rpgExplosions.push(expl);
+                    if (!mute){
+                        playSound(bullets[i].sound, new THREE.Audio(listener));
+                    }
                 } else {
                     if (bullets[i].flame){
                         bullets[i].strikes++;
