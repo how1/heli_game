@@ -339,6 +339,7 @@ export const pullDownHeli = () => {
 	grappled = true;
 }
 
+
 const getDropInfo = () => {
 	let random = Math.random();
 	let dropInfo;
@@ -357,10 +358,6 @@ const getDropInfo = () => {
 		dropInfo = new Flamethrower();
 	} else {
 		dropInfo = getGrappleCannon();
-	}
-	if (dropInfo == undefined) {
-		console.log(random);
-		debugger;
 	}
 	return dropInfo;
 }
@@ -533,7 +530,8 @@ export let grappleCannon = getGrappleCannon();
 export const Flamethrower = function () {
 	this.color = 0x0000ff;
 	this.name = 'flamethrower';
-	this.mesh = getDropIconMesh('flamethrower', 6);
+	this.dropMesh = getDropIconMesh(this.name, 6);
+	this.mesh;
 	this.size = 2;
 	this.flames = [];
 	this.speed = .5;
@@ -567,3 +565,5 @@ export const getFlameMesh = () => {
 }
 
 export let flamethrower = new Flamethrower();
+
+
