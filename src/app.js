@@ -142,6 +142,7 @@ let dodger;
 
 const start = () => {
     xVelocity = 0;
+    equippedWeapons = [];
     equippedWeapons.push(standardGun);
     displayWeaponInfo();
     
@@ -601,7 +602,8 @@ const shootBullet = () => {
             mesh: flame.mesh,
             damage:equippedWeapons[0].damage,
             sound: equippedWeapons[0].hitSound,
-            flame
+            flame,
+            strikes: 0
         }
         bullets.push(bullet);
     } else if (equippedWeapons[0].name == rpg.name) {
@@ -1477,17 +1479,35 @@ const update = () => {
         //check for collision with heli
         if (heliHealth > 0){
             if (checkHeliBulletCollision(bullets[i].mesh)){
-                heliHealth -= bullets[i].damage;
                 let expl;
-                if (bullets[i].sound == explosion)
+                if (bullets[i].sound == explosion){
+                    heliHealth -= bullets[i].damage;
                     expl = getExplosion(10, 10);
-                else expl = getBulletHit(6, 6);
-                expl.spr.position.x = bullets[i].mesh.position.x;
-                expl.spr.position.y = bullets[i].mesh.position.y;
-                scene.add(expl.spr);
-                rpgExplosions.push(expl);
-                if (!mute)
-                    playSound(bullets[i].sound, new THREE.Audio(listener));
+                } else {
+                    if (bullets[i].flame){
+                        bullets[i].strikes++;
+                        if (bullets[i].strikes % 10 == 0){
+                            heliHealth -= bullets[i].damage * 10;
+                            expl = getBulletHit(6, 6);
+                            expl.spr.position.x = bullets[i].mesh.position.x;
+                            expl.spr.position.y = bullets[i].mesh.position.y;
+                            scene.add(expl.spr);
+                            rpgExplosions.push(expl);
+                            if (!mute)
+                                playSound(bullets[i].sound, new THREE.Audio(listener));
+                        }
+                    } else {
+                        heliHealth -= bullets[i].damage;
+                        expl = getBulletHit(6, 6);
+                        expl.spr.position.x = bullets[i].mesh.position.x;
+                        expl.spr.position.y = bullets[i].mesh.position.y;
+                        scene.add(expl.spr);
+                        rpgExplosions.push(expl);
+                        if (!mute)
+                            playSound(bullets[i].sound, new THREE.Audio(listener));
+                    } 
+
+                }
                 if(heliHealth <= 0){
                     // if (!mute && bullets[i].sound != explosion);
                         // playSound(explosion, new THREE.Audio(listener));

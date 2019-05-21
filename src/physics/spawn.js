@@ -549,9 +549,9 @@ export const Flamethrower = function () {
 }
 export const Flame = function () {
 	this.maxSize = 50;
-	this.lifeSpan = 60;
+	this.lifeSpan = 35;
 	this.opacity = 1;
-	this.speed = 2;
+	this.speed = 1;
 	this.size = 1;
 	this.mesh = getFlameMesh();
 	this.velocityVector = new THREE.Vector3();
