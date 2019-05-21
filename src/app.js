@@ -157,6 +157,7 @@ const start = () => {
     character.mesh.position.y = 80;
     character.mesh.position.x = 0;
     spawn();
+    scene.add(heliGun);
     gameStatus = 'play'
     rpg.mesh = rocket;
     gameSpeed = 1;
@@ -560,6 +561,11 @@ const shootHeliBullet = () => {
         }
         square.position.x = heli.position.x;
         square.position.y = heli.position.y;
+        // let tmp = new THREE.Vector3();
+        // tmp.x += 5;
+        // tmp.applyQuaternion(heliGun.quaternion);
+        // square.position.copy(heliGun.position);
+        // square.position.add(tmp);
         let tmpHeliPos = new THREE.Vector3(heli.position.x, heli.position.y, 0);
         let bulletVelocity = tmpHeliPos.sub(character.mesh.position).normalize().negate();
         let bullet = {
@@ -567,6 +573,7 @@ const shootHeliBullet = () => {
             mesh: square,
         }
         heliBullets.push(bullet);
+        heliShotThisFrame = 0;
     // }
 }
 
@@ -744,6 +751,7 @@ const changeWeapon = () => {
     equippedWeapons.push(tmp);
     updateWeaponInfo();
     updateWeaponIcon();
+    reloadDelta = 0;
 }
 
 const addWeapon = (pickup) => {
@@ -1234,6 +1242,40 @@ export const pointArm = () => {
     //
 }
 
+let heliGun = new THREE.Mesh(new THREE.PlaneGeometry(11,6,32), new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(require('./pics/heliGun1.png')), side:THREE.FrontSide}));
+let heliGun1 = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(require('./pics/heliGun1.png')), side:THREE.FrontSide});
+let heliGun2 = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(require('./pics/heliGun2.png')), side:THREE.FrontSide});
+let heliGun3 = new THREE.MeshBasicMaterial({map: new THREE.TextureLoader().load(require('./pics/heliGun3.png')), side:THREE.FrontSide});
+heliGun1.transparent = true;
+heliGun1.opacity = 1;
+heliGun2.transparent = true;
+heliGun2.opacity = 1;
+heliGun3.transparent = true;
+heliGun3.opacity = 1;
+heliGun.geometry.translate(11/2, 0, 0);
+heliGun.position.y = 100;
+heliGun.position.z = 5;
+
+let heliShotThisFrame = 0;
+
+export const pointHeliGun = () => {
+    // console.log(heliGun.position);
+    heliGun.position.copy(heli.position);
+    heliGun.position.y -= 5;
+    heliGun.position.x += 5;
+    let tmp = new THREE.Vector3();
+    tmp.copy(heli.position);
+    let bulletVelocity = tmp.sub(character.mesh.position).normalize().negate();
+    let degrees = bulletVelocity.angleTo(new THREE.Vector3(1,0,0));
+    heliGun.rotation.z = -degrees;
+    if (heliShotThisFrame < 5) heliGun.material = heliGun2;
+    else if (heliShotThisFrame < 10) heliGun.material = heliGun3;
+    else heliGun.material = heliGun1;
+    heliShotThisFrame++;
+    
+    //
+}
+
 // const pressEnterOpacity = () => {
 //     if (gameStatus == 'startScreen'){
 //         console.log(pressEnter.material.opacity);
@@ -1483,6 +1525,8 @@ const update = () => {
                 if (bullets[i].sound == explosion){
                     heliHealth -= bullets[i].damage;
                     expl = getExplosion(10, 10);
+                    expl.spr.position.x = bullets[i].mesh.position.x;
+                    expl.spr.position.y = bullets[i].mesh.position.y;   
                     scene.add(expl.spr);
                     rpgExplosions.push(expl);
                     if (!mute){
@@ -1538,6 +1582,7 @@ const update = () => {
     else if (xVelocity < 0) standDir = 'left';
 
     pointArm();
+    // pointHeliGun();
 
     //
     //Collisions come back as t,b,l,r or none
