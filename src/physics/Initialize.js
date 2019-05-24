@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+
 import "../styles/components/loader.scss";
 import { playerHealth, getMousePos, mute, playSound, gameStatus, displayWeaponInfo, updateWeaponInfo,
- displayScore, listener, highscore, heliCount, setCookie, setHighscore } from "../app.js";
+ displayScore, listener, highscore, heliCount, setCookie } from "../app.js";
 
 
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js';document.head.appendChild(script);})()
@@ -38,6 +39,8 @@ window.addEventListener('resize', () => {
 		displayScore();
 	}
 });
+
+export let hashedScore;
 
 export let objects = [];
 
@@ -562,12 +565,11 @@ let arrowKeysImage;
 export let newHighscore;
 
 export const showGameOverButtons = () => {
-	console.log(heliCount);
     restartButton.getMesh(character.mesh.position.x - 23, -7, 3);
     mainMenuButton.getMesh(character.mesh.position.x + 23, -7, 3);
     if (heliCount > highscore){
-    	setHighscore(heliCount);
     	setCookie('highscore', heliCount, 60);
+    	getCookie('highscore');
 	    if (newHighscore)
 	        newHighscore.style.display = 'none';
 	    newHighscore = document.createElement('div');
