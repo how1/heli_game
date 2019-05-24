@@ -1484,7 +1484,9 @@ const update = () => {
             newVec.multiplyScalar(bullets[i].speed);
             bullets[i].velocity.lerp(newVec, bullets[i].alpha += delta2/200);
             let degrees = bullets[i].velocity.angleTo(new THREE.Vector3(1,0,0));
-            bullets[i].mesh.rotation.z = degrees;
+            if (bullets[i].mesh.position.y > heli.position.y && bullets[i].velocity.y < 0){
+                bullets[i].mesh.rotation.z = -degrees
+            } else bullets[i].mesh.rotation.z = degrees;
         }
         //move bullets
         bullets[i].mesh.position.x += bullets[i].velocity.x * gameSpeed;
