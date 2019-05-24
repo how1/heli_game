@@ -256,6 +256,7 @@ function onDocumentKeyDown(event) {
                 gravity = GRAVITATION;
                 walkingRight = false;
                 walkingLeft = false;
+                // playSound(jumpSound, new THREE.Audio(listener));
                 if (!jumping){
                     jumping = true;
                     jump(standDir);
@@ -783,6 +784,7 @@ let healthpackPickup = require('./sounds/healthpackPickup.mp3');
 let flamethrowerPickup = require('./sounds/flamethrowerPickup.mp3');
 let song = require('./sounds/gameplayMusic.mp3');
 let menuSong = require('./sounds/menuMusic.mp3');
+let jumpSound = require('./sounds/jump.mp3');
 export let hover = require('./sounds/hover.mp3');
 // export let fadeIn = require('./sounds/fadeIn.mp3');
 // export let fadeOut = require('./sounds/fadeOut.mp3');
@@ -1619,6 +1621,7 @@ const update = () => {
             if (keyEvents[0]){
                 yVelocity = ySpeed;
                 jumping = true;
+                // playSound(jumpSound, new THREE.Audio(listener));
                 if (!jumping)
                     jump(standDir);
             }

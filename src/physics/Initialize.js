@@ -503,10 +503,9 @@ export const mainMenu = () => {
     highscoreText = document.createElement('div');
     highscoreText.id = 'highscore';
     highscoreText.style.position = 'absolute';
-    //highscoreText.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
-    highscoreText.style.width = 12 + '%';
+    highscoreText.style.width = window.innerHeight/40 + '%';
     highscoreText.style.height = 5 + '%';
-    highscoreText.style.fontSize = window.innerHeight / 20 + 'px';
+    highscoreText.style.fontSize = window.innerHeight / 22 + 'px';
     highscoreText.style.backgroundColor = 'rgba(255,0,0,.5)';
     highscoreText.style.borderRadius = window.innerHeight/20 + 'px';
     highscoreText.style.paddingLeft = window.innerHeight/78 + 'px';
@@ -575,7 +574,7 @@ export const showGameOverButtons = () => {
 	    newHighscore.id = 'highscore';
 	    newHighscore.style.position = 'absolute';
 	    //newHighscore.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
-	    newHighscore.style.width = 17 + '%';
+	    newHighscore.style.width = window.innerHeight/30 + '%';
 	    newHighscore.style.height = 5 + '%';
 	    newHighscore.style.fontSize = window.innerHeight / 20 + 'px';
 	    newHighscore.style.backgroundColor = 'rgba(255,0,0,.5)';
@@ -584,7 +583,7 @@ export const showGameOverButtons = () => {
 	    newHighscore.style.paddingRight = window.innerHeight/78 + 'px';
 	    newHighscore.innerHTML = "New Highscore!: " + heliCount;
 	    newHighscore.style.top = window.innerHeight / 5 + 'px';
-	    newHighscore.style.left = window.innerWidth / 2 - 100 + 'px';
+	    newHighscore.style.left = window.innerWidth - windowOffset - window.innerHeight/1.025 + 'px';
 	    document.body.appendChild(newHighscore);
     }
 }

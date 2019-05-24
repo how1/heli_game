@@ -15,3 +15,8 @@ fix heli shooting postion
 get better highscore displays
 
 fix highscore size bug
+
+change color of arm based on what weapon is equipped
+
+fix seeker missle angle bug
+
