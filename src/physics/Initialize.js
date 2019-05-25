@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 import "../styles/components/loader.scss";
 import { playerHealth, getMousePos, mute, playSound, gameStatus, displayWeaponInfo, updateWeaponInfo,
- displayScore, listener, highscore, heliCount, setCookie } from "../app.js";
+ displayScore, listener, highscore, heliCount, setCookie, checkCookie } from "../app.js";
 
 
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js';document.head.appendChild(script);})()
@@ -572,21 +572,21 @@ export const showGameOverButtons = () => {
     mainMenuButton.getMesh(character.mesh.position.x + 23, -7, 3);
     if (heliCount > highscore){
     	setCookie('highscore', heliCount, 60);
-    	getCookie('highscore');
+    	checkCookie('highscore');
 	    if (newHighscore)
 	        newHighscore.style.display = 'none';
 	    newHighscore = document.createElement('div');
 	    inputBar = document.createElement('input');
 	    submitButton = document.createElement('button');
-	    header = document.createElement('h1');
+	    header = document.createElement('h3');
 	    inputBar.type = 'text';
 	    inputBar.name = 'submit';
 	    inputBar.id = 'nameInput';
-	    button.innerHTML = 'Submit Highscore';
+	    submitButton.innerHTML = 'Submit Highscore';
 	    newHighscore.id = 'highscore';
 	    newHighscore.style.position = 'absolute';
 	    //newHighscore.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
-	    newHighscore.style.width = window.innerHeight/30 + '%';
+	    newHighscore.style.width = window.innerHeight/25 + '%';
 	    newHighscore.style.height = 10 + '%';
 	    header.style.fontSize = window.innerHeight / 20 + 'px';
 	    newHighscore.style.backgroundColor = 'rgba(255,0,0,.5)';
@@ -596,12 +596,13 @@ export const showGameOverButtons = () => {
 	    header.innerHTML = "New Highscore!: " + heliCount;
 	    newHighscore.style.top = window.innerHeight / 5 + 'px';
 	    newHighscore.style.left = window.innerWidth - windowOffset - window.innerHeight/1.025 + 'px';
-	   	let name = encodeHTML(document.getElementById('nameInput').value);
-	    button.onclick = submitHighscore(name, heliCount);
 	    document.body.appendChild(newHighscore);
 	    newHighscore.appendChild(header);
-	    newHighscore.appendChild(inputBar);
-	    newHighscore.appendChild(submitButton);
+	    // newHighscore.appendChild(inputBar);
+	    // newHighscore.appendChild(submitButton);
+	   	// let name = encodeHTML(document.getElementById('nameInput').value);
+	   	submitButton.onclick = submitScore;
+
     }
 }
 

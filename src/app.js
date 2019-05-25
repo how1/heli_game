@@ -36,8 +36,6 @@ import './styles/styles.scss';
 
 // let database = firebase.database();
 
-console.log(key);
-
 function getCookie(cname) {
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
@@ -55,14 +53,11 @@ function getCookie(cname) {
 }
 
 export function setCookie(cname, cvalue, exdays) {
-    let hash = crypto.SHA256(cvalue + "" + key);
-    let value = JSON.stringify({hs: cvalue, hash});
-    console.log(typeof(value));
-    let encHighScore = crypto.AES.encrypt(value + "", key + "");
+    let encHighScore = crypto.AES.encrypt(cvalue + "", key);
     var d = new Date();
     d.setTime(d.getTime() + (exdays*24*60*60*1000));
     var expires = "expires="+ d.toUTCString();
-    document.cookie = cname + "=" + value + ";" + expires + ";path=/";
+    document.cookie = cname + "=" + encHighScore + ";" + expires + ";path=/";
 }
 
 export let highscore = 0;
@@ -71,18 +66,14 @@ export let highscore = 0;
 //     highscore = score;
 // }
 
-function checkCookie() {
+export function checkCookie() {
     let hs = getCookie("highscore");
     if (!hs) {
       setCookie("highscore", 0, 365);
     } else {
-        hs = hs + "";
-        let decrypted = crypto.AES.decrypt(hs);
-        let jsonObj = JSON.parse(decrypted);
-        hs = jsonObj[0];
-        if (crypto.SHA256(hs + "" + key + "") == jsonObj[1]){
-            highscore = hs;
-        }
+        let decrypted = crypto.AES.decrypt(hs, key).toString(crypto.enc.Utf8);
+        console.log(decrypted);
+        highscore = decrypted;
     } 
 }
 
