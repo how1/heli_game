@@ -571,8 +571,8 @@ export const showGameOverButtons = () => {
     restartButton.getMesh(character.mesh.position.x - 23, -7, 3);
     mainMenuButton.getMesh(character.mesh.position.x + 23, -7, 3);
     if (heliCount > highscore){
-    	setCookie('highscore', heliCount, 60);
-    	checkCookie('highscore');
+    	setCookie('data', heliCount, 60);
+    	checkCookie('data');
 	    if (newHighscore)
 	        newHighscore.style.display = 'none';
 	    newHighscore = document.createElement('div');

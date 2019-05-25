@@ -67,9 +67,9 @@ export let highscore = 0;
 // }
 
 export function checkCookie() {
-    let hs = getCookie("highscore");
+    let hs = getCookie("data");
     if (!hs) {
-      setCookie("highscore", 0, 365);
+      setCookie("data", 0, 365);
     } else {
         let decrypted = crypto.AES.decrypt(hs, key).toString(crypto.enc.Utf8);
         console.log(decrypted);
