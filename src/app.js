@@ -1,6 +1,11 @@
 import * as THREE from 'three';
 import * as aes from 'crypto-js/aes';
+<<<<<<< HEAD
 import * as sha256 from 'crypto-js/sha256'
+=======
+import * as sha256 from 'crypto-js/sha256';
+import * as json from 'json';
+>>>>>>> 9dfc863cd8a7c251a4edfd431041cce57d44d24c
 import key from './physics/key.js';
 import * as firebase from "firebase/app";
 
