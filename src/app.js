@@ -1,7 +1,6 @@
 import * as THREE from 'three';
-import * as aes from 'crypto-js/aes';
-import * as sha256 from 'crypto-js/sha256'
-import key from './physics/key.js';
+import * as crypto from 'crypto-js';
+import {key} from './physics/key.js';
 // import * as firebase from "firebase/app";
 
 import { bodies, camera, renderer, scene, init, character, objects, 
@@ -37,6 +36,8 @@ import './styles/styles.scss';
 
 // let database = firebase.database();
 
+console.log(key);
+
 function getCookie(cname) {
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
@@ -54,9 +55,10 @@ function getCookie(cname) {
 }
 
 export function setCookie(cname, cvalue, exdays) {
-    let hash = sha256(cvalue + "" + key);
-    let value = JSON.stringify({hs: cvalue, hash})
-    let encHighScore = aes.encrypt(value, key);
+    let hash = crypto.SHA256(cvalue + "" + key);
+    let value = JSON.stringify({hs: cvalue, hash});
+    console.log(typeof(value));
+    let encHighScore = crypto.AES.encrypt(value + "", key + "");
     var d = new Date();
     d.setTime(d.getTime() + (exdays*24*60*60*1000));
     var expires = "expires="+ d.toUTCString();
@@ -74,9 +76,11 @@ function checkCookie() {
     if (!hs) {
       setCookie("highscore", 0, 365);
     } else {
-        let jsonObj = JSON.parse(aes.decrypt(hs));
+        hs = hs + "";
+        let decrypted = crypto.AES.decrypt(hs);
+        let jsonObj = JSON.parse(decrypted);
         hs = jsonObj[0];
-        if (sha256(hs + "" + key) == jsonObj[1]){
+        if (crypto.SHA256(hs + "" + key + "") == jsonObj[1]){
             highscore = hs;
         }
     } 
