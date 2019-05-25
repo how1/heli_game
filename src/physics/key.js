@@ -1,1 +1,1 @@
-export let key = '4N2#ns2@!E)<8iqaSdeWSV';
+export let key = 'namewmNANANNWWW0200221##$FFVMW#J#NS_#JM@NERI@C@(J@NX@C@ICN#@MNVWnvkjsca;sdl2n 233';
