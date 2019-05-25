@@ -610,13 +610,14 @@ function encodeHTML(s) {
 }
 
 const submitScore = (name, score) => {
-	if (name.length > 0){
-		let userId = Date.now() + "" + name;
-		firebase.database().ref('users/' + userId).set({
-		name,
-		highscore: score
-		});
-	}
+	console.log('firebase set');
+	// if (name.length > 0){
+	// 	let userId = Date.now() + "" + name;
+	// 	firebase.database().ref('users/' + userId).set({
+	// 	name,
+	// 	highscore: score
+	// 	});
+	// }
 }
 
 export const instructions = () => {

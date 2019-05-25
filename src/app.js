@@ -1,13 +1,8 @@
 import * as THREE from 'three';
 import * as aes from 'crypto-js/aes';
-<<<<<<< HEAD
 import * as sha256 from 'crypto-js/sha256'
-=======
-import * as sha256 from 'crypto-js/sha256';
-import * as json from 'json';
->>>>>>> 9dfc863cd8a7c251a4edfd431041cce57d44d24c
 import key from './physics/key.js';
-import * as firebase from "firebase/app";
+// import * as firebase from "firebase/app";
 
 import { bodies, camera, renderer, scene, init, character, objects, 
     moveCharacter, walk, stand, jump, updateSprite, 
@@ -28,19 +23,19 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
 import 'normalize.css';
 import './styles/styles.scss';
 
-let firebaseConfig = {
-    apiKey: "AIzaSyAnfDeBJKe8goIdkLvtrGcdCQxDGkYHXow",
-    authDomain: "heli-game.firebaseapp.com",
-    databaseURL: "https://heli-game.firebaseio.com",
-    projectId: "heli-game",
-    storageBucket: "heli-game.appspot.com",
-    messagingSenderId: "690359290663",
-    appId: "1:690359290663:web:41025f62275a3073"
-};
+// let firebaseConfig = {
+//     apiKey: "AIzaSyAnfDeBJKe8goIdkLvtrGcdCQxDGkYHXow",
+//     authDomain: "heli-game.firebaseapp.com",
+//     databaseURL: "https://heli-game.firebaseio.com",
+//     projectId: "heli-game",
+//     storageBucket: "heli-game.appspot.com",
+//     messagingSenderId: "690359290663",
+//     appId: "1:690359290663:web:41025f62275a3073"
+// };
 
-firebase.initializeApp(firebaseConfig);
+// firebase.initializeApp(firebaseConfig);
 
-let database = firebase.database();
+// let database = firebase.database();
 
 function getCookie(cname) {
     var name = cname + "=";
