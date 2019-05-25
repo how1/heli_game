@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+
 import "../styles/components/loader.scss";
 import { playerHealth, getMousePos, mute, playSound, gameStatus, displayWeaponInfo, updateWeaponInfo,
- displayScore, listener, highscore, heliCount, setCookie, setHighscore } from "../app.js";
+ displayScore, listener, highscore, heliCount, setCookie } from "../app.js";
 
 
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js';document.head.appendChild(script);})()
@@ -38,6 +39,8 @@ window.addEventListener('resize', () => {
 		displayScore();
 	}
 });
+
+export let hashedScore;
 
 export let objects = [];
 
@@ -560,32 +563,60 @@ let arrowKeysFile = require('../pics/arrowKeys.png');
 let arrowKeysImage;
 
 export let newHighscore;
+let inputBar;
+let submitButton;
+let header;
 
 export const showGameOverButtons = () => {
-	console.log(heliCount);
     restartButton.getMesh(character.mesh.position.x - 23, -7, 3);
     mainMenuButton.getMesh(character.mesh.position.x + 23, -7, 3);
     if (heliCount > highscore){
-    	setHighscore(heliCount);
     	setCookie('highscore', heliCount, 60);
+    	getCookie('highscore');
 	    if (newHighscore)
 	        newHighscore.style.display = 'none';
 	    newHighscore = document.createElement('div');
+	    inputBar = document.createElement('input');
+	    submitButton = document.createElement('button');
+	    header = document.createElement('h1');
+	    inputBar.type = 'text';
+	    inputBar.name = 'submit';
+	    inputBar.id = 'nameInput';
+	    button.innerHTML = 'Submit Highscore';
 	    newHighscore.id = 'highscore';
 	    newHighscore.style.position = 'absolute';
 	    //newHighscore.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
 	    newHighscore.style.width = window.innerHeight/30 + '%';
-	    newHighscore.style.height = 5 + '%';
-	    newHighscore.style.fontSize = window.innerHeight / 20 + 'px';
+	    newHighscore.style.height = 10 + '%';
+	    header.style.fontSize = window.innerHeight / 20 + 'px';
 	    newHighscore.style.backgroundColor = 'rgba(255,0,0,.5)';
 	    newHighscore.style.borderRadius = window.innerHeight/20 + 'px';
 	    newHighscore.style.paddingLeft = window.innerHeight/78 + 'px';
 	    newHighscore.style.paddingRight = window.innerHeight/78 + 'px';
-	    newHighscore.innerHTML = "New Highscore!: " + heliCount;
+	    header.innerHTML = "New Highscore!: " + heliCount;
 	    newHighscore.style.top = window.innerHeight / 5 + 'px';
 	    newHighscore.style.left = window.innerWidth - windowOffset - window.innerHeight/1.025 + 'px';
+	   	let name = encodeHTML(document.getElementById('nameInput').value);
+	    button.onclick = submitHighscore(name, heliCount);
 	    document.body.appendChild(newHighscore);
+	    newHighscore.appendChild(header);
+	    newHighscore.appendChild(inputBar);
+	    newHighscore.appendChild(submitButton);
     }
+}
+
+function encodeHTML(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+}
+
+const submitScore = (name, score) => {
+	if (name.length > 0){
+		let userId = Date.now() + "" + name;
+		firebase.database().ref('users/' + userId).set({
+		name,
+		highscore: score
+		});
+	}
 }
 
 export const instructions = () => {

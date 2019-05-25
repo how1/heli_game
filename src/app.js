@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import * as aes from 'crypto-js/aes';
+import * as sha256 from 'crypto-js/sha256'
+import key from './physics/key.js';
+import * as firebase from "firebase/app";
 
 import { bodies, camera, renderer, scene, init, character, objects, 
     moveCharacter, walk, stand, jump, updateSprite, 
@@ -19,40 +23,63 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
 import 'normalize.css';
 import './styles/styles.scss';
 
+let firebaseConfig = {
+    apiKey: "AIzaSyAnfDeBJKe8goIdkLvtrGcdCQxDGkYHXow",
+    authDomain: "heli-game.firebaseapp.com",
+    databaseURL: "https://heli-game.firebaseio.com",
+    projectId: "heli-game",
+    storageBucket: "heli-game.appspot.com",
+    messagingSenderId: "690359290663",
+    appId: "1:690359290663:web:41025f62275a3073"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+let database = firebase.database();
+
 function getCookie(cname) {
-  var name = cname + "=";
-  var decodedCookie = decodeURIComponent(document.cookie);
-  var ca = decodedCookie.split(';');
-  for(var i = 0; i <ca.length; i++) {
-    var c = ca[i];
-    while (c.charAt(0) == ' ') {
-      c = c.substring(1);
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
     }
-    if (c.indexOf(name) == 0) {
-      return c.substring(name.length, c.length);
-    }
-  }
-  return "";
+    return "";
 }
 
 export function setCookie(cname, cvalue, exdays) {
-  var d = new Date();
-  d.setTime(d.getTime() + (exdays*24*60*60*1000));
-  var expires = "expires="+ d.toUTCString();
-  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    let hash = sha256(cvalue + "" + key);
+    let value = JSON.stringify({hs: cvalue, hash})
+    let encHighScore = aes.encrypt(value, key);
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + value + ";" + expires + ";path=/";
 }
 
 export let highscore = 0;
 
-export const setHighscore = (score) => {
-    highscore = score;
-}
+// export const setHighscore = (score) => {
+//     highscore = score;
+// }
 
 function checkCookie() {
-  let hs = getCookie("highscore");
-  if (!hs) {
+    let hs = getCookie("highscore");
+    if (!hs) {
       setCookie("highscore", 0, 365);
-  } else highscore = hs;
+    } else {
+        let jsonObj = JSON.parse(aes.decrypt(hs));
+        hs = jsonObj[0];
+        if (sha256(hs + "" + key) == jsonObj[1]){
+            highscore = hs;
+        }
+    } 
 }
 
 checkCookie();
