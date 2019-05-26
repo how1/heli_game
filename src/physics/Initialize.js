@@ -641,10 +641,11 @@ export const instructions = () => {
 	tintMesh.position.z = 5;
 	//
 
-	let arrowKeysImageGeom = new THREE.PlaneGeometry( 60, 60, 32);
+	let arrowKeysImageGeom = new THREE.PlaneGeometry( 70, 70, 32);
 	let arrowKeysImageTex = getTexture(arrowKeysFile);
 	let arrowKeysMat = getMaterial(arrowKeysImageTex);
 	let arrowKeysImage = new THREE.Mesh(arrowKeysImageGeom, arrowKeysMat);
+	arrowKeysImage.position.y = 5;
 	scene.add(arrowKeysImage);
 	// arrowKeysImage.position.x = -20;
 
@@ -746,6 +747,13 @@ function Button(up, down, high, tick, x, y, z) {
 			this.down = true;
 		}
 	};
+	this.returnToUp = function(){
+		scene.remove(this.currentMesh);
+		scene.remove(this.upHighMesh);
+		scene.add(this.upMesh);
+		this.down = false;
+		this.highlighted = false;
+	}
 	this.mouseUp = function(){
 		this.highlighted = false;
 		this.down = false;

@@ -675,32 +675,39 @@ document.addEventListener("mouseup", function(event){
         //     mainMenu();
         // }
     } else if (gameStatus == 'pause' || gameStatus == 'gameOver') {
-        if (checkMenuCollision(pos, resumeButton.currentMesh)){
-            resume();
-            // music.play();
-            if (!mute)
-                playSound(tick, new THREE.Audio(listener));
-            gameStatus = 'play';
-        } else if (checkMenuCollision(pos, restartButton.currentMesh)){
+        if (gameStatus == 'pause') {
+            if (checkMenuCollision(pos, resumeButton.currentMesh)){
+                resume();
+                // music.play();
+                if (!mute)
+                    playSound(tick, new THREE.Audio(listener));
+                gameStatus = 'play';
+            }
+        }
+        if (checkMenuCollision(pos, restartButton.currentMesh)){
             bullets = [];
             heliBullets = [];
             music.stop();
             gameStatus = 'play';
             start();
         } else if (checkMenuCollision(pos, mainMenuButton.currentMesh)){
-            if (!mute)
-                playSound(tick, new THREE.Audio(listener));
-            music.stop();
-            hoverSound.stop();
-            heliBullets = [];
-            gameStatus = 'ready';
-            instructionsMenu = false;
-            menuMusic.play();
-            onCredits = false;
-            onMainMenu = true;
-            weaponText.style.display = 'none';
-            text.style.display = 'none';
-            mainMenu();
+            let quit = confirm("Are you sure? You will lose your score.");
+            if (quit){
+                if (!mute)
+                    playSound(tick, new THREE.Audio(listener));
+                music.stop();
+                hoverSound.stop();
+                heliBullets = [];
+                gameStatus = 'ready';
+                instructionsMenu = false;
+                menuMusic.play();
+                if (mute) menuMusic.setVolume(0);
+                onCredits = false;
+                onMainMenu = true;
+                weaponText.style.display = 'none';
+                text.style.display = 'none';
+                mainMenu();
+            } else mainMenuButton.returnToUp();
         }
     }
     for (var i = 0; i < buttons.length; i++) {
