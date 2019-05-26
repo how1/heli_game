@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 import "../styles/components/loader.scss";
 import { playerHealth, getMousePos, mute, playSound, gameStatus, displayWeaponInfo, updateWeaponInfo,
- displayScore, listener, highscore, heliCount, setCookie, checkCookie } from "../app.js";
+ displayScore, listener, highscore, heliCount, setCookie, checkCookie, submitScore, getScores } from "../app.js";
 
 
 (function(){var script=document.createElement('script');script.onload=function(){var stats=new Stats();document.body.appendChild(stats.dom);requestAnimationFrame(function loop(){stats.update();requestAnimationFrame(loop)});};script.src='//rawgit.com/mrdoob/stats.js/master/build/stats.min.js';document.head.appendChild(script);})()
@@ -205,15 +205,19 @@ let startGameDownTex = getTexture(require('../pics/startGameButtonDown.png'));
 let creditsUpTex = getTexture(require('../pics/creditsButtonUp.png'));
 let creditsUpHoverTex = getTexture(require('../pics/creditsButtonUpHover.png'));
 let creditsDownTex = getTexture(require('../pics/creditsButtonDown.png'));
+let hsUpTex = getTexture(require('../pics/hsButtonUp.png'));
+let hsUpHoverTex = getTexture(require('../pics/hsButtonUpHover.png'));
+let hsDownTex = getTexture(require('../pics/hsButtonDown.png'));
 
 export let buttons = [
 	new Button(backButtonUpTex, backButtonDownTex, backButtonUpHoverTex, tick, 0,-36,3),
 	new Button(resumeButtonUpTex, resumeButtonDownTex, resumeButtonUpHoverTex, tick, 0, 11,3),
 	new Button(mainMenuButtonUpTex, mainMenuButtonDownTex, mainMenuButtonUpHoverTex, tick, 0,-7,3),
 	new Button(restartButtonUpTex, restartButtonDownTex, restartButtonUpHoverTex, tick, 0,-7,3),
-	new Button(instructionsUpTex, instructionsDownTex, instructionsUpHoverTex, tick, 30,0,3),
-	new Button(startGameUpTex, startGameDownTex, startGameUpHoverTex, tick, 30,11,3),
-	new Button(creditsUpTex, creditsDownTex, creditsUpHoverTex, tick, 30,-11,3),
+	new Button(instructionsUpTex, instructionsDownTex, instructionsUpHoverTex, tick, 30, 5 ,3),
+	new Button(startGameUpTex, startGameDownTex, startGameUpHoverTex, tick, 30, 15 ,3),
+	new Button(creditsUpTex, creditsDownTex, creditsUpHoverTex, tick, 30,-5,3),
+	new Button(hsUpTex, hsDownTex, hsUpHoverTex, tick, 30, -15, 3 )
 ];
 
 export let backButton = buttons[0];
@@ -223,8 +227,9 @@ export let restartButton = buttons[3];
 export let instructionsButton = buttons[4];
 export let startGameButton = buttons[5];
 export let creditsButton = buttons[6];
+export let highscoresButton = buttons[7];
 
-export let mainMenuButtons = [startGameButton, instructionsButton, creditsButton];
+export let mainMenuButtons = [startGameButton, instructionsButton, creditsButton, highscoresButton];
 export let gameOverButtons = [restartButton, mainMenuButton];
 export let pauseButtons = [resumeButton, restartButton, mainMenuButton];
 
@@ -496,6 +501,7 @@ export const mainMenu = () => {
 	instructionsButton.getMesh();
 	startGameButton.getMesh();
 	creditsButton.getMesh();
+	highscoresButton.getMesh();
 	title.position.x = -30;
 	title.position.y = 0;
 	title.position.z = 4;
@@ -574,7 +580,7 @@ export const showGameOverButtons = () => {
     	setCookie('data', heliCount, 60);
     	checkCookie('data');
 	    if (newHighscore)
-	        newHighscore.style.display = 'none';
+	        document.body.removeChild(document.getElementById('highscoreDiv'));
 	    newHighscore = document.createElement('div');
 	    inputBar = document.createElement('input');
 	    submitButton = document.createElement('button');
@@ -582,43 +588,46 @@ export const showGameOverButtons = () => {
 	    inputBar.type = 'text';
 	    inputBar.name = 'submit';
 	    inputBar.id = 'nameInput';
-	    submitButton.innerHTML = 'Submit Highscore';
-	    newHighscore.id = 'highscore';
+	    header.id = 'header';
+	    inputBar.placeholder = 'Your Name';
+	    inputBar.maxLength = 15;
+	    submitButton.innerHTML = 'Submit Highscore &#x1F30E';
+	    submitButton.id = 'submitButton';
+	    newHighscore.id = 'highscoreDiv';
 	    newHighscore.style.position = 'absolute';
 	    //newHighscore.style.zIndex = 1;    // if you still don't see the label, try uncommenting this
 	    newHighscore.style.width = window.innerHeight/25 + '%';
-	    newHighscore.style.height = 10 + '%';
-	    header.style.fontSize = window.innerHeight / 20 + 'px';
 	    newHighscore.style.backgroundColor = 'rgba(255,0,0,.5)';
 	    newHighscore.style.borderRadius = window.innerHeight/20 + 'px';
 	    newHighscore.style.paddingLeft = window.innerHeight/78 + 'px';
 	    newHighscore.style.paddingRight = window.innerHeight/78 + 'px';
 	    header.innerHTML = "New Highscore!: " + heliCount;
-	    newHighscore.style.top = window.innerHeight / 5 + 'px';
+	    newHighscore.style.top = 2 + 'px';
 	    newHighscore.style.left = window.innerWidth - windowOffset - window.innerHeight/1.025 + 'px';
 	    document.body.appendChild(newHighscore);
 	    newHighscore.appendChild(header);
-	    // newHighscore.appendChild(inputBar);
-	    // newHighscore.appendChild(submitButton);
-	   	// let name = encodeHTML(document.getElementById('nameInput').value);
-	   	submitButton.onclick = submitScore;
+	    newHighscore.appendChild(inputBar);
+	    newHighscore.appendChild(submitButton);
+	   	submitButton.addEventListener('click', function(){
+	   		let name = encodeHTML(document.getElementById('nameInput').value);
+	   		if (name.length > 0){
+				submitScore(name, heliCount);
+				submitButton.style.display = 'none';
+				inputBar.style.display = 'none';
+				// header.style.margin: 'auto';
+				let header2 = document.createElement('h4');
+				header2.id = 'submittedMessage';
+				header2.innerHTML = "Thank You, Score Submitted";
+				newHighscore.appendChild(header2);
+	   		} else alert('Name must be more than 0 characters');
+	   		// alert('Thank you! Your highscore has been submitted');
+	   	});
 
     }
 }
 
 function encodeHTML(s) {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-}
-
-const submitScore = (name, score) => {
-	console.log('firebase set');
-	// if (name.length > 0){
-	// 	let userId = Date.now() + "" + name;
-	// 	firebase.database().ref('users/' + userId).set({
-	// 	name,
-	// 	highscore: score
-	// 	});
-	// }
 }
 
 export const instructions = () => {
@@ -660,6 +669,21 @@ export const credits = () => {
 
 	backButton.getMesh();
 
+}
+
+export const highscores = () => {
+	scene.remove.apply(scene, scene.children);
+	//Background
+	scene.add(mdForeground);
+	scene.add(background);
+	scene.add(farBackground);
+	scene.add(tintMesh);
+	tintMesh.position.z = 4;
+	//
+
+	getScores();
+
+	backButton.getMesh();
 }
 
 // let upMat = getMaterial(getTexture(require('../pics/backButtonUp.png')));

@@ -1,14 +1,16 @@
 import * as THREE from 'three';
 import * as crypto from 'crypto-js';
-import {key} from './physics/key.js';
-// import * as firebase from "firebase/app";
+import {key, email, password} from './physics/key.js';
+import * as firebase from "firebase/app";
+import "firebase/auth";
+import "firebase/database";
 
 import { bodies, camera, renderer, scene, init, character, objects, 
     moveCharacter, walk, stand, jump, updateSprite, 
     arm, armTex, armTex2, armTex3, armTexLeft, armTex2Left, armTex3Left, leftFoot, rightFoot, 
     rocket, rocketTex, rocketTex2, changeJumpingDir, getExplosion, getBulletHit, updateBackground,
-    startGameButton, instructionsButton, creditsButton, mainMenu, buttonHover, instructions, 
-    backButton, credits, resumeButton, restartButton, mainMenuButton, pause, resume, 
+    startGameButton, instructionsButton, creditsButton, mainMenu, highscores, buttonHover, instructions, 
+    backButton, credits, resumeButton, restartButton, mainMenuButton, highscoresButton, pause, resume, 
     showGameOverButtons, buttonHighlight, buttons, mainMenuButtons, pauseButtons, gameOverButtons,
      width, height, windowOffset, updateProps, heliFlying, heliGrappled, getCrashedHeli, restart, 
      startScreen, pressEnter, highscoreText, newHighscore} from "./physics/Initialize.js";
@@ -22,19 +24,27 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
 import 'normalize.css';
 import './styles/styles.scss';
 
-// let firebaseConfig = {
-//     apiKey: "AIzaSyAnfDeBJKe8goIdkLvtrGcdCQxDGkYHXow",
-//     authDomain: "heli-game.firebaseapp.com",
-//     databaseURL: "https://heli-game.firebaseio.com",
-//     projectId: "heli-game",
-//     storageBucket: "heli-game.appspot.com",
-//     messagingSenderId: "690359290663",
-//     appId: "1:690359290663:web:41025f62275a3073"
-// };
+const firebaseConfig = {
+  apiKey: "AIzaSyAnfDeBJKe8goIdkLvtrGcdCQxDGkYHXow",
+  authDomain: "heli-game.firebaseapp.com",
+  databaseURL: "https://heli-game.firebaseio.com",
+  projectId: "heli-game",
+  storageBucket: "heli-game.appspot.com",
+  messagingSenderId: "690359290663",
+  appId: "1:690359290663:web:41025f62275a3073"
+};
 
-// firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 
-// let database = firebase.database();
+let database = firebase.database();
+
+firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+  // Handle Errors here.
+  var errorCode = error.code;
+  var errorMessage = error.message;
+  console.log(errorCode, errorMessage);
+  // ...
+});
 
 function getCookie(cname) {
     var name = cname + "=";
@@ -78,6 +88,105 @@ export function checkCookie() {
 }
 
 checkCookie();
+
+export const submitScore = (name, score) => {
+    if (name.length > 0){
+        let date = new Date();
+        date.getTime();
+        let now = date.toUTCString();
+        console.log('firebase set');
+        let firebaseRef = database.ref('scores/');
+        firebaseRef.push().set({
+            name, 
+            date: now,
+            score
+        });
+    }
+}
+
+let scoreboard;
+
+export const getScores = () => {
+    let scores = [];
+    let ref = database.ref("scores");
+    ref.orderByChild("score").limitToLast(10).on("child_added", function(snapshot) {
+        scores.push(snapshot);
+        // console.log(snapshot.key + " was " + snapshot.val().score);
+    });
+    scores = sortByScore(scores);
+    for (var i = 0; i < scores.length; i++) {
+        console.log(scores[i].val().score);
+    }
+    if (scoreboard) document.body.removeChild(document.getElementById('scoreboard'));
+    scoreboard = document.createElement('table');
+    scoreboard.style.top = window.innerHeight / 25 + 'px';
+    scoreboard.style.height = window.innerHeight * 0.65 + 'px';
+    scoreboard.style.width = (window.innerHeight - 4) * 1.5 + 'px';
+    scoreboard.style.left = windowOffset + 'px';
+    scoreboard.id = 'scoreboard';
+    let header = document.createElement('caption');
+    header.id = 'scoreHeader';
+    header.innerHTML = "Highscores";
+    header.style.fontSize = window.innerHeight / 15 + 'px';
+    document.body.appendChild(scoreboard);
+    scoreboard.appendChild(header);
+    scoreboard.fontSize = window.innerHeight / 30 + 'px';
+    let tableHeaderRow = document.createElement('tr');
+    tableHeaderRow.className = 'scoreRow';
+    let rankH = document.createElement('th');
+    let nameH = document.createElement('th');
+    let scoreH = document.createElement('th');
+    let dateH = document.createElement('th');
+    rankH.className = 'scoreItem';
+    nameH.className = 'scoreItem';
+    scoreH.className = 'scoreItem';
+    dateH.className = 'scoreItem';
+    rankH.innerHTML = 'Rank';
+    nameH.innerHTML = 'Name';
+    scoreH.innerHTML = 'Choppers';
+    dateH.innerHTML = 'Date';
+    scoreboard.appendChild(tableHeaderRow);
+    tableHeaderRow.appendChild(rankH);
+    tableHeaderRow.appendChild(nameH);
+    tableHeaderRow.appendChild(scoreH);
+    tableHeaderRow.appendChild(dateH);
+    for (var i = 0; i < scores.length; i++) {
+        let scoreRow = document.createElement('tr');
+        scoreRow.className = 'scoreRow';
+        let rank = document.createElement('td');
+        let name = document.createElement('td');
+        let score = document.createElement('td');
+        let date = document.createElement('td');
+        rank.className = 'scoreItem';
+        name.className = 'scoreItem';
+        score.className = 'scoreItem';
+        date.className = 'scoreItem';
+        rank.innerHTML = i+1;
+        name.innerHTML = scores[i].val().name;
+        score.innerHTML = scores[i].val().score;
+        date.innerHTML = scores[i].val().date;
+        scoreboard.appendChild(scoreRow);
+        scoreRow.appendChild(rank);
+        scoreRow.appendChild(name);
+        scoreRow.appendChild(score);
+        scoreRow.appendChild(date);
+    }
+
+}
+
+const hideScores = () => {
+    scoreboard.style.display = 'none';
+}
+
+getScores();
+hideScores();
+
+function sortByScore(array) {
+    return array.sort(function(a, b) {
+        let x = a.val().score; let y = b.val().score;
+        return ((x < y) ? 1 : ((x > y) ? -1 : 0));
+    });
+}
 
 export let gameStatus = "notReady";
 export let listener;
@@ -408,7 +517,7 @@ renderer.domElement.addEventListener("mousemove", function(event){
                     }
                 } else if (button.highlighted) button.unhighlight();
             }
-        } else if (instructionsMenu || onCredits) {
+        } else if (instructionsMenu || onCredits || onHighscores) {
             if (checkMenuCollision(pos, backButton.currentMesh)){
                 backButton.highlight(mute);
             } else if (backButton.highlighted) {
@@ -462,6 +571,7 @@ let reloaded = true;
 let mouseDown = false;
 let instructionsMenu = false;
 let onCredits = false;
+let onHighscores = false;
 
 let musicStart = false;
 
@@ -473,12 +583,12 @@ document.addEventListener("mousedown", function(event){
             for (var i = 0; i < mainMenuButtons.length; i++) {
                 let button = mainMenuButtons[i];
                 if (checkMenuCollision(pos, button.currentMesh)){
-                    if (!button.down){
+                    // if (!button.down){
                         button.mouseDown();
-                    }
+                    // }
                 } else button.mouseUp();
             }
-        } else if (instructionsMenu || onCredits) {
+        } else if (instructionsMenu || onCredits || onHighscores) {
             if (checkMenuCollision(pos, backButton.currentMesh)){
                 backButton.mouseDown();
             } else {
@@ -519,6 +629,7 @@ document.addEventListener("mouseup", function(event){
                 playSound(tick, new THREE.Audio(listener));
             instructions();
         } else if (checkMenuCollision(pos, creditsButton.currentMesh)){
+            creditsButton.mouseUp();
             onMainMenu = false;
             if (!mute)
                 playSound(tick, new THREE.Audio(listener));
@@ -530,8 +641,17 @@ document.addEventListener("mouseup", function(event){
                 playSound(tick, new THREE.Audio(listener));
             instructionsMenu = false;
             onCredits = false;
+            if (onHighscores) hideScores();
+            onHighscores = false;
             onMainMenu = true;
             mainMenu();
+        } else if (checkMenuCollision( pos, highscoresButton.currentMesh)){
+            highscoresButton.mouseUp();
+            onMainMenu = false;
+            onHighscores = true;
+            if (!mute)
+                playSound(tick, new THREE.Audio(listener));
+            highscores();
         }
     } else if (instructionsMenu || onCredits) {
         // if (checkMenuCollision(pos, backButton.currentMesh)){

@@ -47,6 +47,72 @@ button:disabled {
 	padding: auto;
 }
 
-#highscore {
-    /*padding-top: 10px;*/
+#highscoreDiv {
+    display: inline-block;
+    text-align: center;
+    height: 30%
+}
+
+#submitButton {
+	border-radius: 13px;
+	border-style: 1px solid black;
+	color: black;
+	box-shadow: 4px 1px;
+	font-size: 1.5rem;
+	background-color: #ccc;
+	width: 90%;
+	margin: 3px;
+}
+
+#submitButton:hover {
+	background-color: #ffcccc;
+}
+
+#nameInput {
+	border-radius: 13px;
+	width: 80%;
+	border: 1px solid #ccc;
+	margin: 3px;
+	padding: 4px 8px 4px 8px;
+	font-size: 1rem;
+}
+
+#header {
+	font-size: 1.5rem;
+}
+
+#scoreboard {
+	border-radius: 13px;
+	width: 90%;
+	overflow: auto;
+	background-color: black;
+	display: table;
+	opacity: 0.4;
+	position: absolute;
+	padding: 1rem;
+	text-align: center;
+}
+
+#scoreHeader {
+	color: white;
+	border-radius: 10px;
+    background-color: black;
+    padding-top: 20px;
+    padding-bottom: 0px;
+}
+
+.scoreItem {
+	color: white;
+	/*width: 10%;*/
+	/*font-size: 1rem;*/
+}
+
+.scoreRow {
+	/*display: inline;*/
+	width: 100%;
+	/*font-size: 1rem;*/
+}
+
+tr {
+	width: 100%;
 }
