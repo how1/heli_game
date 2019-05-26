@@ -351,33 +351,42 @@ function onDocumentKeyDown(event) {
     //         menuMusic.pause();
     //     }
     // } else {
-        if (keyCode == 77) {
-            mute = !mute;
-            setSpawnSound();
-            if (gameStatus != 'notReady'){
-                if (music.getVolume() > 0) 
-                    music.setVolume(0);
-                else music.setVolume(.7);
-                if (menuMusic.getVolume() > 0)
-                    menuMusic.setVolume(0);
-                else menuMusic.setVolume(.5);
-                if (hoverSound.getVolume() > 0)
-                    hoverSound.setVolume(0);
-                else hoverSound.setVolume(.5);
+    if (keyCode == 77) {
+        mute = !mute;
+        setSpawnSound();
+        if (gameStatus != 'notReady'){
+            if (music.getVolume() > 0) 
+                music.setVolume(0);
+            else music.setVolume(.7);
+            if (menuMusic.getVolume() > 0)
+                menuMusic.setVolume(0);
+            else menuMusic.setVolume(.5);
+            if (hoverSound.getVolume() > 0)
+                hoverSound.setVolume(0);
+            else hoverSound.setVolume(.5);
+        }
+    } else if (keyCode == 27){
+        if (gameStatus == 'play' || gameStatus == 'pause'){
+            if (gameStatus == 'play') {
+                pause();
+                gameStatus = 'pause';
+                // music.pause();
+            } else {
+                gameStatus = 'play';
+                // music.play();
+                resume();
             }
-        } else if (keyCode == 27){
-            if (gameStatus == 'play' || gameStatus == 'pause'){
-                if (gameStatus == 'play') {
-                    pause();
-                    gameStatus = 'pause';
-                    // music.pause();
-                } else {
-                    gameStatus = 'play';
-                    // music.play();
-                    resume();
-                }
+        } else if (gameStatus == 'ready'){
+            if (!onMainMenu){
+                mainMenu();
+                onMainMenu = true;
+                instructionsMenu = false;
+                onCredits = false;
+                onHighscores = false;
+                hideScores();
             }
-        } 
+        }
+    } 
     // }
     if (gameStatus == 'play'){
         if (keyCode == 38) { // jump
@@ -617,41 +626,45 @@ document.addEventListener("mousedown", function(event){
 document.addEventListener("mouseup", function(event){
     mouseDown = false;
     if (gameStatus == 'ready'){
-        if (checkMenuCollision(pos, startGameButton.currentMesh)){
-            startGameButton.mouseUp();
-            onMainMenu = false;
-            start();
-        } else if (checkMenuCollision(pos, instructionsButton.currentMesh)){
-            instructionsButton.mouseUp();
-            onMainMenu = false;
-            instructionsMenu = true;
-            if (!mute)
-                playSound(tick, new THREE.Audio(listener));
-            instructions();
-        } else if (checkMenuCollision(pos, creditsButton.currentMesh)){
-            creditsButton.mouseUp();
-            onMainMenu = false;
-            if (!mute)
-                playSound(tick, new THREE.Audio(listener));
-            onCredits = true;
-            credits();
-        } else if (checkMenuCollision(pos, backButton.currentMesh)){
-            backButton.mouseUp();
-            if (!mute)
-                playSound(tick, new THREE.Audio(listener));
-            instructionsMenu = false;
-            onCredits = false;
-            if (onHighscores) hideScores();
-            onHighscores = false;
-            onMainMenu = true;
-            mainMenu();
-        } else if (checkMenuCollision( pos, highscoresButton.currentMesh)){
-            highscoresButton.mouseUp();
-            onMainMenu = false;
-            onHighscores = true;
-            if (!mute)
-                playSound(tick, new THREE.Audio(listener));
-            highscores();
+        if (onMainMenu){
+            if (checkMenuCollision(pos, startGameButton.currentMesh)){
+                startGameButton.mouseUp();
+                onMainMenu = false;
+                start();
+            } else if (checkMenuCollision(pos, instructionsButton.currentMesh)){
+                instructionsButton.mouseUp();
+                onMainMenu = false;
+                instructionsMenu = true;
+                if (!mute)
+                    playSound(tick, new THREE.Audio(listener));
+                instructions();
+            } else if (checkMenuCollision(pos, creditsButton.currentMesh)){
+                creditsButton.mouseUp();
+                onMainMenu = false;
+                if (!mute)
+                    playSound(tick, new THREE.Audio(listener));
+                onCredits = true;
+                credits();
+            } else if (checkMenuCollision( pos, highscoresButton.currentMesh)){
+                highscoresButton.mouseUp();
+                onMainMenu = false;
+                onHighscores = true;
+                if (!mute)
+                    playSound(tick, new THREE.Audio(listener));
+                highscores();
+            }
+        } else {
+            if (checkMenuCollision(pos, backButton.currentMesh)){
+                backButton.mouseUp();
+                if (!mute)
+                    playSound(tick, new THREE.Audio(listener));
+                instructionsMenu = false;
+                onCredits = false;
+                if (onHighscores) hideScores();
+                onHighscores = false;
+                onMainMenu = true;
+                mainMenu();
+            } 
         }
     } else if (instructionsMenu || onCredits) {
         // if (checkMenuCollision(pos, backButton.currentMesh)){

@@ -565,7 +565,7 @@ export const resume = () => {
 	scene.remove(restartButton.upHighMesh);
 }
 
-let arrowKeysFile = require('../pics/arrowKeys.png');
+let arrowKeysFile = require('../pics/instructions.png');
 let arrowKeysImage;
 
 export let newHighscore;
