@@ -3,4 +3,4 @@ src/sounds/camera.jpg
 *.xcf
 *.zip
 *.jpg
-physics/key.js
+src/physics/key.js
