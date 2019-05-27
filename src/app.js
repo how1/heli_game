@@ -20,7 +20,7 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
     shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume, slowSound, 
     getDropIconMesh, healthpack, Gun, standardGun, flamethrower, heatSeekers, grappleCannon, 
-    pullDownHeli, grappled, muteSpawn, setSpawnSound } from "./physics/spawn.js";
+    pullDownHeli, grappled, muteSpawn, setSpawnSound, bulletTime, shield } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 
@@ -82,7 +82,6 @@ export function checkCookie() {
       setCookie("data", 0, 365);
     } else {
         let decrypted = crypto.AES.decrypt(hs, key).toString(crypto.enc.Utf8);
-        console.log(decrypted);
         highscore = decrypted;
     } 
 }
@@ -94,7 +93,6 @@ export const submitScore = (name, score) => {
         let date = new Date();
         date.getTime();
         let now = date.toUTCString();
-        console.log('firebase set');
         let firebaseRef = database.ref('scores/');
         firebaseRef.push().set({
             name, 
@@ -111,12 +109,8 @@ export const getScores = () => {
     let ref = database.ref("scores");
     ref.orderByChild("score").limitToLast(10).on("child_added", function(snapshot) {
         scores.push(snapshot);
-        // console.log(snapshot.key + " was " + snapshot.val().score);
     });
     scores = sortByScore(scores);
-    for (var i = 0; i < scores.length; i++) {
-        console.log(scores[i].val().score);
-    }
     if (scoreboard) document.body.removeChild(document.getElementById('scoreboard'));
     scoreboard = document.createElement('table');
     scoreboard.style.top = window.innerHeight / 25 + 'px';
@@ -271,6 +265,7 @@ let heliDodging;
 let dodger;
 
 
+
 const start = () => {
     xVelocity = 0;
     equippedWeapons = [];
@@ -300,11 +295,9 @@ const start = () => {
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
     // music = playSound(song, new THREE.Audio(listener));
-    // console.log(music);
     // music.play();
     setTimeout(function(){music.play();}, 500);
     if (mute){
-        console.log('mute');
         music.setVolume(0);
     } else {
         // explosionStart.play();
@@ -691,8 +684,25 @@ document.addEventListener("mouseup", function(event){
             gameStatus = 'play';
             start();
         } else if (checkMenuCollision(pos, mainMenuButton.currentMesh)){
-            let quit = confirm("Are you sure? You will lose your score.");
-            if (quit){
+            if (gameStatus == 'pause'){
+                let quit = confirm("Are you sure? You will lose your score.");
+                if (quit){
+                    if (!mute)
+                        playSound(tick, new THREE.Audio(listener));
+                    music.stop();
+                    hoverSound.stop();
+                    heliBullets = [];
+                    gameStatus = 'ready';
+                    instructionsMenu = false;
+                    menuMusic.play();
+                    if (mute) menuMusic.setVolume(0);
+                    onCredits = false;
+                    onMainMenu = true;
+                    weaponText.style.display = 'none';
+                    text.style.display = 'none';
+                    mainMenu();
+                } else mainMenuButton.returnToUp();
+            } else {
                 if (!mute)
                     playSound(tick, new THREE.Audio(listener));
                 music.stop();
@@ -707,7 +717,8 @@ document.addEventListener("mouseup", function(event){
                 weaponText.style.display = 'none';
                 text.style.display = 'none';
                 mainMenu();
-            } else mainMenuButton.returnToUp();
+            }
+            
         }
     }
     for (var i = 0; i < buttons.length; i++) {
@@ -968,22 +979,6 @@ rpg.pickupSound = rpgPickup;
 healthpack.pickupSound = healthpackPickup;
 
 let audioLoader = new THREE.AudioLoader();
-// loadingManager.onLoad = function() {
-//     playGame();
-//     console.log('audio loaded');
-// }
-// loadingManager.onProgress = function() {
-//     console.log('1 loaded');
-// }
-
-// export let explosionSounds = [];
-// export let gunshot2Sounds = [];
-// export let metalHitSounds = [];
-// export let gunshotSounds = [];
-// export let rpgBlastSounds = [];
-// export let mac10Sounds = [];
-// export let musicSounds = [];
-// export let pickupSounds = [];
 
 let loadingBar;
 let prog = 0;
@@ -1296,6 +1291,112 @@ export const displayHealthBar = () => {
 
 }
 
+let bulletTimeBar;
+let bulletTimeBarBackground;
+let timeLogo;
+let timeBarPosition;
+let timeBarPositionX = 46;
+let timeBarPositionY = 22;
+
+const timeBarInit = () => {
+    let geometry = new THREE.PlaneGeometry( 1.5, PLAYERHEALTHMAX * 1.5, 32 );
+    let material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.FrontSide} );
+    bulletTimeBarBackground = new THREE.Mesh( geometry, material );
+   
+    geometry = new THREE.PlaneGeometry( 1.5, PLAYERHEALTHMAX * 1.5, 32 );
+    geometry.translate(0, PLAYERHEALTHMAX * 1.5 / 2, 0);
+    material = new THREE.MeshBasicMaterial( {color: 0xFFBB00, side: THREE.FrontSide} );
+    bulletTimeBar = new THREE.Mesh( geometry, material );
+    
+    geometry = new THREE.PlaneGeometry( 3, 3, 32 );
+    material = new THREE.MeshBasicMaterial( {map: new THREE.TextureLoader().load(require('./pics/clock.png'))
+        , side: THREE.FrontSide} );
+    material.transparent = true;
+    material.opacity = 1;
+    timeLogo = new THREE.Mesh( geometry, material );
+    
+    bulletTimeBar.scale.set(1, 1 - (Date.now() - bulletTimeStart)/bulletTime.reloadTime, 1);
+    bulletTimeBar.position.y = timeBarPositionY - bulletTimeBar.geometry.parameters.height/2;
+    bulletTimeBarBackground.position.y = timeBarPositionY;
+    timeBarPosition = bulletTimeBar.position.y;
+    bulletTimeBar.position.x = timeBarPositionX;
+    bulletTimeBarBackground.position.x = timeBarPositionX;
+    timeLogo.position.y = timeBarPositionY - 8.1;
+    timeLogo.position.x = character.mesh.position.x + timeBarPositionX + .1;
+    bulletTimeBar.position.z = 10;
+    bulletTimeBarBackground.position.z = 9.99;
+    timeLogo.position.z = 10;
+    scene.add( bulletTimeBarBackground ); 
+    scene.add(bulletTimeBar);
+    scene.add( timeLogo );
+    displayTimeBar();
+
+}
+
+export const displayTimeBar = () => {
+    bulletTimeBar.scale.set(1, 1 - (Date.now() - bulletTimeStart)/bulletTime.reloadTime, 1);
+    // timeBarPosition -= .5;
+    bulletTimeBar.position.y = timeBarPosition;
+    bulletTimeBar.position.x = character.mesh.position.x + timeBarPositionX;
+    bulletTimeBarBackground.position.y = timeBarPositionY;
+    bulletTimeBarBackground.position.x = character.mesh.position.x + timeBarPositionX;
+ 
+}
+
+let invincibilityBar;
+let invincibilityBarBackground;
+let shieldLogo;
+let vinceBarPosition;
+let vinceBarPositionX = 46;
+let vinceBarPositionY = 22;
+
+const invincibilityBarInit = () => {
+    if (invincibilityBar) scene.remove(invincibilityBar);
+    if (invincibilityBarBackground) scene.remove(invincibilityBarBackground);
+    if (shieldLogo) scene.remove(shieldLogo);
+    let geometry = new THREE.PlaneGeometry( 1.5, PLAYERHEALTHMAX * 1.5, 32 );
+    let material = new THREE.MeshBasicMaterial( {color: 0xffffff, side: THREE.FrontSide} );
+    invincibilityBarBackground = new THREE.Mesh( geometry, material );
+   
+    geometry = new THREE.PlaneGeometry( 1.5, PLAYERHEALTHMAX * 1.5, 32 );
+    geometry.translate(0, PLAYERHEALTHMAX * 1.5 / 2, 0);
+    material = new THREE.MeshBasicMaterial( {color: 0xff00ff, side: THREE.FrontSide} );
+    invincibilityBar = new THREE.Mesh( geometry, material );
+    
+    geometry = new THREE.PlaneGeometry( 4.5, 4.5, 32 );
+    material = new THREE.MeshBasicMaterial( {map: new THREE.TextureLoader().load(require('./pics/shieldLogo.png'))
+        , side: THREE.FrontSide} );
+    material.transparent = true;
+    material.opacity = 1;
+    shieldLogo = new THREE.Mesh( geometry, material );
+    
+    invincibilityBar.scale.set(1, 1 - (Date.now() - shieldTimeStart)/shield.reloadTime, 1);
+    invincibilityBar.position.y = vinceBarPositionY - invincibilityBar.geometry.parameters.height/2;
+    invincibilityBarBackground.position.y = vinceBarPositionY;
+    vinceBarPosition = invincibilityBar.position.y;
+    invincibilityBar.position.x = vinceBarPositionX;
+    invincibilityBarBackground.position.x = vinceBarPositionX;
+    shieldLogo.position.y = vinceBarPositionY - 8.1;
+    shieldLogo.position.x = character.mesh.position.x + vinceBarPositionX + .1;
+    invincibilityBar.position.z = 10;
+    invincibilityBarBackground.position.z = 9.99;
+    shieldLogo.position.z = 10;
+    scene.add( invincibilityBarBackground ); 
+    scene.add( invincibilityBar );
+    scene.add( shieldLogo );
+    displayInvincibilityBar();
+
+}
+
+export const displayInvincibilityBar = () => {
+    invincibilityBar.scale.set(1, 1 - (Date.now() - shieldTimeStart)/shield.reloadTime, 1);
+    invincibilityBar.position.y = vinceBarPosition;
+    invincibilityBar.position.x = character.mesh.position.x + vinceBarPositionX;
+    invincibilityBarBackground.position.y = vinceBarPositionY;
+    invincibilityBarBackground.position.x = character.mesh.position.x + vinceBarPositionX;
+ 
+}
+
 let blowUpFps = 10;
 let blowUpCurTime;
 let blowUpOldTime = Date.now();
@@ -1423,7 +1524,6 @@ heliGun.position.z = 5;
 let heliShotThisFrame = 0;
 
 export const pointHeliGun = () => {
-    // console.log(heliGun.position);
     heliGun.position.copy(heli.position);
     heliGun.position.y -= 5;
     heliGun.position.x += 5;
@@ -1440,25 +1540,13 @@ export const pointHeliGun = () => {
     //
 }
 
-// const pressEnterOpacity = () => {
-//     if (gameStatus == 'startScreen'){
-//         console.log(pressEnter.material.opacity);
-//         if (upOpacity){
-//             pressEnter.material.opacity += .02;
-//             if (pressEnter.material.opacity > 1){
-//                 upOpacity = false;
-//             }
-//         }
-//         else {
-//             pressEnter.material.opacity -= .02;
-//             if (pressEnter.material.opacity < .5){
-//                 upOpacity = true;
-//             }
-//         }
-//     }
-// }
-
 export let gameSpeed = 1;
+let slowedDown = false;
+let bulletTimeStart;
+let timeMesh;
+let shielded = false;
+let shieldTimeStart;
+let shieldMesh;
 let frameCounter = 0;
 let fps = 15;
 let curTime;
@@ -1520,6 +1608,43 @@ const update = () => {
             // }
         }
     }
+    if (slowedDown){
+        if (Date.now() - bulletTimeStart > bulletTime.reloadTime){
+            slowedDown = false;
+            gameSpeed = 1;
+            scene.remove(bulletTimeBar);
+            scene.remove(bulletTimeBarBackground);
+            scene.remove(timeLogo);
+            scene.remove(timeMesh);
+            timeMesh.position.x = character.mesh.position.x;
+        } else {
+            displayTimeBar();
+            if (shielded){
+                bulletTimeBar.position.x = character.mesh.position.x + timeBarPositionX - 5;
+                bulletTimeBarBackground.position.x = character.mesh.position.x + timeBarPositionX - 5;
+                timeLogo.position.x = character.mesh.position.x + timeBarPositionX - 5;
+            } else {
+                bulletTimeBar.position.x = character.mesh.position.x + timeBarPositionX;
+                bulletTimeBarBackground.position.x = character.mesh.position.x + timeBarPositionX;
+                timeLogo.position.x = character.mesh.position.x + timeBarPositionX;
+            }
+        }
+    }
+    if (shielded) {
+        if (Date.now() - shieldTimeStart > shield.reloadTime){
+            scene.remove(shieldMesh);
+            shielded = false;
+            scene.remove(invincibilityBar);
+            scene.remove(shieldLogo);
+            scene.remove(invincibilityBarBackground);
+            shieldMesh.position.x = character.mesh.position.x;
+        } else {
+            displayInvincibilityBar();
+            invincibilityBar.position.x = character.mesh.position.x + vinceBarPositionX;
+            invincibilityBarBackground.position.x = character.mesh.position.x + vinceBarPositionX;
+            shieldLogo.position.x = character.mesh.position.x + vinceBarPositionX;
+        }
+    }
     //Background
     updateBackground();
     //
@@ -1547,6 +1672,28 @@ const update = () => {
                 playerHealth += 3;
                 if (playerHealth > PLAYERHEALTHMAX) playerHealth = PLAYERHEALTHMAX;
                 displayHealthBar();
+            } else if (pickUps[i].name == 'bulletTime') {
+                if (!mute) playSound(pickUps[i].pickupSound, new THREE.Audio(listener), false, 1, 1);
+                gameSpeed = .2;
+                bulletTimeStart = Date.now();
+                slowedDown = true;
+                timeMesh = new THREE.Mesh(new THREE.PlaneGeometry(1000,200,32), new THREE.MeshBasicMaterial({color: 0xffBB00, side: THREE.FrontSide}));
+                timeMesh.position.z = 90;
+                timeMesh.material.transparent = true;
+                timeMesh.material.opacity = 0.3;
+                scene.add(timeMesh);
+                timeBarInit();
+            } else if (pickUps[i].name == 'shield') {
+                if (!mute) playSound(pickUps[i].pickupSound, new THREE.Audio(listener), false, 1, 1);
+                if (shieldMesh) scene.remove(shieldMesh);
+                shielded = true;
+                shieldMesh = new THREE.Mesh(new THREE.PlaneGeometry(1000,200,32), new THREE.MeshBasicMaterial({color: 0xff00ff, side: THREE.FrontSide}));
+                shieldMesh.position.z = 90;
+                shieldMesh.material.transparent = true;
+                shieldMesh.material.opacity = 0.4;
+                scene.add(shieldMesh);
+                shieldTimeStart = Date.now();
+                invincibilityBarInit();
             } else {
                 addWeapon(pickUps[i]);
                 // equippedWeapons[0] = pickUps[i];
@@ -1602,10 +1749,12 @@ const update = () => {
         if (checkBulletCollision(heliBullets[i].mesh, character.mesh)){
             scene.remove(heliBullets[i].mesh);
             heliBullets.splice(i, 1);
-            playerHealth -= 1;
-            if (!mute)
-                playSound(ouch, new THREE.Audio(listener));
-            displayHealthBar();
+            if (!shielded){
+                playerHealth -= 1;
+                if (!mute)
+                    playSound(ouch, new THREE.Audio(listener));
+                displayHealthBar();
+            }
             if (playerHealth == 0){
                 gameStatus = "gameOver";
                 gameOver();
@@ -1868,8 +2017,8 @@ const update = () => {
     //
     //Final movement of character
     if (gameStatus == 'play')
-        moveCharacter(character.mesh.position.x += tmpXVel * gameSpeed, 
-        character.mesh.position.y += yVelocity * gameSpeed);
+        moveCharacter(character.mesh.position.x += tmpXVel, 
+        character.mesh.position.y += yVelocity);
     //
 };
 

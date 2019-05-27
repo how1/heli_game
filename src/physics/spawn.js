@@ -343,7 +343,7 @@ export const pullDownHeli = () => {
 const getDropInfo = () => {
 	let random = Math.random();
 	let dropInfo;
-	let chance = 1/7;
+	let chance = 1/9;
 	if (random < chance){
 		dropInfo = getRpg();
 	} else if (random < chance * 2){
@@ -356,9 +356,11 @@ const getDropInfo = () => {
 		dropInfo = getHeatSeekers();
 	} else if (random < chance * 6) {
 		dropInfo = new Flamethrower();
-	} else {
+	} else if (random < chance * 7) {
 		dropInfo = getGrappleCannon();
-	}
+	} else if (random < chance * 8) {
+		dropInfo = getBulletTime();
+	} else dropInfo = getShield();
 	return dropInfo;
 }
 
@@ -430,6 +432,12 @@ export const getDropIconMesh = (gun, scale) => {
 	} else if (gun == 'grappleCannon'){
 		let mat = getMaterial(getTexture(require('../pics/grappleCannonDrop.png')));
 		mesh = new THREE.Mesh(dropGeom, mat);
+	} else if (gun == 'bulletTime') {
+		let mat = getMaterial(getTexture(require('../pics/bulletTimeDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
+	} else if (gun == 'shield') {
+		let mat = getMaterial(getTexture(require('../pics/shieldDrop.png')));
+		mesh = new THREE.Mesh(dropGeom, mat);
 	}
 	mesh.transparent = true;
 	mesh.opacity = 1;
@@ -456,6 +464,8 @@ let flamethrowerShot = require('../sounds/flamethrowerShot.mp3');
 let heatSeekersPickup = require('../sounds/heatSeekingMissilesPickup.mp3');
 let grappleCannonPickup = require('../sounds/grappleCannonPickup.mp3');
 let grappleShot = require('../sounds/grappleShot.mp3');
+let bulletTimePickup = require('../sounds/bulletTimePickup.mp3');
+let shieldPickup = require('../sounds/shieldPickup.mp3');
 
 export const Gun = function (color, name, size, speed, ammo, fullAmmoMax, damage, velocity, reloadTime, shotSound, hitSound, pickupSound) {
 	this.color = color;
@@ -499,6 +509,8 @@ export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.2, .8, 
 export let getHealthpack = () => {return new Gun(0x000000, 'healthpack', 1.2, .5, 1,1,1,0,1, null, null, healthpackPickup);}
 export let getStandard = () => {return new Gun(0x000000, 'standardGun', 1.2, .8, -1, -1, 1, 0, 600, gunshot2, metalHit, null);}
 export let getHeatSeekers = () => {return new Gun(0x000000, 'heatSeekers', 1.6, .45, 3, 3, 10, 0, 7000, rpgBlast, rpgHit, heatSeekersPickup);}
+export let getBulletTime = () => {return new Gun(0x000000, 'bulletTime', 1.6, .45, 3, 3, 10, 0, 15000, rpgBlast, rpgHit, bulletTimePickup);}
+export let getShield = () => {return new Gun(0x000000, 'shield', 1.6, .45, 3, 3, 10, 0, 20000, rpgBlast, rpgHit, shieldPickup);}
 
 export let rpg = getRpg();
 export let akimboMac10s = getAkimbo();
@@ -507,6 +519,8 @@ export let standardGun = getStandard();
 export let healthpack = getHealthpack();
 export let heatSeekers = getHeatSeekers();
 export let grappleCannon = getGrappleCannon();
+export let bulletTime = getBulletTime();
+export let shield = getShield();
 
 
 // export let antiMatterDevice = {
