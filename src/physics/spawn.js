@@ -504,7 +504,7 @@ let getShotgun = () => { return new Gun(
 export let getGrappleCannon = () => {
 	return new Gun(0x000000, 'grappleCannon', 1.5, .7, 1,1, 30, 0, 10000, grappleShot, metalHit, grappleCannonPickup);
 }
-export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .7,   6,  6,  10,    0,     7000, rpgBlast, rpgHit, rpgPickup);}
+export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .7,   6,  6,  10,    0,     4000, rpgBlast, rpgHit, rpgPickup);}
 export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.2, .8,   50,  50,  1,    0,  550, akimboMac10sShot, metalHit, akimboPickup);}
 export let getHealthpack = () => {return new Gun(0x000000, 'healthpack', 1.2, .5, 1,1,1,0,1, null, null, healthpackPickup);}
 export let getStandard = () => {return new Gun(0x000000, 'standardGun', 1.2, .8, -1, -1, 1, 0, 600, gunshot2, metalHit, null);}
