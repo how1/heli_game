@@ -502,7 +502,7 @@ let getShotgun = () => { return new Gun(
 );} 
 
 export let getGrappleCannon = () => {
-	return new Gun(0x000000, 'grappleCannon', 1.5, .7, 1,1, 30, 0, 10000, grappleShot, metalHit, grappleCannonPickup);
+	return new Gun(0x000000, 'grappleCannon', 1.5, .7, 2,2, 30, 0, 10000, grappleShot, metalHit, grappleCannonPickup);
 }
 export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .7,   6,  6,  10,    0,     4000, rpgBlast, rpgHit, rpgPickup);}
 export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.2, .8,   50,  50,  1,    0,  550, akimboMac10sShot, metalHit, akimboPickup);}
