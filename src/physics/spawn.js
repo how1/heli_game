@@ -1,6 +1,6 @@
 import { camera, renderer, scene, init, character, objects, heliFlying, 
 	crashedHeli, updateSprite, rocketTex, rocket, getCrashedHeli, getGrappledHeli, 
-	getExplosion, getMaterial, heliGrappled } from "./Initialize.js";
+	getExplosion, getMaterial, heliGrappled, getParachute } from "./Initialize.js";
 import { heliCount, gameSpeed, gameStatus, playSound, mute, setHeliShooting, listener, hoverSound } from "../app.js";
 import * as THREE from 'three';
 
@@ -138,6 +138,18 @@ export let volume;
 
 let drag = .1;
 
+// heliFlyoff = setInterval(flyOff, 20000);
+// dodger = setTimeout( function() {
+//     dodge();
+// heliDodging = setInterval(dodge, 5000)
+// }, 3000);
+let dodgeInterval = 5000;
+let dodgeDelta = -5000;
+let dodgeOldTime = Date.now();
+let flyoffOldTime = Date.now();
+let flyoffInterval = 20000;
+let flyoffDelta = 0;
+
 export const move = () => {
 	//Chopper volume
 	if (spawnMute) hoverSound.setVolume(0);
@@ -153,10 +165,20 @@ export const move = () => {
 
 	curTime = Date.now();
     delta = curTime - oldTime;
+    dodgeDelta = curTime - dodgeOldTime;
+    flyoffDelta = curTime - flyoffOldTime;
     if (delta > interval){
         oldTime = curTime - (delta % interval);
         updateSprite(heliFlying);
     }
+  	if (dodgeDelta > dodgeInterval) {
+  		dodge();
+  		dodgeOldTime = Date.now();
+  	}
+  	if (flyoffDelta > flyoffInterval) {
+  		flyOff();
+  		flyoffOldTime = Date.now();
+  	}
     heliFlying.spr.position.x = heli.position.x;
     heliFlying.spr.position.y = heli.position.y;
     heliFlying.spr.material.rotation = heli.rotation.z;
@@ -276,6 +298,7 @@ export let explosions = [];
 export let heliPartVelocityY = [];
 export let heliPartVelocityX = [];
 export let pickUps = [];
+export let pickUpsParachutes = [];
 
 export let slowSound;
 export let grappled = false;
@@ -327,7 +350,11 @@ export const blowUp = () => {
 		dropInfo.dropMesh.position.x = heli.position.x;
 		dropInfo.dropMesh.position.y = heli.position.y;
 		dropInfo.dropMesh.position.z = 2;
-		pickUps.push(dropInfo);
+		pickUps.unshift(dropInfo);
+		// let parachute = getParachute();
+		// parachute.spr.position.copy(dropInfo.dropMesh.position);
+		// pickUpsParachutes.unshift(parachute);
+		// scene.add(parachute.spr);
 	}
 	if (gameStatus == 'play'){
 		spawn();
@@ -343,7 +370,7 @@ export const pullDownHeli = () => {
 const getDropInfo = () => {
 	let random = Math.random();
 	let dropInfo;
-	let chance = 1/9;
+	let chance = 1/8;
 	if (random < chance){
 		dropInfo = getRpg();
 	} else if (random < chance * 2){
@@ -358,9 +385,10 @@ const getDropInfo = () => {
 		dropInfo = new Flamethrower();
 	} else if (random < chance * 7) {
 		dropInfo = getGrappleCannon();
-	} else if (random < chance * 8) {
-		dropInfo = getBulletTime();
-	} else dropInfo = getShield();
+	} else {//if (random < chance * 8) {
+		//dropInfo = getBulletTime();
+		dropInfo = getShield();
+	}
 	return dropInfo;
 }
 

@@ -255,6 +255,7 @@ export let heliFlying;
 export let heliGrappled;
 export let heliGrappledSpr;
 export let crashedHeliSpr;
+export let parachuteTex = getTexture(require('../pics/parachute.png'));
 let explosionSpr
 export let explosion;
 let bulletHitSpr;
@@ -336,7 +337,10 @@ let jumpingArrayRight = [.58, .7];
 let heliArray = [.217, -0.014, .47, .111, .59, .34];
 let explosionArray = [ 0, .083, .165, .25, .335, .42, .51, .60, .695, .78, .87];
 let bulletHitArray = [ 0, .18, .38, .58, .78];
-// let explosionArray = [ 0, .083, .083, .083, .165, .165, .165, .2, .2, .2, .2];
+let parachuteArray = [0.018, .0489, .0801, .1114, .1423, .1730, .2043, .2352, .2667, .3061, .3454, .3829, .422, .4621, .5050, 
+	.5530, .6132, .6685, .7156, .7587, .7992, .8327, .8589, .888, .9131, .9374];
+let parachuteOffset = 0.019;
+// let parachuteDownOffset = 0.04;
 
 
 export const updateBackground = () => {
@@ -437,7 +441,25 @@ export const updateSprite = (sprite, crashed) => {
 			sprite.tex.offset.x = bulletHitArray[sprite.newVal];
 			sprite.newVal++;
 		}
-	}
+	} else if (crashed == 'parachuteDown'){
+		if (sprite.newVal < 9) sprite.newVal = 9;
+		if (sprite.newVal == 26){
+			scene.remove(sprite.spr);
+			return 'done';
+		} else {
+			sprite.tex.offset.x = parachuteArray[sprite.newVal] - parachuteOffset;
+			sprite.newVal++;
+		}
+	} else if (crashed == 'parachuteFalling'){
+		if (sprite.newVal == 9){
+			sprite.newVal = 0;
+			sprite.tex.offset.x = parachuteArray[sprite.newVal] - parachuteOffset;
+			sprite.newVal++;
+		} else {
+			sprite.tex.offset.x = parachuteArray[sprite.newVal] - parachuteOffset;
+			sprite.newVal++;
+		}
+	} 
 
 }
 
@@ -466,6 +488,12 @@ export const getExplosion = (scale) => {
 
 export const getBulletHit = (scale) => {
 	return new spriteSheet(bulletHitSpr, 0, 1, 5, scale, scale, 'bulletHit');
+}
+
+export const getParachute = (scale) => {
+	let p = new spriteSheet( parachuteTex, 0, 1, 26, 12, 15);
+	p.name = 'parachuteFalling';
+	return p;
 }
 
 const getBackgroundMesh = (tex, zPos, yPos, geom, repeat) => {
@@ -931,6 +959,7 @@ export const init = () => {
 	//Bullet hit explosion
 	bulletHitSpr = getTexture( require('../pics/bulletHit.png' ));
 	//
+
 
 
 	// const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );

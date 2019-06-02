@@ -20,7 +20,7 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
     shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume, slowSound, 
     getDropIconMesh, healthpack, Gun, standardGun, flamethrower, heatSeekers, grappleCannon, 
-    pullDownHeli, grappled, muteSpawn, setSpawnSound, bulletTime, shield } from "./physics/spawn.js";
+    pullDownHeli, grappled, muteSpawn, setSpawnSound, bulletTime, shield, pickUpsParachutes } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 
@@ -198,6 +198,7 @@ scene.add(startTintMesh);
 // renderer.domElement.style.display = 'none';
 
 const playGame = () => {
+    playGameButton.style.display = 'none';
     // playGameButton.style.display = 'none';
     // document.body.style.backgroundColor = 'black';
     // renderer.domElement.style.display = 'inline';
@@ -270,6 +271,7 @@ const start = () => {
     xVelocity = 0;
     equippedWeapons = [];
     equippedWeapons.push(standardGun);
+    // equippedWeapons.push(flamethrower);
     displayWeaponInfo();
     
     displayScore();
@@ -301,13 +303,8 @@ const start = () => {
         music.setVolume(0);
     } else {
         // explosionStart.play();
-        playSound(explosion, new THREE.Audio(listener));
+        playSound(explosion, new THREE.Audio(listener), false, 'fast', 0.4);
     }
-    heliFlyoff = setInterval(flyOff, 20000);
-    dodger = setTimeout( function() {
-        dodge();
-    heliDodging = setInterval(dodge, 5000)
-    }, 3000);
 }
 
 let walkInterval;
@@ -994,7 +991,6 @@ let playGameButton = document.createElement('button');
 
 export let loadSounds = () => {
     document.body.appendChild(loadingPercentage);
-    playGameButton.style.display = 'none';
     let geom = new THREE.PlaneGeometry(40, 4, 32);
     geom.translate( 40 / 2, 0, 0 );
     let mat = new THREE.MeshBasicMaterial({color: 0xff0000, side: THREE.FrontSide});
@@ -1040,7 +1036,7 @@ export let loadSounds = () => {
             music.setLoop(true);
             music.setVolume(0.5);
             loadingPercentage.style.display = 'none';
-            playGame();
+            displayPlayGameButton();
         }, function ( xhr ) {
             prog = (xhr.loaded / xhr.total) / 3;
             console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
@@ -1050,6 +1046,25 @@ export let loadSounds = () => {
     // for (var i = 0; i < ; i++) {
     //      }
 }
+
+const displayPlayGameButton = () => {
+    scene.remove(loadingBar);
+    loadingPercentage.style.display = 'none';
+    playGameButton.id = 'playGameButton';
+    // playGameButton.style.position = 'absolute';
+    playGameButton.style.width = 250 + 'px';
+    playGameButton.style.height = 60 + 'px';
+    playGameButton.style.position = 'absolute';
+    playGameButton.innerHTML = 'Play &#x25B6;';
+    playGameButton.style.borderRadius = 10 + 'px';
+    playGameButton.style.top = window.innerHeight / 2 - 30 + 'px';
+    playGameButton.style.left = window.innerWidth / 2 - 125 + 'px';
+    playGameButton.onclick = playGame;
+    document.body.appendChild(playGameButton);
+    console.log('playgamebutton');
+}
+
+loadSounds();
 
 export const playSound = (src, audioObj, loop, speed, vol) => {
     if (!vol) vol = .5; 
@@ -1094,17 +1109,8 @@ export const playSound = (src, audioObj, loop, speed, vol) => {
 // let btnBg = document.createElement('img');
 // btnBg.id = 'btnBg';
 // btnBg.src = require('./pics/littleTitle.png');
-playGameButton.id = 'playGameButton';
-// playGameButton.style.position = 'absolute';
-playGameButton.style.width = 250 + 'px';
-playGameButton.style.height = 60 + 'px';
-playGameButton.style.position = 'absolute';
-playGameButton.innerHTML = 'Play &#x25B6;';
-playGameButton.style.borderRadius = 10 + 'px';
-playGameButton.style.top = window.innerHeight / 2 - 30 + 'px';
-playGameButton.style.left = window.innerWidth / 2 - 125 + 'px';
-playGameButton.onclick = loadSounds;
-document.body.appendChild(playGameButton);
+
+
 // playGameButton.appendChild(btnBg);
 
 
@@ -1607,6 +1613,16 @@ const update = () => {
             //     rpgExplosions.splice(i, 1);
             // }
         }
+        // for (var i = 0; i < pickUpsParachutes.length; i++) {
+        //     if (pickUpsParachutes[i].name == 'parachuteFalling'){
+        //         updateSprite(pickUpsParachutes[i], 'parachuteFalling');
+        //     } else {
+        //         let done = updateSprite(pickUpsParachutes[i], 'parachuteDown');
+        //         if (done == 'done'){
+        //             scene.remove(pickUpsParachutes[i].spr);
+        //         }
+        //     }
+        // }
     }
     if (slowedDown){
         if (Date.now() - bulletTimeStart > bulletTime.reloadTime){
@@ -1660,13 +1676,22 @@ const update = () => {
         for (var j = 0; j < objects.length; j++) {
             if (checkBulletCollision(objects[j], pickUps[i].dropMesh)){
                 stopFalling = true;
+                // pickUpsParachutes[i].name = 'parachuteDown';
             }
         }
         if (!stopFalling){
             pickUps[i].velocity -= GRAVITATION/4;
+            // pickUps[i].velocity += DRAG/5;
             pickUps[i].dropMesh.position.y += pickUps[i].velocity * gameSpeed;
+            // console.log(pickUpsParachutes);
+            // pickUpsParachutes[i].spr.position.copy(pickUps[i].dropMesh.position);
+            // pickUpsParachutes[i].spr.position.y += 3.5;
+            // pickUpsParachutes[i].spr.position.z -= .1;
         }
         if (checkBulletCollision(character.mesh, pickUps[i].dropMesh)){
+            // pickUpsParachutes[i].name = 'parachuteDown';
+            let tmp = pickUpsParachutes.shift();
+            pickUpsParachutes.push(tmp);
             if (pickUps[i].name == 'healthpack'){
                 if (!mute) playSound(pickUps[i].pickupSound, new THREE.Audio(listener), false, 1, 1);
                 playerHealth += 3;
@@ -1690,7 +1715,7 @@ const update = () => {
                 shieldMesh = new THREE.Mesh(new THREE.PlaneGeometry(1000,200,32), new THREE.MeshBasicMaterial({color: 0xff00ff, side: THREE.FrontSide}));
                 shieldMesh.position.z = 90;
                 shieldMesh.material.transparent = true;
-                shieldMesh.material.opacity = 0.4;
+                shieldMesh.material.opacity = 0.25;
                 scene.add(shieldMesh);
                 shieldTimeStart = Date.now();
                 invincibilityBarInit();
@@ -1706,6 +1731,8 @@ const update = () => {
                 //     // shoot = setInterval(shootBullet, equippedWeapons[0].reloadTime);
                 // }
             }
+            // scene.remove(pickUpsParachutes[i].spr);
+            // pickUpsParachutes.splice(i, 1);
             scene.remove(pickUps[i].dropMesh);
             pickUps.splice(i, 1);
         }
@@ -1774,12 +1801,18 @@ const update = () => {
         //flamethrower particle system
         if (bullets[i].flame){
             let flame = bullets[i].flame;
-            if (flame.size < flame.maxSize)
-                flame.size *= 1.1;
-            flame.mesh.material.opacity -= .016;
-            bullets[i].velocity.multiplyScalar(.99);
-            flame.lifeSpan--;
-            if (flame.lifeSpan == 0){
+            if (flame.size < flame.maxSize){
+                if (gameSpeed == 1){
+                    flame.size *= 1.1;
+                } else flame.size *= 1.01;
+            }
+            flame.mesh.material.opacity -= .016 * gameSpeed;
+            if (gameSpeed == 1)
+                bullets[i].velocity.multiplyScalar(.99);
+            else bullets[i].velocity.multiplyScalar(.995);
+            if (gameSpeed == 1) flame.lifeSpan -= 1;
+            else flame.lifeSpan -= .01;
+            if (flame.lifeSpan < 0){
                 scene.remove(bullets[i].mesh);
                 bullets.splice(i, 1);
                 continue;
