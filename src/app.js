@@ -20,7 +20,7 @@ import { spawn, rotateAboutPoint, move, heli, flyOff, dodge,
     blowUp, helipart1, helipart2, heliPartVelocityX, heliPartVelocityY, pickUps,
     shotgun, akimboMac10s, rpg, flyNormal, getBulletMesh, crashedHelis, explosions, volume, slowSound, 
     getDropIconMesh, healthpack, Gun, standardGun, flamethrower, heatSeekers, grappleCannon, 
-    pullDownHeli, grappled, muteSpawn, setSpawnSound, bulletTime, shield, pickUpsParachutes } from "./physics/spawn.js";
+    pullDownHeli, grappled, muteSpawn, setSpawnSound, bulletTime, shield, pickUpsParachutes, getDropInfo } from "./physics/spawn.js";
 import 'normalize.css';
 import './styles/styles.scss';
 
@@ -268,22 +268,20 @@ let dodger;
 
 
 const start = () => {
+    scene.remove.apply(scene, scene.children);
     xVelocity = 0;
     equippedWeapons = [];
     equippedWeapons.push(standardGun);
-    // equippedWeapons.push(flamethrower);
-    displayWeaponInfo();
-    
     displayScore();
-    scene.remove.apply(scene, scene.children);
+    displayWeaponInfo();
     restart();
     menuMusic.stop();
     healthBarInit();
     displayReloadBar();
     updateWeaponIcon();
-    // slowSound.stop();
     character.mesh.position.y = 80;
     character.mesh.position.x = 0;
+    heliCount = 0;
     spawn();
     scene.add(heliGun);
     gameStatus = 'play'
@@ -291,18 +289,14 @@ const start = () => {
     gameSpeed = 1;
     scene.remove(deathPlane);
     heliHealth = HELIHEALTHMAX;
-    heliCount = 0;
     displayScore();
     playerHealth = PLAYERHEALTHMAX;
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
-    // music = playSound(song, new THREE.Audio(listener));
-    // music.play();
     setTimeout(function(){music.play();}, 500);
     if (mute){
         music.setVolume(0);
     } else {
-        // explosionStart.play();
         playSound(explosion, new THREE.Audio(listener), false, 'fast', 0.4);
     }
 }
@@ -1167,6 +1161,7 @@ const displayReloadBar = () => {
     let geom = new THREE.PlaneGeometry(10,2, 32);
     geom.translate( 10 / 2, 0, 0 );
     let mat = new THREE.MeshBasicMaterial({color: 0xffcc00, side: THREE.FrontSide});
+    mat.color
     reloadBar = new THREE.Mesh(geom, mat);
     reloadBar.position.x = reloadBarPositionX;
     reloadBar.position.y = reloadBarPositionY;
@@ -1177,6 +1172,8 @@ const displayReloadBar = () => {
 const updateReloadBar = (percent) => {
     if (percent > 1) percent = 1;
     reloadBar.scale.set(percent,1,1);
+    if (percent == 1) reloadBar.material.color.setHex(0x00ff00);
+    else reloadBar.material.color.setHex(0xffcc00);
 }
 
 let text;
@@ -1613,16 +1610,16 @@ const update = () => {
             //     rpgExplosions.splice(i, 1);
             // }
         }
-        // for (var i = 0; i < pickUpsParachutes.length; i++) {
-        //     if (pickUpsParachutes[i].name == 'parachuteFalling'){
-        //         updateSprite(pickUpsParachutes[i], 'parachuteFalling');
-        //     } else {
-        //         let done = updateSprite(pickUpsParachutes[i], 'parachuteDown');
-        //         if (done == 'done'){
-        //             scene.remove(pickUpsParachutes[i].spr);
-        //         }
-        //     }
-        // }
+        for (var i = 0; i < pickUpsParachutes.length; i++) {
+            if (pickUpsParachutes[i].name == 'parachuteFalling'){
+                updateSprite(pickUpsParachutes[i], 'parachuteFalling');
+            } else {
+                let done = updateSprite(pickUpsParachutes[i], 'parachuteDown');
+                if (done == 'done'){
+                    scene.remove(pickUpsParachutes[i].spr);
+                }
+            }
+        }
     }
     if (slowedDown){
         if (Date.now() - bulletTimeStart > bulletTime.reloadTime){
@@ -1690,8 +1687,8 @@ const update = () => {
         }
         if (checkBulletCollision(character.mesh, pickUps[i].dropMesh)){
             // pickUpsParachutes[i].name = 'parachuteDown';
-            let tmp = pickUpsParachutes.shift();
-            pickUpsParachutes.push(tmp);
+            // let tmp = pickUpsParachutes.shift();
+            // pickUpsParachutes.push(tmp);
             if (pickUps[i].name == 'healthpack'){
                 if (!mute) playSound(pickUps[i].pickupSound, new THREE.Audio(listener), false, 1, 1);
                 playerHealth += 3;

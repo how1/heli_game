@@ -72,6 +72,16 @@ export const spawn = () => {
 	heliFlying.spr.position.y = heli.position.y;
 	updateSprite(heliFlying);
 	scene.add(heliFlying.spr);
+
+	if (heliCount % 8 == 0){
+		if (heliCount == 0) pickUps = [];
+        let drop = getDropInfo();
+        pickUps.push(drop);
+        scene.add(drop.dropMesh);
+        drop.dropMesh.position.x = 219.5;
+        drop.dropMesh.position.y = 50;
+        drop.dropMesh.position.z = 2;
+    }
 }
 
 let heliHeight = 15;
@@ -367,7 +377,7 @@ export const pullDownHeli = () => {
 }
 
 
-const getDropInfo = () => {
+export const getDropInfo = () => {
 	let random = Math.random();
 	let dropInfo;
 	let chance = 1/8;
@@ -530,7 +540,7 @@ let getShotgun = () => { return new Gun(
 );} 
 
 export let getGrappleCannon = () => {
-	return new Gun(0x000000, 'grappleCannon', 1.5, .7, 2,2, 30, 0, 10000, grappleShot, metalHit, grappleCannonPickup);
+	return new Gun(0x000000, 'grappleCannon', 1.5, .7, 1,1, 30, 0, 15000, grappleShot, metalHit, grappleCannonPickup);
 }
 export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .7,   6,  6,  10,    0,     4000, rpgBlast, rpgHit, rpgPickup);}
 export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.2, .8,   50,  50,  1,    0,  550, akimboMac10sShot, metalHit, akimboPickup);}
