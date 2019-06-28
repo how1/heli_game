@@ -275,7 +275,8 @@ const start = () => {
     displayScore();
     displayWeaponInfo();
     restart();
-    menuMusic.stop();
+    if (menuMusic.isPlaying)
+        menuMusic.stop();
     healthBarInit();
     displayReloadBar();
     updateWeaponIcon();
@@ -293,7 +294,9 @@ const start = () => {
     playerHealth = PLAYERHEALTHMAX;
     displayHealthBar();
     moveCharacter(0, character.mesh.position.y);
-    setTimeout(function(){music.play();}, 500);
+    setTimeout(function(){
+        if (!music.isPlaying) music.play();
+    }, 500);
     if (mute){
         music.setVolume(0);
     } else {
