@@ -311,7 +311,7 @@ export let grappled = false;
 
 export const blowUp = () => {
 	setHeliShooting(false);
-	hoverSound.stop();
+	if (hoverSound.isPlaying) hoverSound.stop();
 	if (gameStatus == 'gameOver' && !spawnMute)
 		slowSound = playSound(crash, new THREE.Audio(listener));
 	else if (!spawnMute) {

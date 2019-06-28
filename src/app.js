@@ -671,8 +671,7 @@ document.addEventListener("mouseup", function(event){
         if (checkMenuCollision(pos, restartButton.currentMesh)){
             bullets = [];
             heliBullets = [];
-            if (music.isPlaying)
-                music.stop();
+            if (music.isPlaying) music.stop();
             gameStatus = 'play';
             start();
         } else if (checkMenuCollision(pos, mainMenuButton.currentMesh)){
