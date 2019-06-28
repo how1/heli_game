@@ -672,8 +672,8 @@ document.addEventListener("mouseup", function(event){
             bullets = [];
             heliBullets = [];
             if (gameStatus == 'pause') {
+                console.log('error here possibly', music);
                 music.stop();
-                console.log('stop');
             }
             gameStatus = 'play';
             start();
@@ -683,7 +683,9 @@ document.addEventListener("mouseup", function(event){
                 if (quit){
                     if (!mute)
                         playSound(tick, new THREE.Audio(listener));
+                    console.log('error here possibly 2', music);
                     music.stop();
+                    console.log('error here possible 3', hoverSound);
                     hoverSound.stop();
                     heliBullets = [];
                     gameStatus = 'ready';
@@ -700,6 +702,7 @@ document.addEventListener("mouseup", function(event){
                 if (!mute)
                     playSound(tick, new THREE.Audio(listener));
                 // music.stop();
+                console.log('error here possibly 4', hoverSound);
                 hoverSound.stop();
                 heliBullets = [];
                 gameStatus = 'ready';
