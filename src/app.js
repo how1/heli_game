@@ -279,7 +279,7 @@ const start = () => {
     healthBarInit();
     displayReloadBar();
     updateWeaponIcon();
-    character.mesh.position.y = 80;
+    character.mesh.position.y = 50;
     character.mesh.position.x = 0;
     heliCount = 0;
     spawn();
@@ -680,7 +680,7 @@ document.addEventListener("mouseup", function(event){
                 if (quit){
                     if (!mute)
                         playSound(tick, new THREE.Audio(listener));
-                    music.stop();
+                    // music.stop();
                     hoverSound.stop();
                     heliBullets = [];
                     gameStatus = 'ready';
@@ -696,7 +696,7 @@ document.addEventListener("mouseup", function(event){
             } else {
                 if (!mute)
                     playSound(tick, new THREE.Audio(listener));
-                music.stop();
+                // music.stop();
                 hoverSound.stop();
                 heliBullets = [];
                 gameStatus = 'ready';
@@ -790,11 +790,15 @@ const shootBullet = () => {
         let bulletVelocity = tmpCharPos.sub(pos).normalize().negate();
         let degrees = bulletVelocity.angleTo(new THREE.Vector3(1,0,0));
         rocketMesh.rotation.z = degrees;
+        let rocketSpeed = 0.01;
         let bullet = {
-            velocity: bulletVelocity.multiplyScalar(equippedWeapons[0].speed),
+            velocity: bulletVelocity.multiplyScalar(rocketSpeed),
             mesh: rocketMesh,
             damage:equippedWeapons[0].damage,
-            sound: equippedWeapons[0].hitSound
+            sound: equippedWeapons[0].hitSound,
+            rocketSpeed,
+            maxSpeed: equippedWeapons[0].speed,
+            name: 'rpg'
         }
         bullets.push(bullet);
     } else if (equippedWeapons[0].name == heatSeekers.name) {
@@ -916,7 +920,9 @@ const changeWeapon = () => {
     equippedWeapons.push(tmp);
     updateWeaponInfo();
     updateWeaponIcon();
-    reloadDelta = 0;
+    if (equippedWeapons[0].ammo % equippedWeapons[0].fullAmmoMax == 0){
+        reloadDelta = equippedWeapons[0].reloadTime;
+    } else reloadDelta = 0;
 }
 
 const addWeapon = (pickup) => {
@@ -1589,7 +1595,7 @@ const update = () => {
         oldTime2 = curTime2 - (signsDelta % signsInterval);
         updateProps();
     }
-    if (heliReloadDelta > heliShootingFPS && heliShooting){
+    if (heliReloadDelta > heliShootingFPS && heliShooting && gameStatus == 'play'){
         shootHeliBullet();
         heliReloadDelta = 0;
     }
@@ -1828,6 +1834,10 @@ const update = () => {
             if (bullets[i].mesh.position.y > heli.position.y && bullets[i].velocity.y < 0){
                 bullets[i].mesh.rotation.z = -degrees
             } else bullets[i].mesh.rotation.z = degrees;
+        } else if (bullets[i].name == 'rpg'){
+            if (bullets[i].velocity.length() < bullets[i].maxSpeed)
+                // bullets[i].rocketSpeed *= 1.01;
+                bullets[i].velocity.multiplyScalar(1.15);
         }
         //move bullets
         bullets[i].mesh.position.x += bullets[i].velocity.x * gameSpeed;
@@ -1950,12 +1960,11 @@ const update = () => {
         gameOver();
         if (!mute)
             playSound(explosion, new THREE.Audio(listener));
-        
         updateWeaponInfo();
         equippedWeapons[0] = standardGun;
         music.stop();
         gameSpeed = .01;
-        character.mesh.position.y = 100;
+        character.mesh.position.y = 50;
         character.mesh.position.x = 0;
     }
     for (var i = 0; i < collisions.length; i++) {

@@ -66,7 +66,7 @@ export const spawn = () => {
 	heli = new THREE.Mesh( geometry, material );
 	material.transparent = true;
 	material.opacity = 0;
-	heli.position.y = 100;
+	heli.position.y = 80;
 	scene.add( heli );
 	heliFlying.spr.position.x = heli.position.x;
 	heliFlying.spr.position.y = heli.position.y;
@@ -226,10 +226,6 @@ export const move = () => {
 		velocityVector.add(v1);
 		if (velocityVector.length() > heliMaxSpeed) velocityVector.normalize().multiplyScalar(heliMaxSpeed);
 		heli.position.add(velocityVector.multiplyScalar(gameSpeed));
-		// if (velocityVector.length() > 1){
-		// 	console.log('somethings aint good', velocityVector, heli.position);
-		// }
-		// console.log(heli.position);
 	
 
 	} else {
@@ -540,13 +536,13 @@ let getShotgun = () => { return new Gun(
 );} 
 
 export let getGrappleCannon = () => {
-	return new Gun(0x000000, 'grappleCannon', 1.5, .7, 1,1, 30, 0, 15000, grappleShot, metalHit, grappleCannonPickup);
+	return new Gun(0x000000, 'grappleCannon', 1.5, .7, 2, 2, 30, 0, 25000, grappleShot, metalHit, grappleCannonPickup);
 }
-export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, .7,   6,  6,  10,    0,     4000, rpgBlast, rpgHit, rpgPickup);}
+export let getRpg = () => {return new Gun(0xff0000, 'rpg', 1.6, 1,   8,  8,  10,    0,     4000, rpgBlast, rpgHit, rpgPickup);}
 export let getAkimbo = () => {return new Gun(0xff0000, 'akimboMac10s', 1.2, .8,   50,  50,  1,    0,  550, akimboMac10sShot, metalHit, akimboPickup);}
-export let getHealthpack = () => {return new Gun(0x000000, 'healthpack', 1.2, .5, 1,1,1,0,1, null, null, healthpackPickup);}
+export let getHealthpack = () => {return new Gun(0x000000, 'healthpack', 1.2, .5, 1, 1, 1, 0, 1, null, null, healthpackPickup);}
 export let getStandard = () => {return new Gun(0x000000, 'standardGun', 1.2, .8, -1, -1, 1, 0, 600, gunshot2, metalHit, null);}
-export let getHeatSeekers = () => {return new Gun(0x000000, 'heatSeekers', 1.6, .45, 3, 3, 10, 0, 7000, rpgBlast, rpgHit, heatSeekersPickup);}
+export let getHeatSeekers = () => {return new Gun(0x000000, 'heatSeekers', 1.6, .45, 6, 6, 10, 0, 7000, rpgBlast, rpgHit, heatSeekersPickup);}
 export let getBulletTime = () => {return new Gun(0x000000, 'bulletTime', 1.6, .45, 3, 3, 10, 0, 15000, rpgBlast, rpgHit, bulletTimePickup);}
 export let getShield = () => {return new Gun(0x000000, 'shield', 1.6, .45, 3, 3, 10, 0, 20000, rpgBlast, rpgHit, shieldPickup);}
 

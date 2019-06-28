@@ -926,12 +926,12 @@ export const init = () => {
 	armTex2Left = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm2Left.png')));
 
 	let materials = [
-		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.FrontSide}),
-		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.FrontSide}),
-		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.FrontSide}),
+		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide}),
+		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide}),
+		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide}),
 		armTex,
-		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.FrontSide}),
-		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.FrontSide})
+		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide}),
+		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide})
 	];
 
 	for (var i = 0; i < materials.length; i++) {
