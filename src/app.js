@@ -671,7 +671,10 @@ document.addEventListener("mouseup", function(event){
         if (checkMenuCollision(pos, restartButton.currentMesh)){
             bullets = [];
             heliBullets = [];
-            music.stop();
+            if (gameStatus == 'pause') {
+                music.stop();
+                console.log('stop');
+            }
             gameStatus = 'play';
             start();
         } else if (checkMenuCollision(pos, mainMenuButton.currentMesh)){
@@ -680,7 +683,7 @@ document.addEventListener("mouseup", function(event){
                 if (quit){
                     if (!mute)
                         playSound(tick, new THREE.Audio(listener));
-                    // music.stop();
+                    music.stop();
                     hoverSound.stop();
                     heliBullets = [];
                     gameStatus = 'ready';
