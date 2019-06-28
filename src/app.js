@@ -1794,7 +1794,7 @@ const update = () => {
                 
                 updateWeaponInfo();
                 equippedWeapons[0] = standardGun;
-                music.stop();
+                if (music.isPlaying) music.stop();
                 gameSpeed = .01;
             }
         }
@@ -1963,7 +1963,7 @@ const update = () => {
             playSound(explosion, new THREE.Audio(listener));
         updateWeaponInfo();
         equippedWeapons[0] = standardGun;
-        music.stop();
+        if (music.isPlaying) music.stop();
         gameSpeed = .01;
         character.mesh.position.y = 50;
         character.mesh.position.x = 0;
