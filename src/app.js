@@ -923,9 +923,10 @@ const changeWeapon = () => {
     equippedWeapons.push(tmp);
     updateWeaponInfo();
     updateWeaponIcon();
-    if (equippedWeapons[0].ammo % equippedWeapons[0].fullAmmoMax == 0){
-        reloadDelta = equippedWeapons[0].reloadTime;
-    } else reloadDelta = 0;
+    // if (equippedWeapons[0].ammo % equippedWeapons[0].fullAmmoMax == 0){
+    //     reloadDelta = equippedWeapons[0].reloadTime;
+    // } else reloadDelta = 0;
+    reloadDelta = 0;
 }
 
 const addWeapon = (pickup) => {
