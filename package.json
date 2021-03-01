@@ -38,7 +38,7 @@
     "package": "^1.0.1",
     "sass-loader": "^7.1.0",
     "style-loader": "^0.22.0",
-    "three": "^0.97.0",
+    "three": "^0.125.0",
     "url-loader": "^1.1.2",
     "validator": "^10.5.0",
     "webm-writer": "^0.2.1",
