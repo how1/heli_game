@@ -6,10 +6,10 @@ import * as THREE from 'three';
 
 export let heli;
 export let spawnMute = false;
-let crash = require('../sounds/crash.mp3');
-let hover = require('../sounds/hover.mp3');
-// let fadeIn = require('../sounds/fadeIn.mp3');
-// let fadeOut = require('../sounds/fadeOut.mp3');
+let crash = require('../sounds/crash.ogg');
+let hover = require('../sounds/hover.ogg');
+// let fadeIn = require('../sounds/fadeIn.ogg');
+// let fadeOut = require('../sounds/fadeOut.ogg');
 
 export const muteSpawn = () => {
 	spawnMute = true;
@@ -102,11 +102,11 @@ let v1 = new THREE.Vector3();
 let targetPosition;
 
 const brake = () => {
-	if (THREE.Math.radToDeg(heli.rotation.z) < 0){ //if tilted right
+	if (THREE.MathUtils.radToDeg(heli.rotation.z) < 0){ //if tilted right
 			heli.rotation.z += tiltRate * gameSpeed; //tilt left towards zero tilt
 			if (heli.rotation.z > 15) heli.rotation.z = 0;
 	}		
-	else if (THREE.Math.radToDeg(heli.rotation.z) > 0){ //if tilted left
+	else if (THREE.MathUtils.radToDeg(heli.rotation.z) > 0){ //if tilted left
 		heli.rotation.z -= tiltRate * gameSpeed; //tilt right towards zero tilt
 		if (heli.rotation.z < 0) heli.rotation.z = 0;
 	}
@@ -128,12 +128,12 @@ const accelerate = (direction, multiplier) => {
 }
 
 const tiltLeft = () => {
-	if (THREE.Math.radToDeg(heli.rotation.z) < maxRotation)
+	if (THREE.MathUtils.radToDeg(heli.rotation.z) < maxRotation)
 		heli.rotation.z += tiltRate * gameSpeed;
 }
 
 const tiltRight = () => {
-	if (THREE.Math.radToDeg(heli.rotation.z) > -maxRotation)
+	if (THREE.MathUtils.radToDeg(heli.rotation.z) > -maxRotation)
 		heli.rotation.z -= tiltRate * gameSpeed;
 }
 
@@ -398,9 +398,9 @@ export const getDropInfo = () => {
 	return dropInfo;
 }
 
-let bulletMat = getMaterial(new THREE.TextureLoader().load(require('../pics/bullet.png')));
-let bullet2Mat = getMaterial(new THREE.TextureLoader().load(require('../pics/bullet2.png')));
-let seekerTex = getMaterial(new THREE.TextureLoader().load(require('../pics/seekerTex.png')));
+let bulletMat = getMaterial(new THREE.TextureLoader().load(require('../pics/bullet.png').default));
+let bullet2Mat = getMaterial(new THREE.TextureLoader().load(require('../pics/bullet2.png').default));
+let seekerTex = getMaterial(new THREE.TextureLoader().load(require('../pics/seekerTex.png').default));
 
 export const getBulletMesh = (color, s) => {
 	let size = s;
@@ -443,34 +443,34 @@ export const getDropIconMesh = (gun, scale) => {
 	let dropGeom = new THREE.PlaneGeometry( scale, scale, 32 );
 	let mesh;
 	if (gun == 'akimboMac10s'){
-		let mat = getMaterial(getTexture(require('../pics/akimboDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/akimboDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'rpg'){
-		let mat = getMaterial(getTexture(require('../pics/rpgDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/rpgDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'shotgun'){
-		let mat = getMaterial(getTexture(require('../pics/shotgunDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/shotgunDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'standardGun'){
-		let mat = getMaterial(getTexture(require('../pics/standardDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/standardDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'healthpack'){
-		let mat = getMaterial(getTexture(require('../pics/healthpackDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/healthpackDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'flamethrower'){
-		let mat = getMaterial(getTexture(require('../pics/flamethrowerDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/flamethrowerDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'heatSeekers'){
-		let mat = getMaterial(getTexture(require('../pics/heatSeekersDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/heatSeekersDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'grappleCannon'){
-		let mat = getMaterial(getTexture(require('../pics/grappleCannonDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/grappleCannonDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'bulletTime') {
-		let mat = getMaterial(getTexture(require('../pics/bulletTimeDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/bulletTimeDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	} else if (gun == 'shield') {
-		let mat = getMaterial(getTexture(require('../pics/shieldDrop.png')));
+		let mat = getMaterial(getTexture(require('../pics/shieldDrop.png').default));
 		mesh = new THREE.Mesh(dropGeom, mat);
 	}
 	mesh.transparent = true;
@@ -480,26 +480,26 @@ export const getDropIconMesh = (gun, scale) => {
 }
 
 
-let rpgPickup = require('../sounds/rpg.mp3');
-let akimboPickup = require('../sounds/akimbomac10s.mp3');
-let shotgunPickup = require('../sounds/shotgun.mp3');
-let shotgunBlast = require('../sounds/shotgunBlast.mp3');
-let explosionSound = require('../sounds/explosion.mp3');
-let metalHit = require('../sounds/metalHit.mp3');
-let gunshot = require('../sounds/gunshot.mp3');
-let gunshot2 = require('../sounds/gunshot2.mp3');
-let akimboMac10sShot = require('../sounds/akimbomac10sShot.mp3');
-let rpgBlast = require('../sounds/rpgBlast.mp3');
-let rpgHit = require('../sounds/explosion.mp3');
-let ouch = require('../sounds/ouch.mp3');
-let healthpackPickup = require('../sounds/healthpackPickup.mp3');
-let flamethrowerPickup = require('../sounds/flamethrowerPickup.mp3');
-let flamethrowerShot = require('../sounds/flamethrowerShot.mp3');
-let heatSeekersPickup = require('../sounds/heatSeekingMissilesPickup.mp3');
-let grappleCannonPickup = require('../sounds/grappleCannonPickup.mp3');
-let grappleShot = require('../sounds/grappleShot.mp3');
-let bulletTimePickup = require('../sounds/bulletTimePickup.mp3');
-let shieldPickup = require('../sounds/shieldPickup.mp3');
+let rpgPickup = require('../sounds/rpg.ogg');
+let akimboPickup = require('../sounds/akimbomac10s.ogg');
+let shotgunPickup = require('../sounds/shotgun.ogg');
+let shotgunBlast = require('../sounds/shotgunBlast.ogg');
+let explosionSound = require('../sounds/explosion.ogg');
+let metalHit = require('../sounds/metalHit.ogg');
+let gunshot = require('../sounds/gunshot.ogg');
+let gunshot2 = require('../sounds/gunshot2.ogg');
+let akimboMac10sShot = require('../sounds/akimbomac10sShot.ogg');
+let rpgBlast = require('../sounds/rpgBlast.ogg');
+let rpgHit = require('../sounds/explosion.ogg');
+let ouch = require('../sounds/ouch.ogg');
+let healthpackPickup = require('../sounds/healthpackPickup.ogg');
+let flamethrowerPickup = require('../sounds/flamethrowerPickup.ogg');
+let flamethrowerShot = require('../sounds/flamethrowerShot.ogg');
+let heatSeekersPickup = require('../sounds/heatSeekingMissilesPickup.ogg');
+let grappleCannonPickup = require('../sounds/grappleCannonPickup.ogg');
+let grappleShot = require('../sounds/grappleShot.ogg');
+let bulletTimePickup = require('../sounds/bulletTimePickup.ogg');
+let shieldPickup = require('../sounds/shieldPickup.ogg');
 
 export const Gun = function (color, name, size, speed, ammo, fullAmmoMax, damage, velocity, reloadTime, shotSound, hitSound, pickupSound) {
 	this.color = color;
@@ -606,7 +606,7 @@ export const Flame = function () {
 }
 
 export const getFlameMesh = () => {
-	let mesh = new THREE.Mesh(new THREE.PlaneGeometry(1,1,32), getMaterial(getTexture(require('../pics/flame.png'))));
+	let mesh = new THREE.Mesh(new THREE.PlaneGeometry(1,1,32), getMaterial(getTexture(require('../pics/flame.png').default)));
 	mesh.transparent = true;
 	mesh.opacity = 1;
 	return mesh;

@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import * as crypto from 'crypto-js';
 import {key, email, password} from './physics/key.js';
-import * as firebase from "firebase/app";
-import "firebase/auth";
-import "firebase/database";
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import "firebase/compat/database";
 
 import { bodies, camera, renderer, scene, init, character, objects, 
     moveCharacter, walk, stand, jump, updateSprite, 
@@ -25,13 +25,12 @@ import 'normalize.css';
 import './styles/styles.scss';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAnfDeBJKe8goIdkLvtrGcdCQxDGkYHXow",
-  authDomain: "heli-game.firebaseapp.com",
-  databaseURL: "https://heli-game.firebaseio.com",
-  projectId: "heli-game",
-  storageBucket: "heli-game.appspot.com",
-  messagingSenderId: "690359290663",
-  appId: "1:690359290663:web:41025f62275a3073"
+  apiKey: "AIzaSyDDJuwhMymhAfRtIIQwdXpPZurMDPR0oWo",
+  authDomain: "heli-game-2.firebaseapp.com",
+  projectId: "heli-game-2",
+  storageBucket: "heli-game-2.appspot.com",
+  messagingSenderId: "19239739073",
+  appId: "1:19239739073:web:56974c114f4c4e0a8f7e40"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -942,27 +941,27 @@ const addWeapon = (pickup) => {
         equippedWeapons.push(pickup);
 }
 
-let rpgPickup = require('./sounds/rpg.mp3');
-let akimboPickup = require('./sounds/akimbomac10s.mp3');
-let shotgunPickup = require('./sounds/shotgun.mp3');
-let shotgunBlast = require('./sounds/shotgunBlast.mp3');
-let explosion = require('./sounds/explosion.mp3');
-let metalHit = require('./sounds/metalHit.mp3');
-let gunshot = require('./sounds/gunshot.mp3');
-let gunshot2 = require('./sounds/gunshot2.mp3');
-let akimboMac10sShot = require('./sounds/akimbomac10sShot.mp3');
-let rpgBlast = require('./sounds/rpgBlast.mp3');
-let rpgHit = require('./sounds/explosion.mp3');
-let ouch = require('./sounds/ouch2.mp3');
-let healthpackPickup = require('./sounds/healthpackPickup.mp3');
-let flamethrowerPickup = require('./sounds/flamethrowerPickup.mp3');
-let song = require('./sounds/gameplayMusic.mp3');
-let menuSong = require('./sounds/menuMusic.mp3');
-let jumpSound = require('./sounds/jump.mp3');
-export let hover = require('./sounds/hover.mp3');
-// export let fadeIn = require('./sounds/fadeIn.mp3');
-// export let fadeOut = require('./sounds/fadeOut.mp3');
-let tick = require('./sounds/tick.mp3');
+let rpgPickup = require('./sounds/rpg.ogg');
+let akimboPickup = require('./sounds/akimbomac10s.ogg');
+let shotgunPickup = require('./sounds/shotgun.ogg');
+let shotgunBlast = require('./sounds/shotgunBlast.ogg');
+let explosion = require('./sounds/explosion.ogg');
+let metalHit = require('./sounds/metalHit.ogg');
+let gunshot = require('./sounds/gunshot.ogg');
+let gunshot2 = require('./sounds/gunshot2.ogg');
+let akimboMac10sShot = require('./sounds/akimbomac10sShot.ogg');
+let rpgBlast = require('./sounds/rpgBlast.ogg');
+let rpgHit = require('./sounds/explosion.ogg');
+let ouch = require('./sounds/ouch2.ogg');
+let healthpackPickup = require('./sounds/healthpackPickup.ogg');
+let flamethrowerPickup = require('./sounds/flamethrowerPickup.ogg');
+let song = require('./sounds/gameplayMusic.ogg');
+let menuSong = require('./sounds/menuMusic.ogg');
+let jumpSound = require('./sounds/jump.ogg');
+export let hover = require('./sounds/hover.ogg');
+// export let fadeIn = require('./sounds/fadeIn.ogg');
+// export let fadeOut = require('./sounds/fadeOut.ogg');
+let tick = require('./sounds/tick.ogg');
 
 
 
@@ -1246,7 +1245,7 @@ export const displayWeaponInfo = () => {
     weaponText.style.borderRadius = window.innerHeight/20 + 'px';
     weaponText.style.paddingLeft = window.innerHeight/78 + 'px';
     weaponText.style.paddingRight = window.innerHeight/78 + 'px';
-    weaponText.style.top = window.innerHeight / 1.12 + 'px';
+    weaponText.style.top = window.innerHeight / 1.1 + 'px';
     weaponText.style.left = window.innerWidth - windowOffset - window.innerHeight/5.5 + 'px';
     updateWeaponInfo();
     
@@ -1453,11 +1452,22 @@ const heliPartAnimation = () => {
                 } else {
                     if (line) scene.remove(line);
                     let lineMat = new THREE.LineBasicMaterial({color: 0xffffff});
-                    let lineGeom = new THREE.Geometry();
-                    lineGeom.vertices.push(character.mesh.position);
-                    lineGeom.vertices.push(crashedHelis[i].spr.position);
-                    line = new THREE.Line(lineGeom, lineMat);
-                    scene.add(line);
+                    //New geometry usage for lines
+                    const points = []
+                    points.push(character.mesh.position)
+                    points.push(crashedHelis[i].spr.position)
+                    let geometry = new THREE.BufferGeometry().setFromPoints(points)
+                    let line = new THREE.Line(
+                        geometry,
+                        lineMat
+                    )
+                    scene.add(line)
+                    //Deprecated line geometry
+                    // let lineGeom = new THREE.Geometry();
+                    // lineGeom.vertices.push(character.mesh.position);
+                    // lineGeom.vertices.push(crashedHelis[i].spr.position);
+                    // line = new THREE.Line(lineGeom, lineMat);
+                    // scene.add(line);
                 }
             }
             crashedHelis[i].spr.position.x = helipart1[i].position.x;
@@ -1851,11 +1861,20 @@ const update = () => {
             if (bullets[i].line) scene.remove(bullets[i].line);
             if (bullets[i].mesh.position.distanceTo(character.mesh.position) < 100){
                 let lineMat = new THREE.LineBasicMaterial({color: 0xffffff});
-                let lineGeom = new THREE.Geometry();
-                lineGeom.vertices.push(character.mesh.position);
-                lineGeom.vertices.push(bullets[i].mesh.position);
-                bullets[i].line = new THREE.Line(lineGeom, lineMat);
-                scene.add(bullets[i].line);
+                const points = []
+                points.push(character.mesh.position)
+                points.push(bullets[i].mesh.position)
+                let geometry = new THREE.BufferGeometry().setFromPoints(points)
+                let line = new THREE.Line(
+                    geometry,
+                    lineMat
+                )
+                scene.add(line)
+                // let lineGeom = new THREE.Geometry();
+                // lineGeom.vertices.push(character.mesh.position);
+                // lineGeom.vertices.push(bullets[i].mesh.position);
+                // bullets[i].line = new THREE.Line(lineGeom, lineMat);
+                // scene.add(bullets[i].line);
             }
         }
 

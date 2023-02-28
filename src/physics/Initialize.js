@@ -18,6 +18,7 @@ renderer.setSize( width, height );
 document.body.appendChild( renderer.domElement );
 
 renderer.domElement.id = 'canvas';
+renderer.domElement.style.margin='auto';
 
 export let camera = new THREE.PerspectiveCamera( 45, width / height, 0.1, 1000 );
 scene.add( camera );
@@ -51,11 +52,23 @@ export let rocket;
 
 let maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
 
-const getTexture = (path) => {
-	let tex = new THREE.TextureLoader().load(path.toString());
-	tex.anisotropy = maxAnisotropy;
+// const getTexture = (path) => {
+// 	let tex = new THREE.TextureLoader().load(path.toString());
+// 	tex.anisotropy = maxAnisotropy;
+// 	return tex;
+// }
+
+export let textureLoadingProgress = 0;
+let arrProgress = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+const getTexture = (path, index) => {
+	let tex = new THREE.TextureLoader().load(path.toString(), function(){
+		arrProgress[index] = 1;
+	});
+	tex.generateMipmaps = false;
 	return tex;
 }
+
 
 const getMesh = (geom, mat) => {
 	return new THREE.Mesh(geom, mat);
@@ -98,57 +111,57 @@ const Sign = function(images, x, y) {
 }
 
 const bannerBig = (x, y) => {return new Sign([
-	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-1.png')))),
-	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-2.png')))),
-	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-3.png')))),
-	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-4.png'))))
+	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-1.png').default))),
+	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-2.png').default))),
+	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-3.png').default))),
+	getMesh(bigGeom, getMaterial(getTexture(require('../pics/props/banner-big/banner-big-4.png').default)))
 	], x, y);}
 
 const bannerCoke = (x, y) => {return new Sign([
-	getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-1.png')))),
-	getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-2.png')))),
-	getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-3.png'))))
+	getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-1.png').default))),
+	getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-2.png').default))),
+	getMesh(cokeGeom, getMaterial(getTexture(require('../pics/props/banner-coke/banner-coke-3.png').default)))
 	], x, y);}
 
 const bannerNeon = (x, y) => {return new Sign([
-	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-1.png')))),
-	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-2.png')))),
-	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-3.png')))),
-	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-4.png'))))
+	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-1.png').default))),
+	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-2.png').default))),
+	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-3.png').default))),
+	getMesh(neonGeom, getMaterial(getTexture(require('../pics/props/banner-neon/banner-neon-4.png').default)))
 	], x, y);}
 
 const bannerScroll = (x, y) => {return new Sign([
-	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-1.png')))),
-	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-2.png')))),
-	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-3.png')))),
-	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-4.png'))))
+	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-1.png').default))),
+	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-2.png').default))),
+	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-3.png').default))),
+	getMesh(scrollGeom, getMaterial(getTexture(require('../pics/props/banner-scroll/banner-scroll-4.png').default)))
 	], x, y);}
 
 const bannerSide = (x, y) => {return new Sign([
-	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-1.png')))),
-	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-2.png')))),
-	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-3.png')))),
-	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-4.png'))))
+	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-1.png').default))),
+	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-2.png').default))),
+	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-3.png').default))),
+	getMesh(sideGeom, getMaterial(getTexture(require('../pics/props/banner-side/banner-side-4.png').default)))
 	], x, y);}
 
 const bannerSushi = (x, y) => {return new Sign( [
-	getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-1.png')))),
-	getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-2.png')))),
-	getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-3.png'))))
+	getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-1.png').default))),
+	getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-2.png').default))),
+	getMesh(sushiGeom, getMaterial(getTexture(require('../pics/props/banner-sushi/banner-sushi-3.png').default)))
 	], x, y);}
 
 const monitorFace = (x, y) => {return new Sign([
-	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-1.png')))),
-	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-2.png')))),
-	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-3.png')))),
-	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-4.png'))))
+	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-1.png').default))),
+	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-2.png').default))),
+	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-3.png').default))),
+	getMesh(faceGeom, getMaterial(getTexture(require('../pics/props/monitorface/monitor-face-4.png').default)))
 	], x, y);}
 
-let hotelSign = getMesh(hotelGeom, getMaterial(getTexture(require('../pics/props/hotel-sign.png'))));
+let hotelSign = getMesh(hotelGeom, getMaterial(getTexture(require('../pics/props/hotel-sign.png').default)));
 
 const getAircon = () => {
 	let geom = new THREE.PlaneGeometry(8,8,32);
-	let mesh = getMesh(geom, getMaterial(getTexture(require('../pics/buildings/airConditioner.png'))));
+	let mesh = getMesh(geom, getMaterial(getTexture(require('../pics/buildings/airConditioner.png').default)));
 	let obj = getMesh(new THREE.PlaneGeometry(7, 7, 23), new THREE.MeshBasicMaterial({color:0x000000, side: THREE.FrontSide}));
 	obj.material.opacity = 0;
 	let ac = {
@@ -183,31 +196,31 @@ bannerSushi(18, -13)
 //Buttons
 let buttonGeom = new THREE.PlaneGeometry(50, 10);
 let titleGeom = new THREE.PlaneGeometry(50, 50);
-let tick = require('../sounds/tick.mp3');
-let backButtonUpTex = getTexture(require('../pics/backButtonUp.png'));
-let backButtonDownTex = getTexture(require('../pics/backButtonDown.png'));
-let backButtonUpHoverTex = getTexture(require('../pics/backButtonUpHover.png'));
-let resumeButtonUpTex = getTexture(require('../pics/resumeButtonUp.png'));
-let resumeButtonDownTex = getTexture(require('../pics/resumeButtonDown.png'));
-let resumeButtonUpHoverTex = getTexture(require('../pics/resumeButtonUpHover.png'));
-let restartButtonUpTex = getTexture(require('../pics/restartButtonUp.png'));
-let restartButtonUpHoverTex = getTexture(require('../pics/restartButtonUpHover.png'));
-let restartButtonDownTex = getTexture(require('../pics/restartButtonDown.png'));
-let mainMenuButtonUpTex = getTexture(require('../pics/mainMenuButtonUp.png'));
-let mainMenuButtonUpHoverTex = getTexture(require('../pics/mainMenuButtonUpHover.png'));
-let mainMenuButtonDownTex = getTexture(require('../pics/mainMenuButtonDown.png'));
-let instructionsUpTex = getTexture(require('../pics/instructionsButtonUp.png'));
-let instructionsUpHoverTex = getTexture(require('../pics/instructionsButtonUpHover.png'));
-let instructionsDownTex = getTexture(require('../pics/instructionsButtonDown.png'));
-let startGameUpTex = getTexture(require('../pics/startGameButtonUp.png'));
-let startGameUpHoverTex = getTexture(require('../pics/startGameButtonUpHover.png'));
-let startGameDownTex = getTexture(require('../pics/startGameButtonDown.png'));
-let creditsUpTex = getTexture(require('../pics/creditsButtonUp.png'));
-let creditsUpHoverTex = getTexture(require('../pics/creditsButtonUpHover.png'));
-let creditsDownTex = getTexture(require('../pics/creditsButtonDown.png'));
-let hsUpTex = getTexture(require('../pics/hsButtonUp.png'));
-let hsUpHoverTex = getTexture(require('../pics/hsButtonUpHover.png'));
-let hsDownTex = getTexture(require('../pics/hsButtonDown.png'));
+let tick = require('../sounds/tick.ogg');
+let backButtonUpTex = getTexture(require('../pics/backButtonUp.png').default);
+let backButtonDownTex = getTexture(require('../pics/backButtonDown.png').default);
+let backButtonUpHoverTex = getTexture(require('../pics/backButtonUpHover.png').default);
+let resumeButtonUpTex = getTexture(require('../pics/resumeButtonUp.png').default);
+let resumeButtonDownTex = getTexture(require('../pics/resumeButtonDown.png').default);
+let resumeButtonUpHoverTex = getTexture(require('../pics/resumeButtonUpHover.png').default);
+let restartButtonUpTex = getTexture(require('../pics/restartButtonUp.png').default);
+let restartButtonUpHoverTex = getTexture(require('../pics/restartButtonUpHover.png').default);
+let restartButtonDownTex = getTexture(require('../pics/restartButtonDown.png').default);
+let mainMenuButtonUpTex = getTexture(require('../pics/mainMenuButtonUp.png').default);
+let mainMenuButtonUpHoverTex = getTexture(require('../pics/mainMenuButtonUpHover.png').default);
+let mainMenuButtonDownTex = getTexture(require('../pics/mainMenuButtonDown.png').default);
+let instructionsUpTex = getTexture(require('../pics/instructionsButtonUp.png').default);
+let instructionsUpHoverTex = getTexture(require('../pics/instructionsButtonUpHover.png').default);
+let instructionsDownTex = getTexture(require('../pics/instructionsButtonDown.png').default);
+let startGameUpTex = getTexture(require('../pics/startGameButtonUp.png').default);
+let startGameUpHoverTex = getTexture(require('../pics/startGameButtonUpHover.png').default);
+let startGameDownTex = getTexture(require('../pics/startGameButtonDown.png').default);
+let creditsUpTex = getTexture(require('../pics/creditsButtonUp.png').default);
+let creditsUpHoverTex = getTexture(require('../pics/creditsButtonUpHover.png').default);
+let creditsDownTex = getTexture(require('../pics/creditsButtonDown.png').default);
+let hsUpTex = getTexture(require('../pics/hsButtonUp.png').default);
+let hsUpHoverTex = getTexture(require('../pics/hsButtonUpHover.png').default);
+let hsDownTex = getTexture(require('../pics/hsButtonDown.png').default);
 
 export let buttons = [
 	new Button(backButtonUpTex, backButtonDownTex, backButtonUpHoverTex, tick, 0,-36,3),
@@ -255,7 +268,7 @@ export let heliFlying;
 export let heliGrappled;
 export let heliGrappledSpr;
 export let crashedHeliSpr;
-export let parachuteTex = getTexture(require('../pics/parachute.png'));
+export let parachuteTex = getTexture(require('../pics/parachute.png').default);
 let explosionSpr
 export let explosion;
 let bulletHitSpr;
@@ -298,7 +311,7 @@ const getSound = (src, audioObj, loop) => {
 }
 
 //Character Sounds
-// let footstepsFile = require('../sounds/footsteps.mp3');
+// let footstepsFile = require('../sounds/footsteps.ogg');
 // let footsteps;
 //
 
@@ -316,7 +329,7 @@ const spriteSheet = (sprite, x, y, d, scaleX, scaleY, type) => {
 	sheet.tex = sprite;
 	sheet.tex.repeat.set( 1/d, 1);
 	sheet.tex.needsUpdate = true;
-	sheet.tex.wrapS = sheet.tex.wrapT - THREE.repeatWrapping;
+	sheet.tex.wrapS = sheet.tex.wrapT - THREE.RepeatWrapping;
 	sheet.mat = new THREE.SpriteMaterial({map: sheet.tex});
 	sheet.mat.transparent = true;
 	sheet.opacity = 1;
@@ -511,7 +524,7 @@ const getBackgroundMesh = (tex, zPos, yPos, geom, repeat) => {
 	return mesh;
 }
 
-let titleTex = getTexture(require('../pics/title.png'));
+let titleTex = getTexture(require('../pics/title.png').default);
 let title = new THREE.Mesh(titleGeom, getMaterial(titleTex));
 export let highscoreText;
 
@@ -540,7 +553,7 @@ export const mainMenu = () => {
     highscoreText = document.createElement('div');
     highscoreText.id = 'highscore';
     highscoreText.style.position = 'absolute';
-    highscoreText.style.width = window.innerHeight/40 + '%';
+    highscoreText.style.width = 'auto';
     highscoreText.style.height = 5 + '%';
     highscoreText.style.fontSize = window.innerHeight / 22 + 'px';
     highscoreText.style.backgroundColor = 'rgba(255,0,0,.5)';
@@ -593,7 +606,7 @@ export const resume = () => {
 	scene.remove(restartButton.upHighMesh);
 }
 
-let arrowKeysFile = require('../pics/instructions.png');
+let arrowKeysFile = require('../pics/instructions.png').default;
 let arrowKeysImage;
 
 export let newHighscore;
@@ -691,7 +704,7 @@ export const credits = () => {
 	tintMesh.position.z = 4;
 	//
 	let creditsGeom = new THREE.PlaneGeometry(60,60,32);
-	let creditsTex = getTexture(require('../pics/credits.png'));
+	let creditsTex = getTexture(require('../pics/credits.png').default);
 	let creditsMat = getMaterial(creditsTex);
 	let credits = new THREE.Mesh(creditsGeom, creditsMat);
 	scene.add(credits);
@@ -715,9 +728,9 @@ export const highscores = () => {
 	backButton.getMesh();
 }
 
-// let upMat = getMaterial(getTexture(require('../pics/backButtonUp.png')));
-// let upMat = getMaterial(getTexture(require('../pics/backButtonUp.png')));
-// let upMat = getMaterial(getTexture(require('../pics/backButtonUp.png')));
+// let upMat = getMaterial(getTexture(require('../pics/backButtonUp.png').default));
+// let upMat = getMaterial(getTexture(require('../pics/backButtonUp.png').default));
+// let upMat = getMaterial(getTexture(require('../pics/backButtonUp.png').default));
 
 function Button(up, down, high, tick, x, y, z) {
 	this.getMaterial = function(image){
@@ -823,9 +836,9 @@ export let pressEnter;
 let bgGeom = new THREE.PlaneGeometry(192 * 10, 108, 32);
 let bgGeom1 = new THREE.PlaneGeometry(384 * 10, 216, 32);
 let bgGeom2 = new THREE.PlaneGeometry(800, 390, 32);
-mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png')) , -50, -10, bgGeom, 10 );
-background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png')) , -300, -50, bgGeom1, 10 );
-farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png')), -301, 10, bgGeom2, 1 );
+mdForeground = getBackgroundMesh( getTexture(require('../pics/buildings/near-buildings-bg.png').default) , -50, -10, bgGeom, 10 );
+background = getBackgroundMesh( getTexture( require('../pics/buildings/buildings-bg.png').default) , -300, -50, bgGeom1, 10 );
+farBackground = getBackgroundMesh( getTexture( require('../pics/buildings/skyline-d.png').default), -301, 10, bgGeom2, 1 );
 let tintGeom = new THREE.PlaneGeometry(1000, 1000, 32);
 let tintMat = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.FrontSide});
 tintMat.transparent = true;
@@ -842,7 +855,7 @@ export const startScreen = () => {
 	title.position.z = 4;
 	scene.add(title);
 	let pressEnterGeom = new THREE.PlaneGeometry(60, 10, 32);
-	let pressEnterMat = getMaterial(getTexture(require('../pics/pressEnter.png')));
+	let pressEnterMat = getMaterial(getTexture(require('../pics/pressEnter.png').default));
 	pressEnter = getMesh(pressEnterGeom, pressEnterMat);
 	pressEnter.position.y = -25;
 	scene.add(pressEnter);
@@ -901,29 +914,29 @@ export const init = () => {
 	//
 
 	//Character sprites
-	standingRight = new spriteSheet( getTexture(require('../pics/roboWalkingLarge.png')) , 0, 1, 11, 10, 10);
-	standingLeft = new spriteSheet( getTexture(require('../pics/roboWalkingLarge2.png')) , 0, 1, 11, 10, 10);
-	rightFoot = new spriteSheet( getTexture(require('../pics/roboWalkingLarge.png')) , 0, 1, 11, 10, 10);
-	leftFoot = new spriteSheet( getTexture(require('../pics/roboWalkingLarge2.png')) , 0, 1, 11, 10, 10);
-	jumpingRight = new spriteSheet( getTexture(require('../pics/roboJumping.png')) , 0,1,11,10,10);
-	jumpingLeft = new spriteSheet( getTexture(require('../pics/roboJumping2.png')) , 0,1,11,10,10);
+	standingRight = new spriteSheet( getTexture(require('../pics/roboWalkingLarge.png').default) , 0, 1, 11, 10, 10);
+	standingLeft = new spriteSheet( getTexture(require('../pics/roboWalkingLarge2.png').default) , 0, 1, 11, 10, 10);
+	rightFoot = new spriteSheet( getTexture(require('../pics/roboWalkingLarge.png').default) , 0, 1, 11, 10, 10);
+	leftFoot = new spriteSheet( getTexture(require('../pics/roboWalkingLarge2.png').default) , 0, 1, 11, 10, 10);
+	jumpingRight = new spriteSheet( getTexture(require('../pics/roboJumping.png').default) , 0,1,11,10,10);
+	jumpingLeft = new spriteSheet( getTexture(require('../pics/roboJumping2.png').default) , 0,1,11,10,10);
 	//
 	
 	//Heli sprites
-	heliFlying = new spriteSheet( getTexture(require('../pics/heli5.png')) , 0, 1, 8, 40, 20, 'heliFlying');
-	heliGrappled = new spriteSheet( getTexture(require('../pics/heli5.png')) , 0, 1, 8, 40, 20, 'heliGrappled');
-	heliGrappledSpr = getTexture(require('../pics/heli5.png'));
-	crashedHeliSpr = getTexture( require('../pics/crashedHeli.png' ));
+	heliFlying = new spriteSheet( getTexture(require('../pics/heli5.png').default) , 0, 1, 8, 40, 20, 'heliFlying');
+	heliGrappled = new spriteSheet( getTexture(require('../pics/heli5.png').default) , 0, 1, 8, 40, 20, 'heliGrappled');
+	heliGrappledSpr = getTexture(require('../pics/heli5.png').default);
+	crashedHeliSpr = getTexture( require('../pics/crashedHeli.png').default);
 	//
 
 	//Arms
-	armTex = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm.png')));
-	armTex3 = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm3.png')));
-	armTex2 = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm2.png')));
+	armTex = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm.png').default));
+	armTex3 = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm3.png').default));
+	armTex2 = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm2.png').default));
 
-	armTexLeft = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArmLeft.png')));
-	armTex3Left = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm3Left.png')));
-	armTex2Left = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm2Left.png')));
+	armTexLeft = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArmLeft.png').default));
+	armTex3Left = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm3Left.png').default));
+	armTex2Left = getMaterial(new THREE.TextureLoader().load(require('../pics/roboArm2Left.png').default));
 
 	let materials = [
 		new THREE.MeshBasicMaterial({color: 0x000000, side: THREE.DoubleSide}),
@@ -944,9 +957,9 @@ export const init = () => {
 	//
 
 	//Rockets
-	rocketTex = getMaterial(new THREE.TextureLoader().load(require('../pics/rocketTex.png')));
+	rocketTex = getMaterial(new THREE.TextureLoader().load(require('../pics/rocketTex.png').default));
 	rocketTex.anisotropy = maxAnisotropy;
-	rocketTex2 = getMaterial(new THREE.TextureLoader().load(require('../pics/rocketTex2.png')));
+	rocketTex2 = getMaterial(new THREE.TextureLoader().load(require('../pics/rocketTex2.png').default));
 	rocketTex2.anisotropy = maxAnisotropy;
 	let geometry = new THREE.PlaneGeometry(4, 4, 32);
 	rocket = new THREE.Mesh(geometry, rocketTex);
@@ -999,12 +1012,12 @@ export const init = () => {
 		let geometry = new THREE.PlaneGeometry( 50, 40, 32 );
 		let floorTex;
 		if (Math.random() < .5){
-			floorTex = new THREE.TextureLoader().load(require('../pics/buildings/building1.png'));
+			floorTex = new THREE.TextureLoader().load(require('../pics/buildings/building1.png').default);
 		} else {
-			floorTex = new THREE.TextureLoader().load(require('../pics/buildings/building2.png'));
+			floorTex = new THREE.TextureLoader().load(require('../pics/buildings/building2.png').default);
 		}
 		if (Math.random() < .5){
-			let railingTex = new THREE.TextureLoader().load(require('../pics/rail.png'));
+			let railingTex = new THREE.TextureLoader().load(require('../pics/rail.png').default);
 			let material = new THREE.MeshBasicMaterial( {map: railingTex, side: THREE.FrontSide} );
 			material.transparent = true;
 			material.opacity = 1;
